@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bekofy - Web'den Kayıt Ol</title>
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Our Auth Logic -->
+  <script src="js/auth.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 48 48" fill="none" width="32" height="32">
+        <circle cx="24" cy="24" r="22" fill="url(#nlg)"/>
+        <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <defs><linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#1DB954"/><stop offset="100%" stop-color="#1ed760"/></linearGradient></defs>
+      </svg>
+      <span class="nav-logo-text">Bekofy</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Ana Sayfa</a>
+      <a href="../src/pages/download.html" target="_blank">İndir</a>
+    </div>
+  </nav>
+
+  <!-- Auth Box -->
+  <main class="auth-container">
+    <div class="auth-card">
+      <div id="success-msg" class="success-msg"></div>
+      
+      <form id="auth-form" onsubmit="window.handleRegister(event)">
+        <h1>Aramıza Katıl</h1>
+        <p>Müziğin ritmini bizimle yakala. Hemen ücretsiz hesap oluştur.</p>
+        
+        <div id="error-msg" class="error-msg"></div>
+        
+        <div class="input-group">
+          <label for="username">Kullanıcı Adı</label>
+          <input type="text" id="username" placeholder="Bekir123" required>
+        </div>
+        
+        <div class="input-group">
+          <label for="email">E-posta Adresi</label>
+          <input type="email" id="email" placeholder="ornek@mail.com" required>
+        </div>
+        
+        <div class="input-group">
+          <label for="password">Şifre</label>
+          <input type="password" id="password" placeholder="En az 6 karakter" required minlength="6">
+        </div>
+        
+        <button type="submit" id="submit-btn" class="btn-primary submit-btn">
+          <span id="btn-text">Kayıt Ol</span>
+          <div id="loader" class="loader"></div>
+        </button>
+        
+        <div class="auth-footer">
+          Zaten bir hesabın var mı? <a href="login.html">Giriş Yap</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</body>
+</html>
