@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bekofy - Admin Paneli</title>
+  <meta name="description" content="Bekofy müzik platformu yönetim paneli. Sanatçıları ve şarkıları yönetin.">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="login-screen" class="admin-login-wrapper">
+    <div class="admin-login-card">
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+      <h1>Admin Paneli</h1>
+      <p class="subtitle">Bekofy yönetim paneline giriş yapın</p>
+      <div id="login-error" class="error-msg"></div>
+      <form onsubmit="handleAdminLogin(event)">
+        <div class="input-group">
+          <label for="admin-email">E-posta Adresi</label>
+          <input type="email" id="admin-email" placeholder="admin@bekofy.com" required>
+        </div>
+        <div class="input-group">
+          <label for="admin-password">Şifre</label>
+          <input type="password" id="admin-password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" id="login-btn" class="btn-admin">Giriş Yap</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN PANEL ===== -->
+  <div id="admin-panel" class="admin-layout" style="display:none;">
+    
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="sidebar-logo">
+          <svg viewBox="0 0 48 48" fill="none" width="28" height="28">
+            <circle cx="24" cy="24" r="22" fill="url(#slg)"/>
+            <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <defs><linearGradient id="slg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#1DB954"/><stop offset="100%" stop-color="#1ed760"/></linearGradient></defs>
+          </svg>
+          <span class="sidebar-logo-text">Bekofy</span>
+          <span class="sidebar-badge">Admin</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-nav-item active" data-section="artists" onclick="switchSection('artists')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          Sanatçılar
+        </button>
+        
+        <button class="sidebar-nav-item" data-section="songs" onclick="switchSection('songs')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+          Şarkılar
+        </button>
+
+        <div class="sidebar-divider"></div>
+
+        <button class="sidebar-nav-item" onclick="adminLogout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16,17 21,12 16,7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Çıkış Yap
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar">
+            <span id="sidebar-avatar-letter">A</span>
+          </div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebar-username">Admin</div>
+            <div class="sidebar-user-role" id="sidebar-role">admin</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      
+      <!-- Page Header -->
+      <div class="admin-page-header">
+        <h2 id="page-title">Sanatçı Yönetimi</h2>
+        <p id="page-desc">Sanatçı hesaplarını yönetin, yeni sanatçı ekleyin</p>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label">Sanatçılar</div>
+          <div class="stat-value" id="stat-artists">-</div>
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Toplam Şarkı</div>
+          <div class="stat-value" id="stat-songs">-</div>
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Toplam Kullanıcı</div>
+          <div class="stat-value" id="stat-users">-</div>
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ARTISTS SECTION ===== -->
+      <section id="section-artists" class="admin-section active">
+        <div class="search-bar">
+          <div class="search-input-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" class="search-input" id="artist-search" placeholder="Sanatçı ara..." oninput="searchArtists(this.value)">
+          </div>
+          <button class="btn-add" onclick="openAddArtistModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Sanatçı Ekle
+          </button>
+        </div>
+        <div id="artists-container">
+          <div class="admin-loader"><div class="spinner"></div></div>
+        </div>
+      </section>
+
+      <!-- ===== ARTIST DETAIL SECTION ===== -->
+      <section id="section-artist-detail" class="admin-section">
+        <div id="artist-detail-content"></div>
+      </section>
+
+      <!-- ===== SONGS SECTION ===== -->
+      <section id="section-songs" class="admin-section">
+        <div class="search-bar">
+          <div class="search-input-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" class="search-input" id="song-search" placeholder="Şarkı, sanatçı veya albüm ara..." oninput="searchSongs(this.value)">
+          </div>
+          <button class="btn-add" onclick="openAddSongModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Şarkı Ekle
+          </button>
+        </div>
+        <div id="songs-container">
+          <div class="admin-loader"><div class="spinner"></div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== ADD ARTIST MODAL ===== -->
+  <div id="add-artist-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Yeni Sanatçı Ekle</h3>
+        <button class="modal-close" onclick="closeAddArtistModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="add-artist-error" class="modal-error" style="display:none"></div>
+        <div class="form-group">
+          <label for="new-artist-name">Sanatçı Adı</label>
+          <input type="text" id="new-artist-name" placeholder="Örn: Tarkan, Sezen Aksu...">
+          <p class="form-hint">Bu isim şarkı eklerken seçilebilir olacak ve kullanıcılar arama yaparken görecek.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeAddArtistModal()">İptal</button>
+        <button class="btn-save" id="save-artist-btn" onclick="saveNewArtist()">Sanatçı Ekle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADD SONG MODAL ===== -->
+  <div id="add-song-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Yeni Şarkı Ekle</h3>
+        <button class="modal-close" onclick="closeAddSongModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="add-song-title">Şarkı Başlığı *</label>
+          <input type="text" id="add-song-title" placeholder="Şarkı adını girin">
+        </div>
+        <div class="form-group">
+          <label>Sanatçı(lar) *</label>
+          <div class="tag-input-container" id="add-song-artist-container">
+            <div class="tag-input-wrapper" id="add-song-artist-tags">
+              <input type="text" class="tag-input-field" id="add-song-artist-input" placeholder="Sanatçı adı yazın..." autocomplete="off">
+            </div>
+            <div class="tag-dropdown" id="add-song-artist-dropdown"></div>
+          </div>
+          <p class="form-hint">Birden fazla sanatçı seçebilirsiniz. Listede yoksa önce "Sanatçılar" sekmesinden sanatçı ekleyin.</p>
+        </div>
+        <div class="form-group">
+          <label for="add-song-album">Albüm</label>
+          <input type="text" id="add-song-album" placeholder="Albüm adı (opsiyonel)">
+        </div>
+        <div class="form-group">
+          <label>Kapak Fotoğrafı</label>
+          <img id="add-song-cover-preview" class="cover-preview" style="display:none" alt="Kapak">
+          <div class="cover-upload-area">
+            <button type="button" class="btn-upload-cover" onclick="triggerAddSongCoverUpload()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17,8 12,3 7,8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Fotoğraf Yükle
+            </button>
+            <span id="add-song-cover-file-name" style="font-size:12px;color:var(--tm)"></span>
+          </div>
+          <input type="file" id="add-song-cover-file" accept="image/*" style="display:none" onchange="handleAddSongCoverFileChange(this)">
+        </div>
+        <div class="form-group">
+          <label for="add-song-cover-url">Kapak URL (veya üstten yükleyin)</label>
+          <input type="text" id="add-song-cover-url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label for="add-song-audio-url">Ses Dosyası URL *</label>
+          <input type="text" id="add-song-audio-url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeAddSongModal()">İptal</button>
+        <button class="btn-save" id="save-new-song-btn" onclick="saveNewSong()">Şarkıyı Ekle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EDIT SONG MODAL ===== -->
+  <div id="edit-song-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Şarkıyı Düzenle</h3>
+        <button class="modal-close" onclick="closeEditModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="edit-song-title">Şarkı Başlığı</label>
+          <input type="text" id="edit-song-title" placeholder="Şarkı adını girin">
+        </div>
+        <div class="form-group">
+          <label>Sanatçı(lar)</label>
+          <div class="tag-input-container" id="edit-song-artist-container">
+            <div class="tag-input-wrapper" id="edit-song-artist-tags">
+              <input type="text" class="tag-input-field" id="edit-song-artist-input" placeholder="Sanatçı adı yazın..." autocomplete="off">
+            </div>
+            <div class="tag-dropdown" id="edit-song-artist-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="edit-song-album">Albüm</label>
+          <input type="text" id="edit-song-album" placeholder="Albüm adı (opsiyonel)">
+        </div>
+        <div class="form-group">
+          <label>Kapak Fotoğrafı</label>
+          <img id="edit-cover-preview" class="cover-preview" style="display:none" alt="Kapak önizleme">
+          <div class="cover-upload-area">
+            <button type="button" class="btn-upload-cover" onclick="triggerCoverUpload()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17,8 12,3 7,8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Fotoğraf Yükle
+            </button>
+            <span id="cover-file-name" style="font-size:12px;color:var(--tm)"></span>
+          </div>
+          <input type="file" id="edit-cover-file" accept="image/*" style="display:none" onchange="handleCoverFileChange(this)">
+        </div>
+        <div class="form-group">
+          <label for="edit-song-cover-url">Kapak URL (veya üstten yükleyin)</label>
+          <input type="text" id="edit-song-cover-url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label for="edit-song-audio-url">Ses Dosyası URL</label>
+          <input type="text" id="edit-song-audio-url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeEditModal()">İptal</button>
+        <button class="btn-save" id="save-song-btn" onclick="saveSongEdits()">Değişiklikleri Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

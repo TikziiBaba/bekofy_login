@@ -1,0 +1,1023 @@
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg-primary:#000;--bg-secondary:#0a0a0a;--bg-tertiary:#121212;--bg-elevated:#181818;--bg-highlight:#1a1a1a;--bg-card:#181818;--bg-card-hover:#282828;--green:#1DB954;--green-h:#1ed760;--green-glow:rgba(29,185,84,.3);--tp:#fff;--ts:#b3b3b3;--tm:#535353;--border:rgba(255,255,255,.06);--sw:280px;--ph:90px;--th:36px;--font:'Inter',-apple-system,sans-serif;--r:8px;--rl:12px;--t:all .2s ease;--ts2:all .3s cubic-bezier(.4,0,.2,1)}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overflow:hidden;height:100vh;width:100vw;user-select:none}
+.titlebar{display:flex;align-items:center;justify-content:space-between;height:var(--th);background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);position:fixed;top:0;left:0;right:0;z-index:1000;-webkit-app-region:drag}
+.titlebar-drag{flex:1;display:flex;align-items:center;padding-left:16px}
+.titlebar-title{font-size:12px;font-weight:600;color:var(--ts);letter-spacing:.5px}
+.titlebar-controls{display:flex;-webkit-app-region:no-drag}
+.titlebar-btn{width:46px;height:var(--th);border:none;background:0 0;color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.titlebar-btn:hover{background:rgba(255,255,255,.1);color:var(--tp)}
+.titlebar-btn-close:hover{background:#e81123;color:#fff}
+.app-layout{display:flex;height:calc(100vh - var(--th) - var(--ph));margin-top:var(--th)}
+.sidebar{width:var(--sw);background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:16px 20px;border-bottom:1px solid var(--border)}
+.app-logo{display:flex;align-items:center;gap:10px}
+.logo-text{font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--green-h));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sidebar-nav{padding:12px 8px}
+.nav-item{display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:var(--r);color:var(--ts);text-decoration:none;font-size:14px;font-weight:500;transition:var(--t);margin-bottom:2px}
+.nav-item:hover,.nav-item.active{color:var(--tp);background:var(--bg-highlight)}
+.nav-item svg{width:22px;height:22px;flex-shrink:0}
+.sidebar-divider{height:1px;background:var(--border);margin:4px 16px}
+.playlist-section{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0 8px}
+.playlist-header{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px;font-size:13px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.5px}
+.btn-create-playlist{width:28px;height:28px;border:none;background:0 0;color:var(--ts);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.btn-create-playlist:hover{color:var(--tp);background:var(--bg-highlight)}
+.playlist-list{flex:1;overflow-y:auto;padding:0 4px}
+.playlist-item{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r);cursor:pointer;transition:var(--t)}
+.playlist-item:hover{background:var(--bg-highlight)}
+.playlist-item-cover{width:40px;height:40px;border-radius:4px;background:linear-gradient(135deg,#333,#555);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.playlist-item-cover svg{width:18px;height:18px;color:var(--ts)}
+.playlist-item-info{min-width:0}
+.playlist-item-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playlist-item-meta{font-size:12px;color:var(--tm)}
+.playlist-empty{padding:20px 12px;text-align:center}
+.playlist-empty p{font-size:14px;color:var(--ts);margin-bottom:4px}
+.playlist-empty small{font-size:12px;color:var(--tm)}
+.sidebar-user{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg-highlight);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.user-avatar svg{width:18px;height:18px;color:var(--ts)}
+.user-info{flex:1;min-width:0}
+.user-name{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-email{display:block;font-size:11px;color:var(--tm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-logout{width:32px;height:32px;border:none;background:0 0;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
+.btn-logout:hover{color:#f44;background:rgba(255,68,68,.1)}
+.btn-logout svg{width:18px;height:18px}
+.main-content{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg-tertiary);position:relative}
+.page{display:none;padding:32px;min-height:100%;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-header{margin-bottom:32px}
+.page-header h1{font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+.search-bar-wrapper{position:relative;max-width:480px}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--tm);pointer-events:none}
+.search-bar-wrapper input{width:100%;padding:14px 14px 14px 44px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:500px;color:var(--tp);font-size:14px;font-family:var(--font);transition:var(--t);outline:none}
+.search-bar-wrapper input::placeholder{color:var(--tm)}
+.search-bar-wrapper input:focus{border-color:var(--tp);background:var(--bg-card-hover)}
+.section{margin-bottom:40px}
+.section-title{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:20px}
+.songs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px}
+.song-card{background:var(--bg-card);border-radius:var(--rl);padding:16px;cursor:pointer;transition:var(--ts2);position:relative;overflow:hidden}
+.song-card:hover{background:var(--bg-card-hover);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.song-card-cover{width:100%;aspect-ratio:1;border-radius:var(--r);background:linear-gradient(135deg,#1a1a2e,#16213e);margin-bottom:14px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.song-card-cover img{width:100%;height:100%;object-fit:cover;border-radius:var(--r)}
+.song-card-cover .default-cover{width:48px;height:48px;color:var(--tm)}
+.song-card-play{position:absolute;bottom:8px;right:8px;width:44px;height:44px;border-radius:50%;background:var(--green);border:none;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(8px);transition:var(--ts2);box-shadow:0 8px 16px rgba(0,0,0,.4)}
+.song-card:hover .song-card-play{opacity:1;transform:translateY(0)}
+.song-card-play:hover{background:var(--green-h);transform:scale(1.05)}
+.song-card-play svg{width:20px;height:20px;margin-left:2px}
+.song-card-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.song-card-artist{font-size:13px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.artist-link{cursor:pointer;transition:color .2s ease;text-decoration:none}
+.artist-link:hover{color:var(--green);text-decoration:underline}
+.songs-list{width:100%}
+.song-list-header{display:grid;grid-template-columns:40px 1fr 1fr 80px;gap:16px;padding:0 16px 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.song-list-header span{font-size:12px;font-weight:500;color:var(--tm);text-transform:uppercase;letter-spacing:.5px}
+.song-list-item{display:grid;grid-template-columns:40px 1fr 1fr 80px;gap:16px;padding:8px 16px;border-radius:var(--r);cursor:pointer;transition:var(--t);align-items:center}
+.song-list-item:hover{background:var(--bg-card-hover)}
+.song-list-item.playing{background:rgba(29,185,84,.1)}
+.song-list-item.playing .song-list-title{color:var(--green)}
+.song-list-num{font-size:14px;color:var(--tm);text-align:center;width:40px}
+.song-list-info{display:flex;align-items:center;gap:12px;min-width:0}
+.song-list-cover{width:40px;height:40px;border-radius:4px;background:linear-gradient(135deg,#1a1a2e,#16213e);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.song-list-cover img{width:100%;height:100%;object-fit:cover}
+.song-list-cover svg{width:18px;height:18px;color:var(--tm)}
+.song-list-details{min-width:0}
+.song-list-title{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-list-subtitle{font-size:12px;color:var(--tm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-list-album{font-size:14px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-list-duration{font-size:14px;color:var(--ts);text-align:right}
+.loading-state{text-align:center;padding:60px 20px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state p{color:var(--ts);font-size:14px}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state p{color:var(--ts);font-size:16px;margin:16px 0}
+.btn-primary-small{padding:10px 24px;background:var(--green);border:none;border-radius:500px;color:#000;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn-primary-small:hover{background:var(--green-h);transform:scale(1.04)}
+.playlists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+.player-bar{position:fixed;bottom:0;left:0;right:0;height:var(--ph);background:linear-gradient(180deg,#181818,#0a0a0a);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:999}
+.player-left{display:flex;align-items:center;gap:14px;width:30%;min-width:180px}
+.now-playing-cover{width:56px;height:56px;border-radius:6px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.now-playing-cover img{width:100%;height:100%;object-fit:cover}
+.now-playing-info{min-width:0;flex:1}
+.now-playing-title{display:block;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.now-playing-artist{display:block;font-size:11px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-like{width:32px;height:32px;border:none;background:0 0;color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
+.btn-like:hover{color:var(--tp)}
+.btn-like.liked{color:var(--green)}
+.btn-like.liked svg{fill:var(--green)}
+.btn-like svg{width:18px;height:18px}
+.player-center{flex:1;max-width:720px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:6px}
+.player-controls{display:flex;align-items:center;gap:8px}
+
+/* Modern Player Buttons */
+.btn-ctrl-sm{width:32px;height:32px;border:none;background:0 0;color:var(--tm);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .2s ease}
+.btn-ctrl-sm:hover{color:var(--tp);transform:scale(1.1)}
+.btn-ctrl-sm.active{color:var(--green)}
+.btn-ctrl-sm.active:hover{color:var(--green-h)}
+.btn-ctrl-sm svg{width:16px;height:16px}
+
+.btn-ctrl-md{width:36px;height:36px;border:none;background:0 0;color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .15s ease}
+.btn-ctrl-md:hover{color:var(--tp);transform:scale(1.1)}
+.btn-ctrl-md svg{width:16px;height:16px}
+
+.btn-play-main{width:40px;height:40px;border:none;background:var(--tp);color:var(--bg-primary);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s ease;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.btn-play-main:hover{transform:scale(1.08);background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.btn-play-main:active{transform:scale(.96)}
+.btn-play-main svg{width:16px;height:16px;margin-left:1px}
+
+.progress-bar-wrapper{display:flex;align-items:center;gap:10px;width:100%}
+.time-current,.time-total{font-size:11px;color:var(--tm);min-width:36px;text-align:center;font-variant-numeric:tabular-nums}
+.progress-bar{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;position:relative;cursor:pointer;transition:height .1s}
+.progress-bar:hover{height:6px}
+.progress-bar-fill{height:100%;background:var(--tp);border-radius:2px;width:0;transition:background .1s;position:relative}
+.progress-bar:hover .progress-bar-fill{background:var(--green)}
+.progress-bar-knob{width:12px;height:12px;background:var(--tp);border-radius:50%;position:absolute;top:50%;left:0;transform:translate(-50%,-50%);opacity:0;transition:opacity .1s;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.progress-bar:hover .progress-bar-knob{opacity:1}
+.player-right{display:flex;align-items:center;gap:8px;width:30%;justify-content:flex-end}
+.volume-slider-wrapper{width:100px}
+.volume-slider{height:4px;background:rgba(255,255,255,.1);border-radius:2px;position:relative;cursor:pointer}
+.volume-slider:hover{height:6px}
+.volume-slider-fill{height:100%;background:var(--tp);border-radius:2px;transition:background .1s}
+.volume-slider:hover .volume-slider-fill{background:var(--green)}
+.volume-slider-knob{width:12px;height:12px;background:var(--tp);border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity .1s}
+.volume-slider:hover .volume-slider-knob{opacity:1}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;animation:fadeIn .2s ease}
+.modal{background:var(--bg-elevated);border-radius:var(--rl);padding:32px;width:100%;max-width:400px;box-shadow:0 16px 64px rgba(0,0,0,.5)}
+.modal h3{font-size:22px;font-weight:700;margin-bottom:20px}
+.modal input{width:100%;padding:12px 16px;background:var(--bg-card-hover);border:2px solid var(--border);border-radius:var(--r);color:var(--tp);font-size:14px;font-family:var(--font);outline:none;transition:var(--t);margin-bottom:20px}
+.modal input:focus{border-color:var(--green)}
+.modal input::placeholder{color:var(--tm)}
+.modal-actions{display:flex;justify-content:flex-end;gap:12px}
+.btn-cancel{padding:10px 20px;background:0 0;border:1px solid var(--border);border-radius:500px;color:var(--tp);font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn-cancel:hover{background:var(--bg-card-hover);border-color:var(--ts)}
+.toast-container{position:fixed;bottom:calc(var(--ph) + 16px);right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--r);font-size:14px;font-weight:500;color:#fff;backdrop-filter:blur(10px);animation:toastIn .3s ease-out,toastOut .3s ease-in 2.7s forwards;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.error{background:rgba(255,68,68,.9)}
+.toast.success{background:rgba(29,185,84,.9)}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{from{opacity:1}to{opacity:0}}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:0 0}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* Context Menu */
+.context-menu{position:fixed;z-index:3000;background:#282828;border-radius:8px;padding:4px 0;min-width:220px;box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);animation:ctxIn .15s ease}
+@keyframes ctxIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.context-menu-item{display:flex;align-items:center;gap:12px;padding:10px 14px;color:var(--ts);font-size:13px;font-weight:500;cursor:pointer;transition:all .1s;position:relative}
+.context-menu-item:hover{background:rgba(255,255,255,.1);color:var(--tp)}
+.context-menu-item svg{width:16px;height:16px;flex-shrink:0}
+.context-menu-item .chevron{margin-left:auto;width:14px;height:14px;opacity:.5}
+.context-menu-divider{height:1px;background:rgba(255,255,255,.08);margin:4px 0}
+.context-menu-sub{position:relative}
+.context-submenu{position:absolute;left:calc(100% - 4px);top:0;background:#282828;border-radius:8px;padding:4px 0;min-width:200px;box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);animation:ctxIn .15s ease;padding-left:4px}
+.context-submenu-divider{height:1px;background:rgba(255,255,255,.08);margin:4px 0}
+.context-submenu-list .context-menu-item{font-size:13px}
+
+/* ===== Playlist Detail Page ===== */
+.playlist-detail-banner{position:relative;padding:48px 32px 32px;min-height:240px;display:flex;align-items:flex-end;overflow:hidden}
+.playlist-banner-gradient{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#1a3a2a 0%,#0d2818 40%,var(--bg-tertiary) 100%);z-index:0}
+.playlist-banner-content{display:flex;align-items:flex-end;gap:24px;position:relative;z-index:1;width:100%}
+.playlist-banner-cover{width:180px;height:180px;border-radius:8px;background:linear-gradient(135deg,#1a2a1a,#2a4a2a);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 16px 48px rgba(0,0,0,.5);overflow:hidden}
+.playlist-banner-cover img{width:100%;height:100%;object-fit:cover}
+.playlist-banner-info{flex:1;min-width:0}
+.playlist-banner-label{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--tp);margin-bottom:8px;display:block}
+.playlist-banner-title{font-size:48px;font-weight:900;letter-spacing:-2px;margin-bottom:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playlist-banner-meta{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ts);flex-wrap:wrap}
+.playlist-banner-avatar{width:24px;height:24px;border-radius:50%;background:var(--bg-highlight);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.playlist-banner-avatar img{width:100%;height:100%;object-fit:cover}
+.playlist-banner-dot{color:var(--tm);font-size:8px}
+.playlist-banner-user{font-weight:600;color:var(--tp)}
+
+/* Playlist Actions */
+.playlist-detail-actions{display:flex;align-items:center;gap:16px;padding:24px 32px}
+.btn-play-large{width:56px;height:56px;border-radius:50%;background:var(--green);border:none;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--ts2);box-shadow:0 8px 24px rgba(29,185,84,.3)}
+.btn-play-large:hover{background:var(--green-h);transform:scale(1.06);box-shadow:0 12px 32px rgba(29,185,84,.4)}
+.btn-play-large svg{width:24px;height:24px;margin-left:2px}
+.btn-action{width:40px;height:40px;border-radius:50%;background:0 0;border:none;color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.btn-action:hover{color:var(--tp);transform:scale(1.1)}
+.btn-action svg{width:22px;height:22px}
+.btn-action.btn-danger:hover{color:#f44}
+
+/* Playlist Songs Container */
+.playlist-detail-songs{padding:0 32px 32px}
+.playlist-detail-songs .song-list-header{display:grid;grid-template-columns:40px 1fr 1fr 80px;gap:16px;padding:0 16px 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.playlist-detail-songs .song-list-header span{font-size:12px;font-weight:500;color:var(--tm);text-transform:uppercase;letter-spacing:.5px}
+.playlist-detail-songs .song-list-item{display:grid;grid-template-columns:40px 1fr 1fr 80px;gap:16px;padding:8px 16px;border-radius:var(--r);cursor:pointer;transition:var(--t);align-items:center}
+.playlist-detail-songs .song-list-item:hover{background:var(--bg-card-hover)}
+
+/* Confirm Delete Modal */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:2000;animation:fadeIn .2s ease}
+.confirm-dialog{background:var(--bg-elevated);border-radius:var(--rl);padding:32px;width:100%;max-width:380px;box-shadow:0 16px 64px rgba(0,0,0,.5);text-align:center}
+.confirm-dialog h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.confirm-dialog p{font-size:14px;color:var(--ts);margin-bottom:24px;line-height:1.5}
+.confirm-dialog .modal-actions{display:flex;justify-content:center;gap:12px}
+.confirm-dialog .btn-danger-solid{padding:10px 24px;background:#f44;border:none;border-radius:500px;color:#fff;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.confirm-dialog .btn-danger-solid:hover{background:#ff6666;transform:scale(1.04)}
+
+/* ===== Admin Panel ===== */
+.nav-admin{color:var(--green) !important;opacity:.9}
+.nav-admin.active{background:rgba(29,185,84,.12) !important}
+
+/* Role Badge */
+.role-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;vertical-align:middle;margin-left:4px}
+.role-badge.admin{background:rgba(255,193,7,.2);color:#ffc107}
+.role-badge.artist{background:rgba(156,39,176,.2);color:#ce93d8}
+
+/* Dashboard Stats */
+.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:8px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:24px;display:flex;align-items:center;gap:16px;transition:var(--ts2)}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);border-color:rgba(255,255,255,.1)}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon svg{width:24px;height:24px;color:#fff}
+.stat-users{background:linear-gradient(135deg,#667eea,#764ba2)}
+.stat-songs{background:linear-gradient(135deg,#1DB954,#1ed760)}
+.stat-playlists{background:linear-gradient(135deg,#f093fb,#f5576c)}
+.stat-info{display:flex;flex-direction:column}
+.stat-number{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1}
+.stat-label{font-size:13px;color:var(--ts);margin-top:4px}
+
+/* Admin Search */
+.admin-search-bar{margin-bottom:16px}
+.admin-search-bar input{width:100%;max-width:400px;padding:10px 16px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);color:var(--tp);font-size:14px;font-family:var(--font);outline:none;transition:var(--t)}
+.admin-search-bar input:focus{border-color:var(--green)}
+.admin-search-bar input::placeholder{color:var(--tm)}
+
+/* Admin Table */
+.admin-table-wrapper{overflow-x:auto}
+.admin-table{width:100%;border-collapse:collapse}
+.admin-table th{text-align:left;font-size:12px;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.admin-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+.admin-table tr:hover td{background:rgba(255,255,255,.03)}
+.admin-table .user-row-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg-highlight);display:inline-flex;align-items:center;justify-content:center;margin-right:10px;vertical-align:middle;overflow:hidden}
+.admin-table .user-row-avatar img{width:100%;height:100%;object-fit:cover}
+.admin-table .user-row-name{font-weight:600}
+.admin-table .user-row-email{color:var(--ts);font-size:13px}
+.admin-table .user-row-date{color:var(--tm);font-size:13px}
+
+/* Role Select */
+.role-select{padding:5px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--tp);font-size:13px;font-family:var(--font);cursor:pointer;outline:none;transition:var(--t);-webkit-appearance:none;appearance:none;min-width:100px}
+.role-select:focus{border-color:var(--green)}
+.role-select option{background:#1a1a1a;color:#fff}
+
+/* Admin Song Form */
+.admin-add-song{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:24px;margin-bottom:8px}
+.admin-add-song h3{font-size:16px;font-weight:700;margin-bottom:16px}
+.admin-form{display:flex;flex-direction:column;gap:12px}
+.admin-form-row{display:flex;gap:12px}
+.admin-form-row input{flex:1;padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);color:var(--tp);font-size:14px;font-family:var(--font);outline:none;transition:var(--t)}
+.admin-form-row input:focus{border-color:var(--green)}
+.admin-form-row input::placeholder{color:var(--tm)}
+.admin-divider{height:1px;background:var(--border);margin:24px 0}
+
+/* Admin Songs List */
+.admin-songs-list{display:flex;flex-direction:column;gap:2px}
+.admin-song-row{display:grid;grid-template-columns:40px 1fr 1fr 80px 40px;gap:12px;align-items:center;padding:10px 16px;border-radius:var(--r);transition:var(--t)}
+.admin-song-row:hover{background:var(--bg-card-hover)}
+.admin-song-row .song-num{font-size:14px;color:var(--tm);text-align:center}
+.admin-song-row .song-title-col{font-size:14px;font-weight:500}
+.admin-song-row .song-artist-col{font-size:14px;color:var(--ts)}
+.admin-song-row .song-duration-col{font-size:13px;color:var(--tm);text-align:right}
+.btn-delete-song{width:32px;height:32px;border:none;background:0 0;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.btn-delete-song:hover{color:#f44;background:rgba(255,68,68,.1)}
+.btn-delete-song svg{width:16px;height:16px}
+
+/* ===== Extra Role Badges ===== */
+.role-badge.premium{background:rgba(255,152,0,.2);color:#ffb74d}
+.role-badge.yetkili{background:rgba(0,150,255,.2);color:#64b5f6}
+
+/* Artist Upload Nav */
+.nav-artist-upload{color:#ce93d8 !important;opacity:.9}
+
+/* ===== Profile Page ===== */
+.profile-page-layout{display:flex;gap:24px;flex-wrap:wrap}
+.profile-card{flex:1;min-width:320px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:32px;display:flex;gap:32px}
+.profile-avatar-section{display:flex;flex-direction:column;align-items:center;gap:12px;flex-shrink:0}
+.profile-avatar-large{width:120px;height:120px;border-radius:50%;background:var(--bg-highlight);display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid var(--border)}
+.profile-avatar-large img{width:100%;height:100%;object-fit:cover}
+.btn-change-avatar{padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:500px;color:var(--ts);font-size:12px;font-family:var(--font);cursor:pointer;transition:var(--t);white-space:nowrap}
+.btn-change-avatar:hover{border-color:var(--green);color:var(--green)}
+
+.profile-info-section{flex:1;display:flex;flex-direction:column;gap:16px}
+.profile-field{display:flex;flex-direction:column;gap:4px}
+.profile-field label{font-size:12px;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:.5px}
+.profile-field input,.profile-field textarea{padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);color:var(--tp);font-size:14px;font-family:var(--font);outline:none;transition:var(--t);resize:vertical}
+.profile-field input:focus,.profile-field textarea:focus{border-color:var(--green)}
+.profile-field input:disabled{opacity:.5;cursor:not-allowed}
+
+.profile-role-display{padding:6px 12px;background:var(--bg-elevated);border-radius:var(--r);font-size:14px;font-weight:600;display:inline-block}
+.profile-date{font-size:14px;color:var(--ts)}
+
+.profile-stats-section{display:flex;flex-direction:column;gap:12px;min-width:160px}
+.profile-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;text-align:center;transition:var(--ts2)}
+.profile-stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.profile-stat-num{display:block;font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--green)}
+.profile-stat-label{font-size:13px;color:var(--ts);margin-top:4px;display:block}
+
+/* ===== Pending Songs (Admin) ===== */
+.pending-song-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:8px;transition:var(--t)}
+.pending-song-card:hover{border-color:rgba(255,255,255,.1)}
+.pending-song-info{flex:1;min-width:0}
+.pending-song-title{font-size:14px;font-weight:600}
+.pending-song-artist{font-size:13px;color:var(--ts)}
+.pending-song-meta{font-size:12px;color:var(--tm);margin-top:2px}
+.pending-actions{display:flex;gap:8px}
+.btn-approve{padding:6px 14px;background:var(--green);border:none;border-radius:500px;color:#000;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn-approve:hover{background:var(--green-h);transform:scale(1.04)}
+.btn-reject{padding:6px 14px;background:transparent;border:1px solid #f44;border-radius:500px;color:#f44;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn-reject:hover{background:rgba(255,68,68,.1)}
+
+/* Status badges */
+.status-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.status-badge.pending{background:rgba(255,193,7,.15);color:#ffc107}
+.status-badge.approved{background:rgba(29,185,84,.15);color:#1DB954}
+.status-badge.rejected{background:rgba(255,68,68,.15);color:#f44}
+
+/* ===== Modal Textarea ===== */
+.modal textarea{width:100%;padding:12px 16px;background:var(--bg-card-hover);border:2px solid var(--border);border-radius:var(--r);color:var(--tp);font-size:14px;font-family:var(--font);outline:none;transition:var(--t);margin-bottom:16px;resize:vertical;min-height:48px}
+.modal textarea:focus{border-color:var(--green)}
+.modal textarea::placeholder{color:var(--tm)}
+
+/* ===== Toggle Switch ===== */
+.modal-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px}
+.modal-toggle-label{font-size:14px;font-weight:500;color:var(--ts)}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg-card-hover);border:1px solid var(--border);transition:var(--t);border-radius:24px}
+.toggle-slider::before{content:'';position:absolute;height:18px;width:18px;left:2px;bottom:2px;background:var(--ts);transition:var(--t);border-radius:50%}
+.toggle-switch input:checked + .toggle-slider{background:var(--green);border-color:var(--green)}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);background:#fff}
+.toggle-switch input:focus + .toggle-slider{box-shadow:0 0 0 2px var(--green-glow)}
+
+/* ===== Cover Upload ===== */
+.modal-cover-upload{margin-bottom:16px}
+.cover-upload-label{display:flex;align-items:center;gap:10px;padding:16px;background:var(--bg-card-hover);border:2px dashed var(--border);border-radius:var(--r);cursor:pointer;transition:var(--t);color:var(--ts);font-size:14px}
+.cover-upload-label:hover{border-color:var(--green);color:var(--green)}
+.cover-upload-label svg{flex-shrink:0}
+.cover-preview{position:relative;width:120px;height:120px;border-radius:var(--r);overflow:hidden;border:2px solid var(--border);cursor:pointer}
+.cover-preview img{width:100%;height:100%;object-fit:cover;transition:var(--t)}
+.cover-preview::after{content:'Değiştir';position:absolute;inset:0;background:rgba(0,0,0,0.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;opacity:0;transition:var(--t);pointer-events:none}
+.cover-preview:hover::after{opacity:1}
+.cover-remove-btn{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);z-index:2}
+.cover-remove-btn:hover{background:rgba(255,68,68,.8)}
+
+/* ===== Playlist Public Badge ===== */
+.playlist-banner-label-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.playlist-public-badge{font-size:12px;font-weight:600;color:var(--green);background:rgba(29,185,84,.15);padding:3px 10px;border-radius:500px;letter-spacing:.3px}
+.playlist-banner-description{font-size:14px;color:var(--ts);margin-bottom:12px;line-height:1.5;max-width:600px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* Playlist public indicators */
+.pl-public-icon{font-size:11px;margin-left:4px;vertical-align:middle}
+.playlist-card-public{font-size:11px;color:var(--green);margin-left:4px}
+
+/* ===== Pending Song Preview Button ===== */
+.pending-song-cover{width:48px;height:48px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.pending-song-cover-default{background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center}
+.pending-song-cover-default svg{color:var(--tm)}
+.btn-preview-song{width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);color:var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--ts2);flex-shrink:0}
+.btn-preview-song:hover{background:var(--green);color:#000;border-color:var(--green);transform:scale(1.1);box-shadow:0 4px 16px var(--green-glow)}
+.btn-preview-song svg{margin-left:1px}
+
+/* ===== Verified Tick ===== */
+.verified-tick{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:linear-gradient(135deg,#1d9bf0,#1a8cd8);color:#fff;border-radius:50%;font-size:10px;font-weight:800;margin-left:4px;vertical-align:middle;line-height:1;flex-shrink:0}
+
+/* ===== Sidebar Profile Click ===== */
+.sidebar-user .user-avatar:hover{border:2px solid var(--green);transition:var(--t)}
+.sidebar-user .user-info:hover .user-name{color:var(--green);transition:var(--t)}
+
+/* ===== Reserved Names (Admin) ===== */
+.reserved-names-grid{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+.reserved-name-tag{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:500px;font-size:13px;font-weight:500;transition:var(--t)}
+.reserved-name-tag:hover{border-color:rgba(255,255,255,.1)}
+.reserved-name-remove{width:20px;height:20px;border:none;background:0 0;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;transition:var(--t)}
+.reserved-name-remove:hover{color:#f44;background:rgba(255,68,68,.1)}
+
+/* ===== Admin Ban/Delete Buttons ===== */
+.btn-admin-ban{width:28px;height:28px;border:none;background:0 0;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.btn-admin-ban:hover{color:#ff9800;background:rgba(255,152,0,.15)}
+.btn-admin-delete{width:28px;height:28px;border:none;background:0 0;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.btn-admin-delete:hover{color:#f44;background:rgba(255,68,68,.15)}
+
+/* ===== Remove Avatar Button ===== */
+.btn-remove-avatar{padding:6px 14px;background:transparent;border:1px solid #f44;border-radius:500px;color:#f44;font-size:12px;font-family:var(--font);cursor:pointer;transition:var(--t);white-space:nowrap;margin-top:4px}
+.btn-remove-avatar:hover{background:rgba(255,68,68,.1);border-color:#ff6666;color:#ff6666}
+
+/* ===== Public User Profile ===== */
+.user-profile-banner{position:relative;height:300px;display:flex;align-items:flex-end;padding:32px;overflow:hidden;background:#1a1a1a}
+.user-profile-gradient{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(transparent 0,rgba(18,18,18,1) 100%);z-index:1}
+.user-profile-content{position:relative;z-index:2;display:flex;align-items:flex-end;gap:24px;width:100%}
+.user-profile-avatar{width:160px;height:160px;border-radius:50%;background:var(--bg-elevated);box-shadow:0 8px 32px rgba(0,0,0,.6);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.user-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.user-profile-info{display:flex;flex-direction:column;gap:8px}
+.user-profile-label{font-size:12px;font-weight:700;letter-spacing:1px;color:var(--ts)}
+.user-profile-title{font-size:48px;font-weight:900;letter-spacing:-1px;color:#fff;margin:0;line-height:1;display:flex;align-items:center}
+.user-profile-stats{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ts)}
+.user-profile-actions{display:flex;align-items:center;gap:16px;padding:24px 32px;background:var(--bg-main)}
+
+/* Improve Search User Cards */
+.user-search-card{cursor:pointer;transition:var(--t)}
+.user-search-card:hover{background:var(--bg-elevated) !important;transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+/* ===== Now Playing Detail Overlay ===== */
+.now-playing-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:1500;
+  background:linear-gradient(180deg,#0a0a0a 0%,#121212 100%);
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.32,.72,0,1);
+  will-change:transform;
+}
+.now-playing-overlay.open{
+  transform:translateY(0);
+}
+
+/* Header */
+.now-playing-overlay-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;height:52px;flex-shrink:0;
+  background:rgba(10,10,10,.8);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.04);
+  -webkit-app-region:drag;
+}
+.np-close-btn,.np-more-btn{
+  width:36px;height:36px;border:none;background:transparent;
+  color:var(--ts);cursor:pointer;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:var(--t);-webkit-app-region:no-drag;
+}
+.np-close-btn:hover,.np-more-btn:hover{color:var(--tp);background:rgba(255,255,255,.08)}
+.np-header-title{
+  font-size:12px;font-weight:600;color:var(--ts);
+  letter-spacing:.5px;text-transform:uppercase;
+}
+
+/* Scrollable Content */
+.now-playing-overlay-scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:0;scroll-behavior:smooth;
+}
+.now-playing-overlay-scroll::-webkit-scrollbar{width:6px}
+.now-playing-overlay-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+/* Cover Art Section */
+.np-cover-section{
+  display:flex;align-items:center;justify-content:center;
+  padding:32px 40px 24px;
+  position:relative;
+}
+.np-cover-art{
+  width:min(400px, calc(100vw - 120px));
+  aspect-ratio:1;
+  border-radius:12px;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 100px rgba(29,185,84,.08);
+  position:relative;
+  transition:box-shadow .5s;
+}
+.np-cover-art img{
+  width:100%;height:100%;object-fit:cover;
+  animation:npCoverFadeIn .5s ease;
+}
+@keyframes npCoverFadeIn{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:scale(1)}}
+
+/* Ambient glow behind cover */
+.np-cover-art::before{
+  content:'';position:absolute;
+  top:-30%;left:-30%;right:-30%;bottom:-30%;
+  background:inherit;filter:blur(60px);opacity:.35;
+  z-index:-1;border-radius:50%;
+  pointer-events:none;
+}
+
+/* Song Info */
+.np-song-info{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:20px 40px 8px;gap:16px;
+}
+.np-song-details{flex:1;min-width:0;}
+.np-song-title{
+  font-size:24px;font-weight:800;letter-spacing:-.5px;
+  color:var(--tp);margin:0 0 6px;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.np-song-artist{
+  font-size:15px;color:var(--ts);font-weight:500;margin:0;
+  cursor:default;
+}
+.np-like-btn{
+  width:40px;height:40px;flex-shrink:0;
+  border:none;background:transparent;
+  color:var(--ts);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;transition:var(--t);
+}
+.np-like-btn:hover{color:var(--tp);transform:scale(1.15)}
+.np-like-btn.liked{color:var(--green)}
+.np-like-btn.liked svg{fill:var(--green)}
+.np-like-btn svg{width:24px;height:24px}
+
+/* Controls */
+.np-controls{padding:12px 40px 24px}
+.np-progress-wrapper{margin-bottom:20px}
+.np-progress-bar{
+  width:100%;height:4px;
+  background:rgba(255,255,255,.1);
+  border-radius:2px;position:relative;cursor:pointer;
+  transition:height .15s;
+}
+.np-progress-bar:hover{height:6px}
+.np-progress-fill{
+  height:100%;background:var(--tp);border-radius:2px;width:0;
+  transition:background .15s;position:relative;
+}
+.np-progress-bar:hover .np-progress-fill{background:var(--green)}
+.np-progress-knob{
+  width:14px;height:14px;background:var(--tp);border-radius:50%;
+  position:absolute;top:50%;left:0;
+  transform:translate(-50%,-50%);
+  opacity:0;transition:opacity .15s;
+  box-shadow:0 2px 6px rgba(0,0,0,.4);
+}
+.np-progress-bar:hover .np-progress-knob{opacity:1}
+.np-time-row{
+  display:flex;justify-content:space-between;
+  margin-top:8px;
+}
+.np-time{font-size:11px;color:var(--tm);font-variant-numeric:tabular-nums}
+
+.np-control-buttons{
+  display:flex;align-items:center;justify-content:center;
+  gap:16px;
+}
+.np-ctrl-btn{
+  width:40px;height:40px;border:none;background:transparent;
+  color:var(--ts);cursor:pointer;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s ease;
+}
+.np-ctrl-btn:hover{color:var(--tp);transform:scale(1.12)}
+.np-ctrl-btn.active{color:var(--green)}
+.np-ctrl-btn svg{width:22px;height:22px}
+.np-ctrl-btn.np-ctrl-lg svg{width:28px;height:28px}
+
+.np-play-btn{
+  width:64px;height:64px;border:none;
+  background:var(--tp);color:var(--bg-primary);
+  cursor:pointer;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.np-play-btn:hover{transform:scale(1.06);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.np-play-btn:active{transform:scale(.95)}
+.np-play-btn svg{width:28px;height:28px}
+
+/* Divider */
+.np-divider{
+  height:1px;margin:8px 40px 24px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+}
+
+/* Artist Section */
+.np-artist-section{
+  margin:0 40px 24px;
+  background:rgba(255,255,255,.04);
+  border-radius:16px;padding:24px;
+  border:1px solid rgba(255,255,255,.06);
+  transition:var(--t);
+}
+.np-artist-section:hover{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(255,255,255,.08);
+}
+.np-artist-header{
+  display:flex;align-items:center;gap:16px;margin-bottom:16px;
+}
+.np-artist-avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--bg-highlight);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:hidden;
+  border:2px solid rgba(255,255,255,.08);
+}
+.np-artist-avatar img{width:100%;height:100%;object-fit:cover}
+.np-artist-info{flex:1;min-width:0}
+.np-artist-label{
+  font-size:11px;font-weight:600;color:var(--tm);
+  text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;
+}
+.np-artist-name{
+  font-size:22px;font-weight:800;color:var(--tp);
+  margin:0;letter-spacing:-.3px;
+  display:flex;align-items:center;gap:6px;
+}
+.np-artist-bio{
+  font-size:14px;color:var(--ts);line-height:1.6;
+  margin:0;
+  overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+}
+.np-artist-stats{
+  display:flex;gap:16px;margin-top:12px;
+}
+.np-artist-stat{
+  font-size:13px;color:var(--tm);font-weight:500;
+}
+
+/* More Songs Section */
+.np-more-songs{
+  padding:0 40px 24px;
+}
+.np-section-title{
+  font-size:18px;font-weight:700;color:var(--tp);
+  margin-bottom:16px;letter-spacing:-.3px;
+}
+.np-songs-list{display:flex;flex-direction:column;gap:2px}
+.np-song-item{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 14px;border-radius:8px;
+  cursor:pointer;transition:var(--t);
+}
+.np-song-item:hover{background:rgba(255,255,255,.06)}
+.np-song-item-cover{
+  width:44px;height:44px;border-radius:6px;
+  background:var(--bg-highlight);flex-shrink:0;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.np-song-item-cover img{width:100%;height:100%;object-fit:cover}
+.np-song-item-cover svg{width:20px;height:20px;color:var(--tm)}
+.np-song-item-info{flex:1;min-width:0}
+.np-song-item-title{
+  font-size:14px;font-weight:500;color:var(--tp);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.np-song-item-album{
+  font-size:12px;color:var(--tm);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.np-song-item-duration{
+  font-size:13px;color:var(--tm);flex-shrink:0;
+  font-variant-numeric:tabular-nums;
+}
+
+/* Credits Section */
+.np-credits{padding:0 40px 24px}
+.np-credits-list{display:flex;flex-direction:column;gap:8px}
+.np-credit-item{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;
+  background:rgba(255,255,255,.03);
+  border-radius:12px;border:1px solid rgba(255,255,255,.04);
+  transition:var(--t);
+}
+.np-credit-item:hover{background:rgba(255,255,255,.05)}
+.np-credit-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--bg-highlight);flex-shrink:0;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.np-credit-avatar img{width:100%;height:100%;object-fit:cover}
+.np-credit-avatar svg{width:20px;height:20px;color:var(--tm)}
+.np-credit-info{flex:1;min-width:0}
+.np-credit-name{
+  font-size:14px;font-weight:600;color:var(--tp);
+  display:flex;align-items:center;gap:6px;
+}
+.np-credit-role{font-size:12px;color:var(--tm);margin-top:2px}
+
+/* Bottom Spacer */
+.np-bottom-spacer{height:120px}
+
+/* Make player bar clickable elements have pointer cursor */
+.player-left .now-playing-cover,.player-left .now-playing-info{cursor:pointer}
+.player-left .now-playing-cover:hover{opacity:.85;transition:opacity .2s}
+.player-left .now-playing-info:hover .now-playing-title{color:var(--green);transition:color .2s}
+
+/* ===== Search Discovery Page ===== */
+.search-discovery-section{margin-bottom:32px}
+.search-discovery-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.search-discovery-header .section-title{margin-bottom:0}
+.btn-clear-history{padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:500px;color:var(--ts);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--t)}
+.btn-clear-history:hover{border-color:var(--green);color:var(--green);background:rgba(29,185,84,.08)}
+
+/* Search History */
+.search-history-list{display:flex;flex-direction:column;gap:4px}
+.search-history-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:var(--r);cursor:pointer;transition:var(--t)}
+.search-history-item:hover{background:var(--bg-card-hover)}
+.search-history-text{flex:1;font-size:14px;font-weight:500;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-history-item:hover .search-history-text{color:var(--tp)}
+.search-history-remove{width:28px;height:28px;border:none;background:transparent;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0;opacity:0}
+.search-history-item:hover .search-history-remove{opacity:1}
+.search-history-remove:hover{color:var(--tp);background:rgba(255,255,255,.1)}
+
+/* Discovery Artists Grid */
+.discovery-artists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
+.discovery-artist-card{background:var(--bg-card);border-radius:var(--rl);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:var(--ts2);border:1px solid transparent}
+.discovery-artist-card:hover{background:var(--bg-card-hover);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.4);border-color:var(--border)}
+.discovery-artist-avatar{width:80px;height:80px;border-radius:50%;background:var(--bg-highlight);margin-bottom:12px;overflow:hidden;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:var(--ts2)}
+.discovery-artist-card:hover .discovery-artist-avatar{box-shadow:0 8px 32px rgba(29,185,84,.2)}
+.discovery-artist-avatar img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.discovery-artist-avatar-fallback{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff}
+.discovery-artist-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:flex;align-items:center;gap:3px}
+.discovery-artist-role{font-size:12px;color:var(--tm);margin-top:2px}
+
+/* Discovery Songs List (Trending) */
+.discovery-songs-list{display:flex;flex-direction:column;gap:2px}
+.discovery-song-item{display:flex;align-items:center;gap:14px;padding:10px 16px;border-radius:var(--r);cursor:pointer;transition:var(--t)}
+.discovery-song-item:hover{background:var(--bg-card-hover)}
+.discovery-song-rank{width:24px;font-size:16px;font-weight:700;color:var(--tm);text-align:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.discovery-song-item:hover .discovery-song-rank{color:var(--tp)}
+.discovery-song-cover{width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#1a1a2e,#16213e);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.discovery-song-cover img{width:100%;height:100%;object-fit:cover}
+.discovery-song-info{flex:1;min-width:0}
+.discovery-song-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tp)}
+.discovery-song-artist{font-size:13px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}
+
+/* Discovery Category Cards */
+.discovery-categories-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.discovery-category-card{padding:20px;border-radius:var(--rl);border:1px solid var(--border);cursor:pointer;transition:var(--ts2);display:flex;align-items:center;gap:12px}
+.discovery-category-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.discovery-category-emoji{font-size:28px}
+.discovery-category-label{font-size:15px;font-weight:600}
+
+/* ===== Lyrics Section ===== */
+.np-lyrics-section{
+  margin:0 40px 24px;
+}
+.np-lyrics-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.np-lyrics-header .np-section-title{
+  display:flex;align-items:center;margin-bottom:0;
+}
+.np-lyrics-toggle{
+  width:32px;height:32px;border:none;background:rgba(255,255,255,.06);
+  color:var(--ts);cursor:pointer;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s ease;
+}
+.np-lyrics-toggle:hover{color:var(--tp);background:rgba(255,255,255,.1)}
+.np-lyrics-toggle.collapsed svg{transform:rotate(-90deg)}
+.np-lyrics-toggle svg{transition:transform .3s ease}
+
+.np-lyrics-container{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  max-height:400px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scroll-behavior:smooth;
+  position:relative;
+  transition:max-height .4s ease, opacity .3s ease;
+}
+.np-lyrics-container.collapsed{
+  max-height:0;overflow:hidden;opacity:0;
+  border:none;margin:0;
+}
+.np-lyrics-container::-webkit-scrollbar{width:4px}
+.np-lyrics-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
+
+/* Loading State */
+.np-lyrics-loading{
+  display:flex;align-items:center;justify-content:center;
+  gap:12px;padding:32px;color:var(--ts);font-size:13px;
+}
+.np-lyrics-loading .spinner{
+  border-color:rgba(255,255,255,.1);border-top-color:var(--green);
+}
+
+/* Not Found */
+.np-lyrics-not-found{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px;gap:8px;
+}
+.np-lyrics-not-found p{
+  font-size:14px;color:var(--tm);margin:0;
+}
+
+/* Lyrics Content */
+.np-lyrics-content{
+  padding:24px 28px;
+}
+
+/* Plain text lyrics */
+.np-lyrics-plain{
+  font-size:16px;line-height:2;color:var(--ts);
+  white-space:pre-wrap;word-wrap:break-word;
+  font-weight:500;
+}
+
+/* Synced lyrics */
+.np-lyrics-synced{
+  display:flex;flex-direction:column;gap:2px;
+  padding:20px 0;
+}
+.np-lyric-line{
+  font-size:18px;line-height:1.8;
+  font-weight:600;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  user-select:text;
+  display:flex;flex-wrap:wrap;gap:0 7px;
+  transition:opacity .3s ease;
+}
+.np-lyric-line:hover{
+  background:rgba(255,255,255,.03);
+}
+.np-lyric-line.active{
+  /* no special styling, words handle it */
+}
+.np-lyric-line.past{
+  opacity:.7;
+}
+.np-lyric-line.instrumental{
+  font-style:italic;
+  color:rgba(255,255,255,.15);
+  font-size:14px;
+}
+
+/* Word-by-word highlight */
+.np-lyric-word{
+  display:inline-block;
+  color:rgba(255,255,255,.25);
+  transition:color .5s ease;
+}
+
+/* Active line - words not yet sung (gray) */
+.np-lyric-line.active .np-lyric-word{
+  color:rgba(255,255,255,.3);
+}
+
+/* Active line - words already sung (white) */
+.np-lyric-line.active .np-lyric-word.sung{
+  color:rgba(255,255,255,1);
+}
+
+/* Past line - all words dimmed */
+.np-lyric-line.past .np-lyric-word{
+  color:rgba(255,255,255,.3);
+}
+
+/* Lyrics fade edges */
+.np-lyrics-container::before,
+.np-lyrics-container::after{
+  content:'';position:sticky;left:0;right:0;
+  height:32px;z-index:2;pointer-events:none;display:block;
+}
+.np-lyrics-container::before{
+  top:0;
+  background:linear-gradient(180deg,rgba(18,18,18,.9) 0%,transparent 100%);
+}
+.np-lyrics-container::after{
+  bottom:0;
+  background:linear-gradient(0deg,rgba(18,18,18,.9) 0%,transparent 100%);
+}
+
+/* ===== Sleep Timer ===== */
+.sleep-timer-wrapper{position:relative}
+.sleep-timer-badge{position:absolute;top:-2px;right:-2px;background:var(--green);color:#000;font-size:9px;font-weight:700;padding:1px 4px;border-radius:8px;pointer-events:none;z-index:1}
+.sleep-timer-popup{position:absolute;bottom:calc(100% + 8px);right:0;background:#282828;border-radius:12px;padding:8px 0;min-width:180px;box-shadow:0 16px 48px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);animation:ctxIn .15s ease;z-index:1001}
+.sleep-popup-title{font-size:12px;font-weight:600;color:var(--tm);padding:8px 16px;text-transform:uppercase;letter-spacing:.5px}
+.sleep-option{padding:10px 16px;font-size:14px;color:var(--ts);cursor:pointer;transition:all .15s}
+.sleep-option:hover{background:rgba(255,255,255,.1);color:var(--tp)}
+.sleep-cancel{color:#f44;border-top:1px solid rgba(255,255,255,.06)}
+.sleep-cancel:hover{background:rgba(255,68,68,.1);color:#f44}
+#btn-sleep-timer.active{color:var(--green)}
+
+/* ===== Queue Panel ===== */
+.queue-panel{position:fixed;top:var(--th);right:-360px;width:360px;height:calc(100vh - var(--th) - var(--ph));background:#181818;border-left:1px solid var(--border);z-index:1100;display:flex;flex-direction:column;transition:right .3s cubic-bezier(.32,.72,0,1)}
+.queue-panel.open{right:0}
+.queue-panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.queue-panel-header h3{font-size:16px;font-weight:700}
+.queue-panel-close{width:32px;height:32px;border:none;background:transparent;color:var(--ts);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--t)}
+.queue-panel-close:hover{color:var(--tp);background:rgba(255,255,255,.08)}
+.queue-panel-now{padding:16px 20px;border-bottom:1px solid var(--border)}
+.queue-panel-now .queue-now-label{font-size:11px;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.queue-panel-list{flex:1;overflow-y:auto;padding:8px 0}
+.queue-item{display:flex;align-items:center;gap:12px;padding:8px 20px;cursor:pointer;transition:var(--t)}
+.queue-item:hover{background:rgba(255,255,255,.05)}
+.queue-item.playing{background:rgba(29,185,84,.08)}
+.queue-item-cover{width:40px;height:40px;border-radius:4px;background:var(--bg-highlight);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.queue-item-cover img{width:100%;height:100%;object-fit:cover}
+.queue-item-info{flex:1;min-width:0}
+.queue-item-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-item.playing .queue-item-title{color:var(--green)}
+.queue-item-artist{font-size:12px;color:var(--tm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-item-remove{width:28px;height:28px;border:none;background:transparent;color:var(--tm);cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:var(--t);flex-shrink:0}
+.queue-item:hover .queue-item-remove{opacity:1}
+.queue-item-remove:hover{color:#f44;background:rgba(255,68,68,.1)}
+.queue-item-drag{width:20px;color:var(--tm);cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:var(--t)}
+.queue-item:hover .queue-item-drag{opacity:.6}
+.queue-empty{text-align:center;padding:40px 20px;color:var(--tm);font-size:14px}
+
+/* ===== Premium Badge ===== */
+.premium-badge{display:inline-flex;align-items:center;justify-content:center;padding:1px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:linear-gradient(135deg,#ffd700,#ffaa00);color:#000;margin-left:4px;vertical-align:middle}
+
+/* ===== Avatar Frames ===== */
+.avatar-frame{border-radius:50%;padding:3px}
+.avatar-frame-gold{background:linear-gradient(135deg,#ffd700,#b8860b,#ffd700);animation:frameGold 3s ease infinite}
+@keyframes frameGold{0%,100%{box-shadow:0 0 8px rgba(255,215,0,.4)}50%{box-shadow:0 0 16px rgba(255,215,0,.7)}}
+.avatar-frame-rainbow{background:conic-gradient(#f44,#ff0,#0f0,#0ff,#00f,#f0f,#f44);animation:frameRainbow 3s linear infinite}
+@keyframes frameRainbow{to{filter:hue-rotate(360deg)}}
+.avatar-frame-pulse{background:var(--green);animation:framePulse 2s ease-in-out infinite}
+@keyframes framePulse{0%,100%{box-shadow:0 0 6px var(--green-glow)}50%{box-shadow:0 0 20px var(--green-glow),0 0 40px rgba(29,185,84,.15)}}
+
+/* ===== Theme Selector ===== */
+.theme-selector{display:flex;gap:8px;flex-wrap:wrap}
+.theme-option{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;position:relative}
+.theme-option span{width:24px;height:24px;border-radius:50%;display:block}
+.theme-option:hover{border-color:rgba(255,255,255,.3);transform:scale(1.1)}
+.theme-option.active{border-color:var(--tp);box-shadow:0 0 0 2px var(--bg-primary),0 0 0 4px var(--tp)}
+.theme-option.locked::after{content:'🔒';font-size:10px;position:absolute;bottom:-2px;right:-2px}
+
+/* ===== Frame Selector ===== */
+.frame-selector{display:flex;gap:8px}
+.frame-option{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--ts)}
+.frame-option:hover{border-color:rgba(255,255,255,.3);transform:scale(1.1)}
+.frame-option.active{border-color:var(--green);background:rgba(29,185,84,.1);color:var(--green)}
+
+/* ===== Banner Preview ===== */
+.banner-preview{margin-top:8px;width:100%;max-width:400px;height:100px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.banner-preview img{width:100%;height:100%;object-fit:cover}
+
+/* ===== Theme CSS Variables ===== */
+[data-theme="ocean"]{--green:#0ea5e9;--green-h:#38bdf8;--green-glow:rgba(14,165,233,.3)}
+[data-theme="sunset"]{--green:#f97316;--green-h:#fb923c;--green-glow:rgba(249,115,22,.3)}
+[data-theme="purple"]{--green:#a855f7;--green-h:#c084fc;--green-glow:rgba(168,85,247,.3)}
+[data-theme="rose"]{--green:#f43f5e;--green-h:#fb7185;--green-glow:rgba(244,63,94,.3)}
+[data-theme="midnight"]{--green:#6366f1;--green-h:#818cf8;--green-glow:rgba(99,102,241,.3)}
+
+/* ===== Wrapped Page ===== */
+.nav-wrapped{color:var(--green) !important;opacity:.9}
+.wrapped-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.wrapped-card{background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated));border:1px solid var(--border);border-radius:var(--rl);padding:28px 24px;transition:var(--ts2);position:relative;overflow:hidden}
+.wrapped-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.4);border-color:rgba(255,255,255,.1)}
+.wrapped-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.wrapped-card.card-green::before{background:linear-gradient(90deg,#1DB954,#1ed760)}
+.wrapped-card.card-blue::before{background:linear-gradient(90deg,#0ea5e9,#38bdf8)}
+.wrapped-card.card-purple::before{background:linear-gradient(90deg,#a855f7,#c084fc)}
+.wrapped-card.card-orange::before{background:linear-gradient(90deg,#f97316,#fb923c)}
+.wrapped-card.card-pink::before{background:linear-gradient(90deg,#f43f5e,#fb7185)}
+.wrapped-card .wrapped-emoji{font-size:40px;margin-bottom:12px;display:block}
+.wrapped-card .wrapped-stat{font-size:36px;font-weight:800;letter-spacing:-1px;color:var(--tp);margin-bottom:4px}
+.wrapped-card .wrapped-label{font-size:14px;color:var(--ts);font-weight:500}
+.wrapped-card .wrapped-detail{font-size:13px;color:var(--tm);margin-top:8px}
+
+
+
+/* Sidebar Collapse Styles */
+.sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.sidebar.collapsed { width: 72px; }
+
+/* Fix sidebar header */
+.sidebar-header { justify-content: space-between; overflow: hidden; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.btn-collapse-sidebar {
+  background: transparent; border: none; color: var(--ts);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  padding: 6px; border-radius: 4px; transition: var(--t);
+  flex-shrink: 0;
+}
+.btn-collapse-sidebar:hover { color: var(--tp); background: rgba(255, 255, 255, 0.1); }
+
+/* Hide texts */
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .playlist-header span,
+.sidebar.collapsed .btn-create-playlist,
+.sidebar.collapsed .playlist-list p,
+.sidebar.collapsed .playlist-list small,
+.sidebar.collapsed .user-info { display: none !important; }
+
+/* Normalization */
+.sidebar.collapsed .brand { justify-content: center; width: 100%; margin: 0; padding: 0; }
+.sidebar.collapsed .sidebar-header { padding: 16px 0; flex-direction: column; gap: 16px; justify-content: center; align-items: center; }
+.sidebar.collapsed .btn-collapse-sidebar { margin: 0 auto; transform: rotate(180deg); }
+
+.sidebar.collapsed .nav-item { justify-content: center; padding: 12px 0; }
+.sidebar.collapsed .nav-item svg { margin: 0; }
+.sidebar.collapsed .sidebar-nav { padding: 12px 0; }
+
+.sidebar.collapsed .playlist-header { justify-content: center; padding: 12px 0; border:none; height: auto; }
+.sidebar.collapsed .playlist-item { justify-content: center; padding: 12px 0; }
+.sidebar.collapsed .playlist-item-info { display: none !important; }
+
+.sidebar.collapsed .sidebar-divider { margin: auto !important; width: 36px; margin-top: 8px !important; margin-bottom: 8px !important; }
+
+.sidebar.collapsed .sidebar-user { justify-content: center; padding: 16px 0; }
+.sidebar.collapsed .user-avatar { margin: 0; width: 32px; height: 32px; }
+
+/* Lyrics Share System */
+.np-lyric-line.selected-for-share { background: rgba(255, 255, 255, 0.15); border-radius: 8px; padding-left: 8px; padding-right: 8px; margin-left: -8px; }
+.np-lyric-line.selected-for-share .np-lyric-word { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
+/* Lyrics Selection Modal (Share) */
+.share-lyric-line { padding: 12px 16px; font-size: 18px; font-weight: 600; color: var(--ts); border-radius: 8px; cursor: pointer; transition: all 0.2s; user-select: none; }
+.share-lyric-line:hover { background: rgba(255,255,255,0.05); color: var(--tp); }
+.share-lyric-line.selected-for-share { background: rgba(255, 255, 255, 0.15); color: #fff; transform: scale(1.02); }
