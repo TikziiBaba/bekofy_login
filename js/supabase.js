@@ -22,25 +22,47 @@ function getSupabase() {
 
 async function signUpWithEmail(email, password, username) {
   const sb = getSupabase();
-  const { data, error } = await sb.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username }
+  const maxRetries = 3;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
+    });
+    
+    // Retry on transient network/timeout errors
+    if (error && (error.name === 'AuthRetryableFetchError' || error.status === 504 || error.status === 502 || error.status === 503)) {
+      console.warn(`signUp attempt ${attempt}/${maxRetries} failed (${error.status || error.name}), retrying...`);
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 2000 * attempt)); // Progressive delay
+        continue;
+      }
+      return { data: null, error };
     }
-  });
-  if (data?.user && !error) {
-    try {
-      await sb.from('profiles').insert({
-        id: data.user.id,
-        username: username
-      });
-    } catch (err) {
-      console.log('Profile creation warning:', err);
+    
+    if (data?.user && data.user.identities && data.user.identities.length === 0) {
+      // Fake success returned by Supabase when email is already registered and confirmations are enabled
+      return { data: null, error: { message: 'Bu e-posta adresi zaten kullanımda.' } };
     }
-  }
 
-  return { data, error };
+    if (data?.user && !error) {
+      try {
+        await sb.from('profiles').insert({
+          id: data.user.id,
+          username: username
+        });
+      } catch (err) {
+        console.log('Profile creation warning:', err);
+      }
+    }
+
+    return { data, error };
+  }
+  
+  return { data: null, error: { message: 'Sunucu yanıt vermiyor. Lütfen daha sonra tekrar deneyin.', status: 504 } };
 }
 
 async function signInWithEmail(email, password) {
@@ -130,12 +152,41 @@ async function getSongUrl(filePath) {
 
 async function fetchUserPlaylists(userId) {
   const sb = getSupabase();
-  const { data, error } = await sb
+  
+  // Fetch owned playlists
+  const { data: ownedData, error: ownedError } = await sb
     .from('playlists')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
-  return { data, error };
+    
+  if (ownedError) return { data: null, error: ownedError };
+
+  // Fetch collaborated playlists
+  const { data: collabData, error: collabError } = await sb
+    .from('playlist_collaborators')
+    .select('playlist_id')
+    .eq('user_id', userId);
+    
+  let allPlaylists = [...(ownedData || [])];
+
+  if (!collabError && collabData && collabData.length > 0) {
+    const playlistIds = collabData.map(c => c.playlist_id);
+    const { data: collabPlaylists } = await sb
+      .from('playlists')
+      .select('*')
+      .in('id', playlistIds);
+      
+    if (collabPlaylists) {
+      allPlaylists = [...allPlaylists, ...collabPlaylists];
+    }
+  }
+
+  // Deduplicate and sort
+  const uniquePlaylists = Array.from(new Map(allPlaylists.map(p => [p.id, p])).values());
+  uniquePlaylists.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  return { data: uniquePlaylists, error: null };
 }
 
 async function createPlaylist(name, userId) {
@@ -650,6 +701,76 @@ async function uploadPlaylistCover(playlistId, file) {
     console.error('Cover upload exception:', err);
     return { data: null, error: err };
   }
+}
+// ===== Collaborative Playlists =====
+async function getPlaylistCollaborators(playlistId) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from('playlist_collaborators')
+    .select(`
+      id,
+      user_id,
+      added_at,
+      profiles!inner(username, avatar_url)
+    `)
+    .eq('playlist_id', playlistId)
+    .order('added_at', { ascending: true });
+    
+  if (error) {
+    console.error('getPlaylistCollaborators error:', error);
+    return [];
+  }
+  return data;
+}
+
+async function addPlaylistCollaborator(playlistId, username) {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Veritabanı bağlantısı yok' };
+  
+  // 1. Find user by username
+  const { data: users, error: userError } = await sb
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .single();
+    
+  if (userError || !users) {
+    return { error: 'Kullanıcı bulunamadı.' };
+  }
+  
+  // 2. Add to collaborators
+  const { error: insertError } = await sb
+    .from('playlist_collaborators')
+    .insert([{
+      playlist_id: playlistId,
+      user_id: users.id
+    }]);
+    
+  if (insertError) {
+    if (insertError.code === '23505') { // Unique violation
+      return { error: 'Bu kullanıcı zaten listeye ortak.' };
+    }
+    return { error: 'Ortak eklenirken bir hata oluştu: ' + insertError.message };
+  }
+  
+  return { success: true };
+}
+
+async function removePlaylistCollaborator(playlistId, userId) {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Veritabanı bağlantısı yok' };
+  
+  const { error } = await sb
+    .from('playlist_collaborators')
+    .delete()
+    .eq('playlist_id', playlistId)
+    .eq('user_id', userId);
+    
+  if (error) {
+    return { error: 'Ortak silinirken hata oluştu: ' + error.message };
+  }
+  return { success: true };
 }
 
 // ===== Play History (for recommendations) =====

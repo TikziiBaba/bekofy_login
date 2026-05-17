@@ -1,66 +1,339 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bekofy - Web Platformu</title>
+  <title>Bekofy - Sınırsız Müzik Deneyimi</title>
+  <meta name="description" content="Bekofy ile milyonlarca şarkıyı ücretsiz keşfet. Premium ile reklamsız, çevrimdışı ve yüksek kalitede müzik dinle.">
   <link rel="stylesheet" href="css/style.css">
-</head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <style>
+    /* Animated Gradient Hero */
+    .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:120px 20px 60px; position:relative; z-index:10; overflow:hidden; }
+    .hero::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(29,185,84,0.25),transparent 70%); top:-10%; left:50%; transform:translateX(-50%); filter:blur(80px); animation:heroGlow 6s ease-in-out infinite alternate; pointer-events:none; }
+    @keyframes heroGlow { 0%{transform:translateX(-50%) scale(1);opacity:0.8} 100%{transform:translateX(-50%) scale(1.3);opacity:1} }
+    .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:8px 20px; background:rgba(29,185,84,0.1); border:1px solid rgba(29,185,84,0.3); border-radius:100px; color:var(--green); font-size:14px; font-weight:600; margin-bottom:28px; animation:slideDown 0.6s ease-out; }
+    .hero-badge .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:pulseDot 2s ease infinite; }
+    @keyframes pulseDot { 0%,100%{box-shadow:0 0 0 0 rgba(29,185,84,0.5)} 50%{box-shadow:0 0 0 8px rgba(29,185,84,0)} }
+    .hero h1 { font-size:clamp(44px,8vw,88px); letter-spacing:-3px; margin-bottom:24px; max-width:950px; animation:slideUp 0.8s ease-out 0.2s both; line-height:1.05; }
+    .hero h1 .gradient-text { background:linear-gradient(135deg,#1DB954 0%,#a8edba 50%,#1ed760 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:gradShift 4s ease infinite; }
+    @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .hero p { font-size:clamp(17px,3vw,21px); color:var(--text-secondary); max-width:650px; margin-bottom:44px; animation:slideUp 0.8s ease-out 0.4s both; }
+    .hero-buttons { display:flex; gap:16px; animation:slideUp 0.8s ease-out 0.6s both; flex-wrap:wrap; justify-content:center; }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
 
+    /* Stats */
+    .stats-section { padding:60px 20px; max-width:1100px; margin:0 auto; z-index:10; position:relative; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+    .stat-item { text-align:center; padding:28px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); backdrop-filter:blur(20px); transition:all 0.4s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden; }
+    .stat-item::before { content:''; position:absolute; inset:0; background:var(--grad-card); opacity:0; transition:opacity 0.4s; }
+    .stat-item:hover { border-color:var(--border-green); transform:translateY(-4px); box-shadow:var(--shadow-glow); }
+    .stat-item:hover::before { opacity:1; }
+    .stat-icon { width:44px; height:44px; border-radius:12px; background:var(--green-subtle); border:1px solid var(--border-green); display:flex; align-items:center; justify-content:center; color:var(--green); margin:0 auto 14px; position:relative; z-index:1; }
+    .stat-number { font-size:36px; font-weight:800; font-family:var(--font-heading); color:var(--green); display:block; position:relative; z-index:1; }
+    .stat-label { color:var(--text-secondary); font-size:13px; margin-top:4px; position:relative; z-index:1; }
+
+    /* How It Works */
+    .how-section { padding:100px 20px 60px; max-width:1000px; margin:0 auto; position:relative; z-index:10; }
+    .how-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:48px; counter-reset:step; }
+    .how-step { text-align:center; padding:40px 24px; position:relative; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); transition:all 0.3s; }
+    .how-step:hover { border-color:var(--border-green); transform:translateY(-4px); }
+    .how-step::before { counter-increment:step; content:counter(step); width:52px; height:52px; border-radius:50%; background:var(--green-subtle); border:2px solid var(--green); color:var(--green); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:20px; font-weight:800; font-family:var(--font-heading); }
+    .how-step h3 { font-size:18px; margin-bottom:10px; }
+    .how-step p { color:var(--text-secondary); font-size:14px; line-height:1.6; }
+
+    /* Features */
+    .features { padding:80px 20px 40px; max-width:1200px; margin:0 auto; position:relative; z-index:10; }
+    .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+    .feature-card { background:var(--bg-card); border:1px solid var(--border); padding:32px 24px; border-radius:var(--radius-lg); backdrop-filter:blur(20px); transition:all 0.4s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden; }
+    .feature-card::before { content:''; position:absolute; inset:0; background:var(--grad-card); opacity:0; transition:opacity 0.4s; }
+    .feature-card:hover { transform:translateY(-6px); border-color:var(--border-green); box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+    .feature-card:hover::before { opacity:1; }
+    .feature-icon { width:48px; height:48px; background:var(--green-subtle); border:1px solid var(--border-green); border-radius:14px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; color:var(--green); position:relative; z-index:1; }
+    .feature-card h3 { font-size:18px; margin-bottom:8px; position:relative; z-index:1; }
+    .feature-card p { color:var(--text-secondary); font-size:14px; line-height:1.6; position:relative; z-index:1; }
+
+    /* Showcase */
+    .showcase-section { padding:80px 20px; max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; position:relative; z-index:10; }
+    .showcase-text h2 { font-size:clamp(32px,4vw,44px); letter-spacing:-1.5px; margin-bottom:18px; line-height:1.15; }
+    .showcase-text p { font-size:16px; color:var(--text-secondary); margin-bottom:28px; line-height:1.7; }
+    .showcase-image { position:relative; max-width:480px; margin:0 auto; }
+    .showcase-image img { width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-card); transition:transform 0.5s cubic-bezier(0.16,1,0.3,1); aspect-ratio:16/10; object-fit:cover; }
+    .showcase-image:hover img { transform:scale(1.03) rotate(0.5deg); }
+    .showcase-image::after { content:''; position:absolute; inset:-8px; border-radius:var(--radius-xl); border:1px solid var(--border); pointer-events:none; }
+    .showcase-glow { position:absolute; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(29,185,84,0.2),transparent 70%); filter:blur(50px); bottom:-40px; right:-40px; pointer-events:none; }
+
+    /* Premium CTA */
+    .premium-cta { padding:80px 20px; position:relative; z-index:10; }
+    .premium-cta-inner { max-width:900px; margin:0 auto; text-align:center; padding:56px 40px; border-radius:var(--radius-xl); background:linear-gradient(135deg,rgba(29,185,84,0.1) 0%,rgba(29,185,84,0.02) 100%); border:1px solid var(--border-green); position:relative; overflow:hidden; }
+    .premium-cta-inner::before { content:''; position:absolute; top:-50%; right:-30%; width:300px; height:300px; background:radial-gradient(circle,rgba(29,185,84,0.15),transparent 70%); filter:blur(60px); pointer-events:none; }
+    .premium-cta-inner::after { content:''; position:absolute; bottom:-40%; left:-20%; width:250px; height:250px; background:radial-gradient(circle,rgba(29,185,84,0.1),transparent 70%); filter:blur(60px); pointer-events:none; }
+    .premium-cta-inner h2 { font-size:clamp(28px,4vw,36px); margin-bottom:14px; letter-spacing:-1px; position:relative; z-index:1; }
+    .premium-cta-inner p { color:var(--text-secondary); font-size:16px; max-width:550px; margin:0 auto 28px; position:relative; z-index:1; }
+    .premium-cta-inner .btn { padding:16px 40px; font-size:16px; position:relative; z-index:1; }
+
+    @media(max-width:900px) {
+      .showcase-section { grid-template-columns:1fr; text-align:center; gap:32px; }
+      .showcase-image { max-width:360px; }
+    }
+    @media(max-width:768px) {
+      .stats-grid { grid-template-columns:repeat(2,1fr); }
+      .how-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
 <body>
 
   <!-- Navbar -->
   <nav class="navbar">
     <a href="index.html" class="nav-logo">
-      <svg viewBox="0 0 48 48" fill="none" width="32" height="32">
-        <circle cx="24" cy="24" r="22" fill="url(#nlg)" />
-        <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round"
-          fill="none" />
-        <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round"
-          fill="none" />
-        <defs>
-          <linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48">
-            <stop offset="0%" stop-color="#1DB954" />
-            <stop offset="100%" stop-color="#1ed760" />
-          </linearGradient>
-        </defs>
-      </svg>
+      <svg viewBox="0 0 48 48" fill="none" width="36" height="36"><circle cx="24" cy="24" r="22" fill="url(#nlg)"/><path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/><defs><linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#1DB954"/><stop offset="100%" stop-color="#1ed760"/></linearGradient></defs></svg>
       <span class="nav-logo-text">Bekofy</span>
     </a>
     <div class="nav-links">
-      <a href="../src/pages/download.html" target="_blank">İndir</a>
-      <a href="player.html" class="btn-secondary" style="padding: 10px 24px;">Web'de Dinle</a>
+      <a href="premium.html">Premium</a>
+      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank">İndir</a>
+      <a href="dashboard.html" class="btn btn-secondary" style="padding:10px 24px;font-size:14px;">Hesabım</a>
       <a href="register.html">Kayıt Ol</a>
-      <a href="login.html" class="btn-primary" style="padding: 10px 24px;">Giriş Yap</a>
+      <a href="login.html" class="btn btn-primary" style="padding:10px 24px;font-size:14px;">Giriş Yap</a>
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <main class="auth-container" style="flex-direction: column; text-align: center;">
-    <h1
-      style="font-size: 64px; font-weight: 900; letter-spacing: -2px; margin-bottom: 24px; position: relative; z-index: 1;">
-      Müziğin <span
-        style="background: linear-gradient(135deg, var(--green), var(--green2), #a8edba); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Web
-        Portalı</span>
-    </h1>
-    <p style="font-size: 20px; color: white; max-width: 600px; margin-bottom: 40px; position: relative; z-index: 1;">
-      <span style="color: var(--green); font-weight: bold;">Bekofy</span>, sizi asla yarı yolda bırakmaz ve size
-      mükemmel bir müzik dinleme deneyimi sunar.
-    </p>
-
-    <div style="display: flex; gap: 16px; position: relative; z-index: 1;">
-      <a href="player.html" class="btn-primary" style="font-size: 16px; padding: 16px 40px; background-color: var(--green); border: none;">Web Oynatıcıyı Aç</a>
-      <a href="login.html" class="btn-secondary" style="font-size: 16px; padding: 16px 40px;">Giriş Yap</a>
+  <!-- Hero -->
+  <main class="hero">
+    <div class="hero-badge"><span class="pulse-dot"></span> Yeni Sürüm 2.0 Yayında</div>
+    <h1>Müziğin<br><span class="gradient-text">Geleceğini</span> Dinle</h1>
+    <p>Bekofy ile milyonlarca şarkıya ücretsiz eriş. Canlı şarkı sözleri, Discord entegrasyonu ve Mini Player ile müzik deneyimini başka bir seviyeye taşı.</p>
+    <div class="hero-buttons">
+      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="btn btn-primary" style="padding:18px 40px;font-size:18px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Uygulamayı İndir
+      </a>
+      <a href="premium.html" class="btn btn-secondary" style="padding:18px 40px;font-size:18px;">Premium'u Keşfet</a>
     </div>
-
   </main>
 
-  <footer>
-    <p>© 2026 Bekofy Web Sürümü.</p>
+  <!-- Stats -->
+  <section class="stats-section reveal">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="stat-number" id="stat-users" data-target="0">—</span>
+        <span class="stat-label">Kayıtlı Kullanıcı</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <span class="stat-number" id="stat-songs" data-target="0">—</span>
+        <span class="stat-label">Şarkı Kataloğu</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="stat-number" id="stat-playlists" data-target="0">—</span>
+        <span class="stat-label">Çalma Listesi</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <span class="stat-number" id="stat-likes" data-target="0">—</span>
+        <span class="stat-label">Beğenilen Şarkı</span>
+      </div>
+    </div>
+  </section>
 
+  <!-- How It Works -->
+  <section class="how-section reveal">
+    <h2 class="section-title">Nasıl Çalışır?</h2>
+    <div class="how-grid">
+      <div class="how-step reveal">
+        <h3>Uygulamayı İndir</h3>
+        <p>Windows için Bekofy masaüstü uygulamasını indir ve hemen kur. Kurulum 30 saniyede tamamlanır.</p>
+      </div>
+      <div class="how-step reveal">
+        <h3>Hesabını Oluştur</h3>
+        <p>Ücretsiz hesap aç veya Google ile hızlıca giriş yap. Kişisel müzik deneyimin başlasın.</p>
+      </div>
+      <div class="how-step reveal">
+        <h3>Dinlemeye Başla</h3>
+        <p>Keşfet, listele, paylaş. Milyonlarca şarkıya anında eriş ve kendi çalma listelerini oluştur.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <h2 class="section-title">Neden Bekofy?</h2>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Tamamen Ücretsiz</h3>
+        <p>Arama, dinleme, liste oluşturma ve paylaşma özellikleri ücretsiz. Müzik herkes için olmalı.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <h3>Canlı Şarkı Sözleri</h3>
+        <p>Senkronize şarkı sözleriyle her nota anında ekranda. Karaoke modunda söyle, paylaş.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>Mini Player</h3>
+        <p>Çalışırken veya oyun oynarken kompakt Mini Player ile müziğini kontrol et, hiç pencere değiştirmeden.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3>Çevrimdışı Dinleme</h3>
+        <p>Premium ile favori şarkılarını indir, internet olmadan uçakta veya doğada dinle.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Arkadaşlarla Dinle</h3>
+        <p>Ortak çalma listeleri oluştur, arkadaşlarını takip et ve müzik zevklerini paylaş.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </div>
+        <h3>Discord Entegrasyonu</h3>
+        <p>Dinlediğin şarkı Discord profilinde otomatik gösterilsin. Arkadaşların ne dinlediğini görsün.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee-container reveal">
+    <div class="marquee-content">
+      <span class="marquee-item">Popüler Sanatçılar</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Canlı Şarkı Sözleri</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Müzik İndirme</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Discord RPC</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Mini Player</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Popüler Sanatçılar</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Canlı Şarkı Sözleri</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Müzik İndirme</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Discord RPC</span><span class="marquee-item">•</span>
+      <span class="marquee-item">Mini Player</span>
+    </div>
+  </div>
+
+  <!-- Showcase -->
+  <section class="showcase-section reveal">
+    <div class="showcase-text">
+      <h2>Müziği Daha Yakından<br><span class="gradient-text">Hissedin.</span></h2>
+      <p>Animasyonlu arka planlar, senkronize şarkı sözleri ve söz paylaşım kartlarıyla müzik deneyimin bir adım öteye geçiyor.</p>
+      <a href="register.html" class="btn btn-primary btn-lg">Hemen Katıl</a>
+    </div>
+    <div class="showcase-image">
+      <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=600" alt="Bekofy Experience">
+      <div class="showcase-glow"></div>
+    </div>
+  </section>
+
+  <!-- Premium CTA Banner -->
+  <section class="premium-cta reveal">
+    <div class="premium-cta-inner">
+      <h2>Premium'a Geç, Sınırları Kaldır ✨</h2>
+      <p>Reklamsız müzik, çevrimdışı indirme, stüdyo kalitesinde ses ve özel temalar ile müzik deneyimini zirveye taşı.</p>
+      <a href="premium.html" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Premium Planları Gör
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
   </footer>
 
-</body>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Scroll Reveal
+      const revealAll = () => {
+        document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el => {
+          if (el.getBoundingClientRect().top < window.innerHeight - 60) el.classList.add('active');
+        });
+      };
+      window.addEventListener('scroll', revealAll);
+      revealAll();
 
+      // Navbar scroll shrink
+      window.addEventListener('scroll', () => {
+        document.querySelector('.navbar')?.classList.toggle('scrolled', window.scrollY > 40);
+      });
+
+      // Feature card stagger
+      document.querySelectorAll('.feature-card').forEach((c, i) => { c.style.transitionDelay = `${i*0.08}s`; });
+
+      // ── Fetch real stats from Supabase ──
+      try {
+        const sb = getSupabase();
+        if (sb) {
+          const [usersRes, songsRes, playlistsRes, likesRes] = await Promise.all([
+            sb.from('profiles').select('id', { count: 'exact', head: true }),
+            sb.from('songs').select('id', { count: 'exact', head: true }),
+            sb.from('playlists').select('id', { count: 'exact', head: true }),
+            sb.from('liked_songs').select('id', { count: 'exact', head: true }),
+          ]);
+          setStat('stat-users', usersRes.count || 0);
+          setStat('stat-songs', songsRes.count || 0);
+          setStat('stat-playlists', playlistsRes.count || 0);
+          setStat('stat-likes', likesRes.count || 0);
+        }
+      } catch (e) {
+        console.warn('Stats fetch error:', e);
+      }
+
+      // Animated counter
+      let counterDone = false;
+      function setStat(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.dataset.target = value;
+      }
+      function animateCounters() {
+        if (counterDone) return;
+        const section = document.querySelector('.stats-section');
+        if (!section || section.getBoundingClientRect().top > window.innerHeight - 80) return;
+        counterDone = true;
+        document.querySelectorAll('.stat-number[data-target]').forEach(counter => {
+          const target = +counter.dataset.target;
+          if (!target) { counter.textContent = '0'; return; }
+          const duration = 1800;
+          const step = target / (duration / 16);
+          let current = 0;
+          const tick = () => {
+            current += step;
+            if (current >= target) { counter.textContent = fmtNum(target); return; }
+            counter.textContent = fmtNum(Math.floor(current));
+            requestAnimationFrame(tick);
+          };
+          tick();
+        });
+      }
+      function fmtNum(n) {
+        if (n >= 1000000) return (n/1000000).toFixed(1).replace('.0','') + 'M';
+        if (n >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'K';
+        return n.toLocaleString('tr-TR');
+      }
+      window.addEventListener('scroll', animateCounters);
+      setTimeout(animateCounters, 500);
+    });
+  </script>
+</body>
 </html>

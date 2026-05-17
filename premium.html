@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bekofy Premium - Müziğin Ötesi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Premium Page Specific Styles */
+    .premium-hero {
+      padding: 140px 20px 80px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .premium-hero h1 {
+      font-size: clamp(40px, 6vw, 72px);
+      margin-bottom: 24px;
+      background: var(--grad-premium);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: slideUp 0.8s ease-out both;
+    }
+
+    .premium-hero p {
+      font-size: 20px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      animation: slideUp 0.8s ease-out 0.2s both;
+    }
+
+    /* Pricing Plans */
+    .pricing-section {
+      padding: 40px 20px 100px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 32px;
+      margin-top: 40px;
+    }
+
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--green);
+      transform: translateY(-10px);
+      box-shadow: 0 20px 60px rgba(29, 185, 84, 0.15), inset 0 0 0 1px rgba(29, 185, 84, 0.3);
+    }
+
+    .pricing-card.featured::before {
+      content: 'EN POPÜLER';
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--green);
+      color: #000;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-family: var(--font-heading);
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(29, 185, 84, 0.4);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    }
+
+    .pricing-card.featured:hover {
+      transform: translateY(-16px);
+      box-shadow: 0 24px 80px rgba(29, 185, 84, 0.2), inset 0 0 0 1px rgba(29, 185, 84, 0.4);
+    }
+
+    .plan-name {
+      font-size: 24px;
+      font-family: var(--font-heading);
+      margin-bottom: 8px;
+    }
+
+    .plan-price {
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      font-family: var(--font-heading);
+    }
+
+    .plan-price span {
+      font-size: 18px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .plan-features {
+      list-style: none;
+      margin-bottom: 40px;
+      flex: 1;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .plan-features svg {
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .pricing-card .btn {
+      width: 100%;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      max-width: 800px;
+      margin: 0 auto 100px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .faq-title {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 48px;
+    }
+
+    .faq-item {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+
+    .faq-question {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .faq-answer {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
+        <circle cx="24" cy="24" r="22" fill="url(#nlg)" />
+        <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" />
+        <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" />
+        <defs>
+          <linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48">
+            <stop offset="0%" stop-color="#1DB954" />
+            <stop offset="100%" stop-color="#1ed760" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="nav-logo-text">Bekofy</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Ana Sayfa</a>
+      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank">İndir</a>
+      <a href="dashboard.html" class="btn btn-secondary" style="padding: 10px 24px; font-size: 14px;">Hesabım</a>
+      <a href="login.html" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px;">Giriş Yap</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <main class="premium-hero">
+    <h1>Neden Premium?</h1>
+    <p>Reklamsız müzik, çevrimdışı dinleme, ve muhteşem ses kalitesi. Kendi müzik dünyanı tamamen özgürce yaşa.</p>
+  </main>
+
+  <!-- Pricing -->
+  <section class="pricing-section">
+    <div class="pricing-grid">
+      
+      <!-- Bireysel Plan -->
+      <div class="pricing-card featured" style="animation: slideUp 0.8s ease-out 0.4s both;">
+        <h3 class="plan-name">Bireysel</h3>
+        <div class="plan-price">₺39.99<span> / ay</span></div>
+        <ul class="plan-features">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Reklamsız müzik dinleme
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Çevrimdışı dinlemek için indir
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Her yerde dinle (Mobil, Web, Masaüstü)
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Maksimum ses kalitesi
+          </li>
+        </ul>
+        <a href="checkout.html?plan=bireysel" class="btn btn-primary">Premium'u Başlat</a>
+      </div>
+
+      <!-- Öğrenci Plan -->
+      <div class="pricing-card" style="animation: slideUp 0.8s ease-out 0.6s both;">
+        <h3 class="plan-name">Öğrenci</h3>
+        <div class="plan-price">₺19.99<span> / ay</span></div>
+        <ul class="plan-features">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Tüm Bireysel plan özellikleri
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Doğrulanmış yükseköğretim öğrencileri için
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Aylık indirimli abonelik
+          </li>
+        </ul>
+        <a href="checkout.html?plan=ogrenci" class="btn btn-secondary">Öğrenci Planını Seç</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <h2 class="faq-title">Sıkça Sorulan Sorular</h2>
+    
+    <div class="faq-item">
+      <div class="faq-question">Bekofy Premium'u nasıl iptal edebilirim?</div>
+      <div class="faq-answer">İstediğin zaman hesap ayarlarından aboneliğini iptal edebilirsin. İptal ettikten sonra mevcut fatura döneminin sonuna kadar Premium özelliklerini kullanmaya devam edebilirsin.</div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question">Çevrimdışı dinleme özelliği nasıl çalışır?</div>
+      <div class="faq-answer">Premium üyesiysen, favori çalma listelerini, albümleri veya podcast'leri "İndir" butonuna tıklayarak cihazına kaydedebilir ve internet bağlantısı olmadan dinleyebilirsin.</div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question">Ses kalitesi farkı nedir?</div>
+      <div class="faq-answer">Ücretsiz sürümde standart kalitede ses sunulurken, Premium'da 320 kbps bit hızında "Çok Yüksek" kalitede, stüdyo netliğinde müzik dinleme ayrıcalığına sahip olursun.</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
+  </footer>
+
+</body>
+</html>
