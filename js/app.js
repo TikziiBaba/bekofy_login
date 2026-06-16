@@ -34,12 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initLogout();
   initVolumeToggle();
   initProfilePopupClick();
+  initFriendActivity();
   loadUserInfo();
   loadArtistUsernames();
   loadSongs();
   loadPlaylists();
   setGreeting();
-  
+
   // Load saved player state (last song & volume)
   setTimeout(() => player.loadState(), 500);
 });
@@ -55,10 +56,10 @@ function initTitlebar() {
 function initSidebarCollapse() {
   const btn = document.getElementById('btn-collapse-sidebar');
   const sidebar = document.getElementById('sidebar');
-  if(btn && sidebar) {
+  if (btn && sidebar) {
     // Restore state from localStorage
     const isCollapsed = localStorage.getItem('bekofy-sidebar-collapsed') === 'true';
-    if(isCollapsed) sidebar.classList.add('collapsed');
+    if (isCollapsed) sidebar.classList.add('collapsed');
 
     btn.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
@@ -78,7 +79,17 @@ function initNavigation() {
   });
 }
 
-function navigateTo(page) {
+let pageHistory = [];
+let isNavigatingBack = false;
+
+function navigateTo(page, replaceHistory = false) {
+  if (currentPage === page) return;
+
+  if (!replaceHistory && !isNavigatingBack && currentPage) {
+    pageHistory.push(currentPage);
+  }
+  isNavigatingBack = false;
+
   currentPage = page;
   document.querySelectorAll('.nav-item, .top-nav-btn').forEach(el => el.classList.remove('active'));
   const navEl = document.querySelector(`[data-page="${page}"]`);
@@ -105,6 +116,10 @@ function navigateTo(page) {
   if (page === 'library') {
     loadLibraryPage();
   }
+  // Load new/explore data when navigating to new
+  if (page === 'new') {
+    if (typeof loadNewContent === 'function') loadNewContent();
+  }
   // Load admin data when navigating to admin
   if (page === 'admin') {
     if (currentUserRole !== 'admin' && currentUserRole !== 'yetkili') {
@@ -129,22 +144,43 @@ function navigateTo(page) {
   }
 }
 
+function goBack() {
+  if (pageHistory.length > 0) {
+    const prevPage = pageHistory.pop();
+    isNavigatingBack = true;
+    navigateTo(prevPage);
+  }
+}
+
+// Mouse geri tuşu için (fallback)
+window.addEventListener('mouseup', (e) => {
+  if (e.button === 3) {
+    goBack();
+  }
+});
+
+if (window.electronAPI && window.electronAPI.onAppGoBack) {
+  window.electronAPI.onAppGoBack(() => {
+    goBack();
+  });
+}
+
 // ===== Profile Popup (Discord Style) =====
 function initProfilePopupClick() {
   const topUserBtn = document.getElementById('top-user-btn');
   const popup = document.getElementById('discord-profile-popup');
-  
+
   if (topUserBtn && popup) {
     topUserBtn.style.cursor = 'pointer';
     topUserBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      
+
       // If already active, close it
       if (popup.classList.contains('active')) {
         popup.classList.remove('active');
         return;
       }
-      
+
       try {
         // Populate data before opening
         await updateDiscordPopupData();
@@ -152,7 +188,7 @@ function initProfilePopupClick() {
         showToast('Kritik Hata: ' + err.message, 'error');
         return;
       }
-      
+
       popup.classList.add('active');
     });
 
@@ -162,16 +198,16 @@ function initProfilePopupClick() {
         popup.classList.remove('active');
         document.getElementById('discord-popup-submenu')?.classList.remove('open');
         const chev = document.getElementById('switch-account-chevron');
-        if(chev) chev.style.transform = 'rotate(0deg)';
+        if (chev) chev.style.transform = 'rotate(0deg)';
       }
     });
-    
+
     // Bind buttons
     document.getElementById('btn-discord-edit-profile')?.addEventListener('click', () => {
       popup.classList.remove('active');
       navigateTo('profile');
     });
-    
+
     document.getElementById('btn-discord-copy-id')?.addEventListener('click', () => {
       if (currentUserId) {
         navigator.clipboard.writeText(currentUserId).then(() => {
@@ -188,7 +224,7 @@ function initProfilePopupClick() {
       localStorage.setItem('bekofy_dnd', isDnd);
       updateDndUI();
     });
-    
+
     function updateDndUI() {
       const statusIcon = document.querySelector('.discord-popup-status');
       if (statusIcon && dndBtn) {
@@ -219,7 +255,7 @@ function initProfilePopupClick() {
         }
       }
     });
-    
+
     document.getElementById('discord-popup-submenu')?.addEventListener('click', (e) => {
       e.stopPropagation();
     });
@@ -228,7 +264,7 @@ function initProfilePopupClick() {
     document.getElementById('btn-discord-logout')?.addEventListener('click', () => {
       popup.classList.remove('active');
       const logoutEvent = new Event('click');
-      document.getElementById('btn-logout')?.dispatchEvent(logoutEvent); 
+      document.getElementById('btn-logout')?.dispatchEvent(logoutEvent);
       if (window.electronAPI && window.electronAPI.logout) {
         window.electronAPI.logout();
       }
@@ -245,7 +281,7 @@ async function saveCurrentAccountSession() {
   if (avatarEl) {
     avatar = avatarEl.src;
   } else {
-    avatar = document.getElementById('user-avatar').innerHTML; 
+    avatar = document.getElementById('user-avatar').innerHTML;
   }
 
   try {
@@ -266,21 +302,21 @@ async function saveCurrentAccountSession() {
       },
       lastUsed: Date.now()
     });
-    
+
     localStorage.setItem('bekofy_saved_accounts', JSON.stringify(accounts));
   } catch (err) {
     console.error('Failed to save session for multi-account:', err);
   }
 }
 
-window.switchAccountTo = async function(accountId) {
+window.switchAccountTo = async function (accountId) {
   let accounts = JSON.parse(localStorage.getItem('bekofy_saved_accounts') || '[]');
   const account = accounts.find(a => a.id === accountId);
   if (!account) return;
-  
+
   const sb = typeof getSupabase === 'function' ? getSupabase() : null;
   if (!sb) return;
-  
+
   try {
     showToast('Hesap değiştiriliyor...', 'info');
     const { data, error } = await sb.auth.setSession({
@@ -296,10 +332,10 @@ window.switchAccountTo = async function(accountId) {
   }
 };
 
-window.addNewAccount = function() {
+window.addNewAccount = function () {
   if (typeof signOut === 'function') {
     signOut().then(() => {
-       if (window.electronAPI && window.electronAPI.navigateToAuth) window.electronAPI.navigateToAuth();
+      if (window.electronAPI && window.electronAPI.navigateToAuth) window.electronAPI.navigateToAuth();
     });
   }
 };
@@ -308,12 +344,12 @@ function renderAccountSubmenu() {
   const submenu = document.getElementById('discord-popup-submenu');
   if (!submenu) return;
   let accounts = JSON.parse(localStorage.getItem('bekofy_saved_accounts') || '[]');
-  accounts.sort((a,b) => b.lastUsed - a.lastUsed);
-  
+  accounts.sort((a, b) => b.lastUsed - a.lastUsed);
+
   let html = '';
   accounts.forEach(acc => {
     const isCurrent = acc.id === currentUserId;
-    let avatarHtml = `<div class="account-item-avatar">${acc.avatar.startsWith('<svg') ? acc.avatar : `<img src="${acc.avatar}">`}</div>`;
+    let avatarHtml = `<div class="account-item-avatar">${acc.avatar.startsWith('<') ? acc.avatar : `<img src="${acc.avatar}">`}</div>`;
     html += `
       <button class="account-item" ${isCurrent ? '' : `onclick="window.switchAccountTo('${acc.id}')"`}>
         ${avatarHtml}
@@ -324,7 +360,7 @@ function renderAccountSubmenu() {
       </button>
     `;
   });
-  
+
   html += `
     <button class="account-item" onclick="window.addNewAccount()">
       <div class="account-item-avatar" style="background: transparent;">
@@ -350,7 +386,14 @@ async function updateDiscordPopupData() {
   // Avatar
   const avatarEl = document.getElementById('discord-popup-avatar');
   avatarEl.innerHTML = document.getElementById('user-avatar').innerHTML;
-  
+
+  if (typeof currentUserAvatarFrame !== 'undefined' && currentUserAvatarFrame !== 'none') {
+    const frameClass = getAvatarFrameClass(currentUserAvatarFrame);
+    avatarEl.className = 'discord-popup-avatar ' + frameClass;
+  } else {
+    avatarEl.className = 'discord-popup-avatar';
+  }
+
   // Banner
   const bannerEl = document.getElementById('discord-popup-banner');
   if (window.currentUserBannerUrl) {
@@ -368,14 +411,14 @@ async function updateDiscordPopupData() {
   const nowPlayingTitle = document.getElementById('now-playing-title');
   const nowPlayingArtist = document.getElementById('now-playing-artist');
   const nowPlayingCover = document.getElementById('now-playing-cover');
-  
+
   if (nowPlayingTitle && nowPlayingTitle.textContent !== 'Şarkı seçilmedi' && nowPlayingTitle.textContent !== 'Şarkı Seçilmedi') {
     actText.textContent = nowPlayingTitle.textContent;
     actSub.textContent = nowPlayingArtist ? nowPlayingArtist.textContent : 'Bekofy';
-    
+
     // Check if the container has an image inside
     const imgEl = nowPlayingCover ? nowPlayingCover.querySelector('img') : null;
-    
+
     if (imgEl && imgEl.src && !imgEl.src.endsWith('default-cover.svg')) {
       actIcon.innerHTML = `<img src="${imgEl.src}" alt="cover">`;
     } else {
@@ -425,8 +468,83 @@ function setGreeting() {
   else if (hour < 12) greeting = 'Günaydın';
   else if (hour < 18) greeting = 'İyi Günler';
   else greeting = 'İyi Akşamlar';
-  const h1 = document.querySelector('#page-home .page-header h1');
+  const h1 = document.querySelector('#home-greeting');
+  const sub = document.querySelector('#greeting-subtitle');
   if (h1) h1.textContent = greeting;
+  if (sub) sub.textContent = 'Müziğin ritmini hisset';
+}
+
+async function renderHeroBanner() {
+  const heroSection = document.getElementById('hero-banner-section');
+  const heroTitle = document.getElementById('hero-banner-title');
+  const heroArtist = document.getElementById('hero-banner-artist');
+  const heroBg = document.getElementById('hero-banner-bg');
+  const playBtn = document.getElementById('hero-banner-play');
+
+  if (!heroSection || !allSongs.length) return;
+
+  const heroSong = allSongs[Math.floor(Math.random() * allSongs.length)];
+
+  heroTitle.textContent = heroSong.title;
+  heroArtist.textContent = heroSong.artist;
+  if (heroSong.cover_url) {
+    heroBg.style.backgroundImage = `url('${heroSong.cover_url}')`;
+  }
+
+  playBtn.onclick = () => {
+    player.playSong(heroSong, allSongs);
+  };
+
+  heroSection.style.display = 'block';
+}
+
+async function renderDailyMixes() {
+  const section = document.getElementById('daily-mix-section');
+  const grid = document.getElementById('daily-mix-grid');
+  if (!section || !grid || !allSongs.length) return;
+
+  let mixes = JSON.parse(localStorage.getItem('bekofy_daily_mixes') || 'null');
+  const today = new Date().toDateString();
+
+  if (!mixes || mixes.date !== today) {
+    mixes = { date: today, data: [] };
+    const artists = [...new Set(allSongs.map(s => s.artist))].sort(() => 0.5 - Math.random());
+    for (let i = 0; i < 4 && i < artists.length; i++) {
+      const artistSongs = allSongs.filter(s => s.artist === artists[i]);
+      if (artistSongs.length > 0) {
+        mixes.data.push({
+          title: `${artists[i]} Mix`,
+          desc: `${artists[i]} ve benzerleri`,
+          songs: artistSongs,
+          cover: artistSongs[0].cover_url
+        });
+      }
+    }
+    localStorage.setItem('bekofy_daily_mixes', JSON.stringify(mixes));
+  }
+
+  if (mixes.data.length > 0) {
+    grid.innerHTML = mixes.data.map((mix, idx) => `
+      <div class="daily-mix-card" onclick="playDailyMix(${idx})">
+        <img src="${mix.cover || ''}" class="daily-mix-cover">
+        <div class="daily-mix-info">
+          <h4>${mix.title}</h4>
+          <p>${mix.desc}</p>
+        </div>
+        <button class="daily-mix-play">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+    `).join('');
+    section.style.display = 'block';
+
+    window.playDailyMix = (idx) => {
+      const mix = mixes.data[idx];
+      if (mix && mix.songs.length) {
+        player.playSong(mix.songs[0], mix.songs);
+      }
+    };
+  }
 }
 
 // ===== Load User Info & Ensure Profile =====
@@ -436,11 +554,11 @@ async function loadUserInfo() {
     if (user) {
       currentUserId = user.id;
       const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
-      
+
       const nameEl = document.getElementById('user-name');
       nameEl.childNodes[0].textContent = displayName + ' ';
       document.getElementById('user-email').textContent = user.email || '';
-      
+
       // Profil yoksa oluştur
       await ensureProfile(user.id, displayName);
       // Beğenilen şarkıları yükle
@@ -461,17 +579,17 @@ async function loadUserRole(userId) {
     const badge = document.getElementById('role-badge');
     const adminNav = document.getElementById('nav-admin');
     const artistNav = document.getElementById('nav-artist-upload');
-    
+
     const roleConfig = {
-      admin:   { text: 'Admin',    css: 'admin',   admin: true,  artist: true },
-      yetkili: { text: 'Yetkili',  css: 'yetkili', admin: true,  artist: false },
-      artist:  { text: 'Sanatçı',  css: 'artist',  admin: false, artist: true },
-      premium: { text: 'Premium',  css: 'premium', admin: false, artist: false },
-      user:    { text: null,       css: null,      admin: false, artist: false },
+      admin: { text: 'Admin', css: 'admin', admin: true, artist: true },
+      yetkili: { text: 'Yetkili', css: 'yetkili', admin: true, artist: false },
+      artist: { text: 'Sanatçı', css: 'artist', admin: false, artist: true },
+      premium: { text: 'Premium', css: 'premium', admin: false, artist: false },
+      user: { text: null, css: null, admin: false, artist: false },
     };
-    
+
     const cfg = roleConfig[currentUserRole] || roleConfig.user;
-    
+
     if (cfg.text) {
       badge.textContent = cfg.text;
       badge.className = 'role-badge ' + cfg.css;
@@ -479,10 +597,10 @@ async function loadUserRole(userId) {
     } else {
       badge.style.display = 'none';
     }
-    
+
     adminNav.style.display = cfg.admin ? 'flex' : 'none';
     artistNav.style.display = cfg.artist ? 'flex' : 'none';
-    
+
     // Also toggle top-bar buttons
     const topAdmin = document.getElementById('btn-top-admin');
     const topArtist = document.getElementById('btn-top-artist-upload');
@@ -496,10 +614,10 @@ async function loadUserRole(userId) {
 async function loadUserAvatar(userId, displayName) {
   try {
     const sb = getSupabase();
-    const { data: profile } = await sb.from('profiles').select('avatar_url').eq('id', userId).single();
+    const { data: profile } = await sb.from('profiles').select('avatar_url, avatar_frame').eq('id', userId).single();
     const avatarEl = document.getElementById('user-avatar');
     const topAvatarEl = document.getElementById('top-user-avatar');
-    
+
     if (profile && profile.avatar_url) {
       avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
       if (topAvatarEl) topAvatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
@@ -524,7 +642,7 @@ function getInitials(name) {
 }
 
 function getAvatarColor(name) {
-  const colors = ['#1DB954','#E91E63','#9C27B0','#3F51B5','#009688','#FF5722','#795548','#607D8B','#F44336','#2196F3','#4CAF50','#FF9800'];
+  const colors = ['#1DB954', '#E91E63', '#9C27B0', '#3F51B5', '#009688', '#FF5722', '#795548', '#607D8B', '#F44336', '#2196F3', '#4CAF50', '#FF9800'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -546,19 +664,19 @@ async function openAvatarUpload(userId, displayName) {
       const sb = getSupabase();
       const ext = file.name.split('.').pop();
       const filePath = `${userId}/avatar.${ext}`;
-      
+
       const { error: uploadError } = await sb.storage.from('avatars').upload(filePath, file, { upsert: true });
-      if (uploadError) { 
+      if (uploadError) {
         console.error('Upload Error Detailed:', uploadError);
-        showToast('Yükleme hatası: ' + (uploadError.message || JSON.stringify(uploadError)), 'error'); 
-        return; 
+        showToast('Yükleme hatası: ' + (uploadError.message || JSON.stringify(uploadError)), 'error');
+        return;
       }
-      
+
       const { data: urlData } = sb.storage.from('avatars').getPublicUrl(filePath);
       const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
-      
+
       await sb.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
-      
+
       await loadUserAvatar(userId, displayName);
       showToast('Profil fotoğrafı güncellendi! 📸', 'success');
     } catch (err) {
@@ -582,11 +700,190 @@ async function ensureProfile(userId, username) {
     try {
       const sb = getSupabase();
       await sb.from('profiles').upsert({ id: userId, username: username }, { onConflict: 'id' });
-    } catch (e) {
-      console.log('Profile ensure error:', e);
+    } catch (err) {
+      console.warn("Analytics update failed:", err);
     }
   }
 }
+
+// ===== Friend Activity Logic =====
+function initFriendActivity() {
+  const btnOpen = document.getElementById('btn-top-friend-activity');
+  const btnClose = document.getElementById('btn-close-friend-activity');
+  const sidebar = document.getElementById('friend-activity-sidebar');
+
+  if (btnOpen && sidebar) {
+    btnOpen.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      if (!sidebar.classList.contains('collapsed')) {
+        loadFriendActivity();
+      }
+    });
+  }
+
+  if (btnClose && sidebar) {
+    btnClose.addEventListener('click', () => {
+      sidebar.classList.add('collapsed');
+    });
+  }
+}
+
+let _currentFriends = [];
+
+async function loadFriendActivity() {
+  if (!currentUserId) return;
+  const list = document.getElementById('friend-activity-list');
+
+  try {
+    const sb = getSupabase();
+    // Fetch accepted friends
+    const { data: friendships, error } = await sb.from('friendships')
+      .select('friend_id, user_id')
+      .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
+      .eq('status', 'accepted');
+
+    if (error) throw error;
+
+    if (!friendships || friendships.length === 0) {
+      list.innerHTML = `<div class="no-activity-text">Henüz hiç arkadaşın yok. Başkalarını takip etmeye başla!</div>`;
+      return;
+    }
+
+    const friendIds = friendships.map(f => f.user_id === currentUserId ? f.friend_id : f.user_id);
+    _currentFriends = friendIds;
+
+    // Subscribe to realtime updates
+    if (typeof subscribeToFriendActivity === 'function') {
+      subscribeToFriendActivity(friendIds, (newProfile) => {
+        updateFriendActivityUI(newProfile);
+      });
+    }
+
+    // Fetch profiles of friends including song info
+    const { data: profiles, error: profileErr } = await sb.from('profiles')
+      .select(`
+        id, username, avatar_url, avatar_frame, is_playing, last_activity,
+        songs:current_song_id (id, title, artist, cover_url)
+      `)
+      .in('id', friendIds);
+
+    if (profileErr) throw profileErr;
+
+    renderFriendActivityList(profiles);
+
+  } catch (err) {
+    console.error('Arkadaş aktivitesi yüklenirken hata:', err);
+    list.innerHTML = `<div class="no-activity-text">Aktiviteler yüklenemedi.</div>`;
+  }
+}
+
+function renderFriendActivityList(profiles) {
+  const list = document.getElementById('friend-activity-list');
+  if (!profiles || profiles.length === 0) {
+    list.innerHTML = `<div class="no-activity-text">Arkadaşların şu an çevrimdışı.</div>`;
+    return;
+  }
+
+  // Sort: playing first
+  profiles.sort((a, b) => {
+    if (a.is_playing && !b.is_playing) return -1;
+    if (!a.is_playing && b.is_playing) return 1;
+    return new Date(b.last_activity || 0) - new Date(a.last_activity || 0);
+  });
+
+  list.innerHTML = profiles.map(profile => createFriendActivityHTML(profile)).join('');
+}
+
+function createFriendActivityHTML(profile) {
+  const avatar = profile.avatar_url
+    ? `<img src="${profile.avatar_url}" alt="Avatar">`
+    : `<div class="avatar-initials" style="width:100%;height:100%;background:${getAvatarColor(profile.username)};display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff">${getInitials(profile.username)}</div>`;
+
+  const isOnline = profile.is_playing;
+  const statusClass = isOnline ? 'online' : '';
+
+  let frameClass = '';
+  if (profile.avatar_frame && profile.avatar_frame !== 'none') {
+    frameClass = ' ' + getAvatarFrameClass(profile.avatar_frame);
+  }
+
+  let songInfoHtml = '';
+  let artistHtml = '';
+  let animHtml = '';
+  let songIdStr = profile.songs?.id || '';
+  let songTitleStr = profile.songs?.title || '';
+  let songArtistStr = profile.songs?.artist || '';
+
+  // Sanitize strings for HTML attributes
+  songTitleStr = songTitleStr.replace(/"/g, '&quot;');
+  songArtistStr = songArtistStr.replace(/"/g, '&quot;');
+  const usernameStr = profile.username ? profile.username.replace(/"/g, '&quot;') : '';
+
+  if (songTitleStr) {
+    const songClick = songIdStr ? `onclick="event.stopPropagation(); window.playSongFromActivity('${songIdStr}')"` : '';
+    songInfoHtml = `<span class="friend-song-info ${isOnline ? 'playing' : ''}" title="${songTitleStr}" ${songClick} style="cursor:pointer">${songTitleStr}</span>`;
+    artistHtml = `<span class="friend-artist-info" title="${songArtistStr}">${songArtistStr}</span>`;
+    if (isOnline) {
+      animHtml = `<div class="playing-animation"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>`;
+    }
+  } else {
+    songInfoHtml = `<span class="friend-song-info">Şu an bir şey dinlemiyor</span>`;
+  }
+
+  return `
+    <div class="friend-activity-item" id="friend-activity-${profile.id}" onclick="window.openFriendProfile('${profile.id}')">
+      <div class="friend-avatar-wrap${frameClass}">
+        ${avatar}
+        <div class="friend-status-indicator ${statusClass}"></div>
+      </div>
+      <div class="friend-info">
+        <span class="friend-name" title="${usernameStr}">${profile.username} ${animHtml}</span>
+        ${songInfoHtml}
+        ${artistHtml}
+      </div>
+    </div>
+  `;
+}
+
+window.openFriendProfile = function (userId) {
+  if (!userId) return;
+  // Close sidebar when navigating
+  const sidebar = document.getElementById('friend-activity-sidebar');
+  if (sidebar) sidebar.classList.add('collapsed');
+  loadPublicUserProfile(userId);
+};
+
+window.playSongFromActivity = function (songId) {
+  if (!songId || songId === 'undefined') return;
+  const song = allSongs.find(s => s.id === songId);
+  if (song) {
+    player.playSong(song, [song]);
+  }
+};
+
+function updateFriendActivityUI(newProfile) {
+  if (!_currentFriends.includes(newProfile.id)) return;
+
+  const sb = getSupabase();
+  sb.from('profiles').select('id, username, avatar_url, avatar_frame, is_playing, last_activity, songs:current_song_id(id, title, artist, cover_url)')
+    .eq('id', newProfile.id)
+    .single()
+    .then(({ data, error }) => {
+      if (error || !data) return;
+      const el = document.getElementById(`friend-activity-${data.id}`);
+      if (el) {
+        el.outerHTML = createFriendActivityHTML(data);
+      } else {
+        const list = document.getElementById('friend-activity-list');
+        if (list.querySelector('.no-activity-text')) {
+          list.innerHTML = createFriendActivityHTML(data);
+        } else {
+          list.insertAdjacentHTML('afterbegin', createFriendActivityHTML(data));
+        }
+      }
+    });
+}
+
 
 // ===== Load Songs =====
 let _songsSubscribed = false;
@@ -600,7 +897,7 @@ async function loadSongs() {
       data = fallback.data;
       error = fallback.error;
     }
-    
+
     if (error) {
       showEmptyState('recent-songs', 'Şarkılar yüklenemedi');
       showEmptyState('all-songs', 'Şarkılar yüklenemedi');
@@ -614,7 +911,7 @@ async function loadSongs() {
     renderHomePopularArtists(allSongs);
     renderTopLikedSongs(allSongs);
     initMoodCards();
-    
+
     // Subscribe to realtime updates only once
     if (!_songsSubscribed) {
       subscribeToSongs((payload) => {
@@ -627,6 +924,46 @@ async function loadSongs() {
     console.error('Songs load error:', err);
     showEmptyState('recent-songs', 'Şarkılar yüklenemedi');
     showEmptyState('all-songs', 'Şarkılar yüklenemedi');
+  }
+}
+
+// ===== Load New (Keşfet) Content =====
+async function loadNewContent() {
+  if (!currentUserId) return;
+  
+  try {
+    // 1. Fetch newest releases
+    const newReleasesRes = await fetchNewReleases();
+    const newReleasesContainer = document.getElementById('new-latest-releases');
+    if (newReleasesRes.data && newReleasesRes.data.length > 0) {
+      newReleasesContainer.innerHTML = newReleasesRes.data.map(song => createSongCard(song)).join('');
+    } else {
+      newReleasesContainer.innerHTML = '<p style="color:var(--tm);padding:12px;">Yeni çıkan şarkı bulunamadı.</p>';
+    }
+
+    // 2. Fetch liked songs to generate recommendations
+    const likedRes = await fetchLikedSongs(currentUserId);
+    const likedSongIds = new Set((likedRes.data || []).map(l => l.song_id));
+
+    // 3. Recommended Songs
+    const recommendedSongs = await getRecommendedSongs(currentUserId, allSongs, likedSongIds);
+    const recommendedContainer = document.getElementById('new-recommended-songs');
+    if (recommendedSongs && recommendedSongs.length > 0) {
+      recommendedContainer.innerHTML = recommendedSongs.map(song => createSongCard(song)).join('');
+    } else {
+      recommendedContainer.innerHTML = '<p style="color:var(--tm);padding:12px;">Henüz yeterli dinleme geçmişin yok.</p>';
+    }
+
+    // 4. Personalized Mix
+    const mixSongs = await getPersonalizedMix(currentUserId, allSongs, likedSongIds);
+    const mixContainer = document.getElementById('new-personal-mix');
+    const mixSection = document.getElementById('section-personal-mix');
+    if (mixSongs && mixSongs.length > 0) {
+      mixContainer.innerHTML = mixSongs.map(song => createSongCard(song)).join('');
+      mixSection.style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Error loading new content:', err);
   }
 }
 
@@ -648,14 +985,14 @@ function renderRecentSongs(songs) {
 let discoverWeeklyCache = null;
 async function playDiscoverWeekly() {
   if (allSongs.length === 0) return;
-  
+
   if (!discoverWeeklyCache) {
     if (currentUserId) {
       discoverWeeklyCache = await getRecommendedSongs(currentUserId, allSongs, userLikedSongIds);
       // Make it longer for discover weekly (up to 30)
       if (discoverWeeklyCache.length < 30) {
-        const remaining = allSongs.filter(s => 
-          !userLikedSongIds.has(s.id) && 
+        const remaining = allSongs.filter(s =>
+          !userLikedSongIds.has(s.id) &&
           !discoverWeeklyCache.find(r => r.id === s.id)
         ).sort(() => Math.random() - 0.5);
         discoverWeeklyCache.push(...remaining.slice(0, 30 - discoverWeeklyCache.length));
@@ -664,7 +1001,7 @@ async function playDiscoverWeekly() {
       discoverWeeklyCache = [...allSongs].sort(() => Math.random() - 0.5).slice(0, 30);
     }
   }
-  
+
   if (discoverWeeklyCache && discoverWeeklyCache.length > 0) {
     player.playSong(discoverWeeklyCache[0], discoverWeeklyCache);
     showToast('Haftalık Keşif listesi başlatıldı 🎵', 'success');
@@ -680,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
       playDiscoverWeekly();
     });
   }
-  
+
   const bannerDiscover = document.getElementById('discover-weekly-btn');
   if (bannerDiscover) {
     bannerDiscover.addEventListener('click', () => {
@@ -692,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function renderRecommendedSongs() {
   const container = document.getElementById('recommended-songs');
   if (!container) return;
-  
+
   if (!currentUserId || allSongs.length === 0) {
     // Kullanıcı giriş yapmamışsa veya şarkı yoksa son eklenenlerden rastgele göster
     const shuffled = [...allSongs].sort(() => Math.random() - 0.5).slice(0, 8);
@@ -703,7 +1040,7 @@ async function renderRecommendedSongs() {
     }
     return;
   }
-  
+
   try {
     const recommended = await getRecommendedSongs(currentUserId, allSongs, userLikedSongIds);
     if (recommended.length > 0) {
@@ -721,10 +1058,10 @@ async function renderRecommendedSongs() {
 }
 
 function createSongCard(song) {
-  const coverHtml = song.cover_url 
-    ? `<img src="${song.cover_url}" alt="${escapeHtml(song.title)}" onerror="this.style.display='none'">` 
+  const coverHtml = song.cover_url
+    ? `<img src="${song.cover_url}" alt="${escapeHtml(song.title)}" onerror="this.style.display='none'">`
     : `<svg class="default-cover" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
-  
+
   return `
     <div class="song-card" data-song-id="${song.id}">
       <div class="song-card-cover">
@@ -760,8 +1097,8 @@ function renderAllSongs(songs) {
 }
 
 function renderSongListItem(song, num) {
-  const coverHtml = song.cover_url 
-    ? `<img src="${song.cover_url}" alt="" onerror="this.style.display='none'">` 
+  const coverHtml = song.cover_url
+    ? `<img src="${song.cover_url}" alt="" onerror="this.style.display='none'">`
     : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
 
   return `
@@ -807,7 +1144,7 @@ function renderHomePopularArtists(songs) {
     if (container) container.innerHTML = '<div class="empty-state"><p>Henüz sanatçı yok</p></div>';
     return;
   }
-  
+
   // Count songs per artist
   const artistMap = {};
   songs.forEach(s => {
@@ -820,7 +1157,7 @@ function renderHomePopularArtists(songs) {
   });
 
   const artists = Object.values(artistMap).sort((a, b) => b.count - a.count).slice(0, 12);
-  
+
   container.innerHTML = artists.map(artist => {
     const avatarHtml = artist.cover
       ? `<img src="${artist.cover}" alt="${escapeHtml(artist.name)}">`
@@ -882,7 +1219,7 @@ document.addEventListener('click', (e) => {
     if (artistName) openArtistProfile(artistName);
     return;
   }
-  
+
   // Song card play button
   const playBtn = e.target.closest('[data-play-id]');
   if (playBtn) {
@@ -891,7 +1228,7 @@ document.addEventListener('click', (e) => {
     playSongFromAny(id);
     return;
   }
-  
+
   // Song card click
   const songCard = e.target.closest('.song-card[data-song-id]');
   if (songCard) {
@@ -905,21 +1242,21 @@ document.addEventListener('click', (e) => {
     playSongFromAny(quickPick.dataset.songId);
     return;
   }
-  
+
   // Song list item click
   const songItem = e.target.closest('.song-list-item[data-song-id]');
   if (songItem) {
     playSongFromAny(songItem.dataset.songId);
     return;
   }
-  
+
   // Playlist item click (sidebar)
   const playlistItem = e.target.closest('.playlist-item[data-playlist-id]');
   if (playlistItem) {
     openPlaylistDetail(playlistItem.dataset.playlistId);
     return;
   }
-  
+
   // Playlist card click (library page)
   const playlistCard = e.target.closest('.playlist-card[data-playlist-id]');
   if (playlistCard) {
@@ -938,17 +1275,17 @@ function playSongFromAny(id) {
       return;
     }
   }
-  
+
   // allSongs'da ara
   let song = allSongs.find(s => s.id === id);
   let songList = allSongs;
-  
+
   // Bulamazsa search sonuçlarında ara
   if (!song && searchResultSongs.length > 0) {
     song = searchResultSongs.find(s => s.id === id);
     songList = searchResultSongs;
   }
-  
+
   if (song) {
     player.playSong(song, songList);
   }
@@ -998,25 +1335,25 @@ function initPlayerControls() {
   const progressBar = document.getElementById('progress-bar');
   const fsProgressBar = document.getElementById('fs-progress-bar');
   let isDraggingProgress = false;
-  
+
   const seekFromEvent = (e, bar) => {
     const rect = bar.getBoundingClientRect();
     const percent = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
     player.seek(percent);
   };
-  
+
   progressBar.addEventListener('mousedown', (e) => {
     isDraggingProgress = true;
     seekFromEvent(e, progressBar);
   });
-  
+
   if (fsProgressBar) {
     fsProgressBar.addEventListener('mousedown', (e) => {
       isDraggingProgress = true;
       seekFromEvent(e, fsProgressBar);
     });
   }
-  
+
   document.addEventListener('mousemove', (e) => {
     if (isDraggingProgress) {
       if (player.isFullscreen) {
@@ -1026,7 +1363,7 @@ function initPlayerControls() {
       }
     }
   });
-  
+
   document.addEventListener('mouseup', () => {
     isDraggingProgress = false;
   });
@@ -1034,28 +1371,28 @@ function initPlayerControls() {
   // Volume slider - click & drag
   const volumeSlider = document.getElementById('volume-slider');
   let isDraggingVolume = false;
-  
+
   const setVolumeFromEvent = (e) => {
     const rect = volumeSlider.getBoundingClientRect();
     const vol = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     player.setVolume(vol);
   };
-  
+
   volumeSlider.addEventListener('mousedown', (e) => {
     isDraggingVolume = true;
     setVolumeFromEvent(e);
   });
-  
+
   document.addEventListener('mousemove', (e) => {
     if (isDraggingVolume) setVolumeFromEvent(e);
   });
-  
+
   document.addEventListener('mouseup', () => {
     isDraggingVolume = false;
   });
 
   // Like button (player bar)
-  document.getElementById('btn-like').addEventListener('click', async function() {
+  document.getElementById('btn-like').addEventListener('click', async function () {
     const currentSong = player.getCurrentSong();
     if (!currentSong || !currentUserId) return;
     await toggleLikeSong(currentSong.id);
@@ -1090,7 +1427,7 @@ function loadSearchHistory() {
 function saveSearchHistory() {
   try {
     localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistoryItems.slice(0, MAX_SEARCH_HISTORY)));
-  } catch {}
+  } catch { }
 }
 
 function addToSearchHistory(query) {
@@ -1112,7 +1449,7 @@ function removeFromSearchHistory(query) {
 async function showSearchDiscovery() {
   const container = document.getElementById('search-results');
   let html = '';
-  
+
   // 1. Recent searches
   if (searchHistoryItems.length > 0) {
     html += `
@@ -1135,18 +1472,18 @@ async function showSearchDiscovery() {
       </div>
     `;
   }
-  
+
   // 2. Popular Artists
   try {
     const sb = getSupabase();
     const [artistsRes, profilesRes] = await Promise.all([
       sb.from('artists').select('id, name, avatar_url').order('name').limit(20),
-      sb.from('profiles').select('id, username, avatar_url, role').eq('role', 'artist').order('username').limit(10)
+      sb.from('profiles').select('id, username, avatar_url, avatar_frame, role').eq('role', 'artist').order('username').limit(10)
     ]);
-    
+
     const seen = new Set();
     const allArtistsDiscovery = [];
-    
+
     for (const p of (profilesRes.data || [])) {
       const key = (p.username || '').toLowerCase();
       if (key && !seen.has(key)) {
@@ -1161,19 +1498,19 @@ async function showSearchDiscovery() {
         allArtistsDiscovery.push({ name: a.name, avatar_url: a.avatar_url, source: 'artist' });
       }
     }
-    
+
     if (allArtistsDiscovery.length > 0) {
       html += `
         <div class="search-discovery-section">
           <h2 class="section-title">🎤 Sanatçılar</h2>
           <div class="discovery-artists-grid">
             ${allArtistsDiscovery.slice(0, 12).map(a => {
-              const initials = getInitials(a.name);
-              const color = getAvatarColor(a.name);
-              const avatarHtml = a.avatar_url 
-                ? `<img src="${a.avatar_url}" alt="${escapeHtml(a.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                : '';
-              return `
+        const initials = getInitials(a.name);
+        const color = getAvatarColor(a.name);
+        const avatarHtml = a.avatar_url
+          ? `<img src="${a.avatar_url}" alt="${escapeHtml(a.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          : '';
+        return `
                 <div class="discovery-artist-card" data-artist-name="${escapeHtml(a.name)}">
                   <div class="discovery-artist-avatar">
                     ${avatarHtml}
@@ -1183,7 +1520,7 @@ async function showSearchDiscovery() {
                   <div class="discovery-artist-role">Sanatçı</div>
                 </div>
               `;
-            }).join('')}
+      }).join('')}
           </div>
         </div>
       `;
@@ -1191,22 +1528,22 @@ async function showSearchDiscovery() {
   } catch (err) {
     console.log('Discovery artists error:', err);
   }
-  
+
   // 3. Trending / Popular songs (based on likes or recent)
   if (allSongs.length > 0) {
     // Show recently added songs
     const recentSongs = [...allSongs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
-    
+
     if (recentSongs.length > 0) {
       html += `
         <div class="search-discovery-section">
           <h2 class="section-title">🔥 Popüler</h2>
           <div class="discovery-songs-list">
             ${recentSongs.map((song, i) => {
-              const coverHtml = song.cover_url 
-                ? `<img src="${song.cover_url}" alt="" onerror="this.style.display='none'">` 
-                : `<svg viewBox="0 0 24 24" fill="currentColor" opacity="0.3"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
-              return `
+        const coverHtml = song.cover_url
+          ? `<img src="${song.cover_url}" alt="" onerror="this.style.display='none'">`
+          : `<svg viewBox="0 0 24 24" fill="currentColor" opacity="0.3"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
+        return `
                 <div class="discovery-song-item" data-song-id="${song.id}">
                   <div class="discovery-song-rank">${i + 1}</div>
                   <div class="discovery-song-cover">${coverHtml}</div>
@@ -1216,12 +1553,12 @@ async function showSearchDiscovery() {
                   </div>
                 </div>
               `;
-            }).join('')}
+      }).join('')}
           </div>
         </div>
       `;
     }
-    
+
     // Browse by genre/mood categories
     const categories = [
       { emoji: '🎵', label: 'Tüm Şarkılar', color: '#1DB954' },
@@ -1229,7 +1566,7 @@ async function showSearchDiscovery() {
       { emoji: '🆕', label: 'Yeni Eklenenler', color: '#9b59b6' },
       { emoji: '🎲', label: 'Rastgele Keşfet', color: '#e67e22' },
     ];
-    
+
     html += `
       <div class="search-discovery-section">
         <h2 class="section-title">📂 Göz At</h2>
@@ -1244,7 +1581,7 @@ async function showSearchDiscovery() {
       </div>
     `;
   }
-  
+
   if (!html) {
     html = `
       <div class="empty-state">
@@ -1253,16 +1590,16 @@ async function showSearchDiscovery() {
       </div>
     `;
   }
-  
+
   container.innerHTML = html;
-  
+
   // Bind discovery events
   bindDiscoveryEvents();
 }
 
 function bindDiscoveryEvents() {
   const container = document.getElementById('search-results');
-  
+
   // Search history items - click to search
   container.querySelectorAll('.search-history-item').forEach(item => {
     item.addEventListener('click', (e) => {
@@ -1272,7 +1609,7 @@ function bindDiscoveryEvents() {
       document.getElementById('top-search-input').dispatchEvent(new Event('input'));
     });
   });
-  
+
   // Search history remove buttons
   container.querySelectorAll('.search-history-remove').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1280,7 +1617,7 @@ function bindDiscoveryEvents() {
       removeFromSearchHistory(btn.dataset.remove);
     });
   });
-  
+
   // Artist cards - click to view profile
   container.querySelectorAll('.discovery-artist-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -1288,7 +1625,7 @@ function bindDiscoveryEvents() {
       if (artistName) openArtistProfile(artistName);
     });
   });
-  
+
   // Song items - click to play
   container.querySelectorAll('.discovery-song-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -1296,7 +1633,7 @@ function bindDiscoveryEvents() {
       if (songId) playSongFromAny(songId);
     });
   });
-  
+
   // Category cards
   container.querySelectorAll('.discovery-category-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -1321,7 +1658,7 @@ function bindDiscoveryEvents() {
   });
 }
 
-window.clearSearchHistory = function() {
+window.clearSearchHistory = function () {
   searchHistoryItems = [];
   saveSearchHistory();
   showSearchDiscovery();
@@ -1331,17 +1668,17 @@ function initSearch() {
   const searchInput = document.getElementById('top-search-input');
   if (!searchInput) return;
   let debounceTimer;
-  
+
   // Navigate to search page when input is focused
   searchInput.addEventListener('focus', () => {
     if (currentPage !== 'search') {
       navigateTo('search');
     }
   });
-  
+
   // Load search history
   loadSearchHistory();
-  
+
   // Show discovery content initially
   showSearchDiscovery();
 
@@ -1356,12 +1693,12 @@ function initSearch() {
       }
 
       // Önce lokal ara (anında sonuç)
-      const localResults = allSongs.filter(s => 
+      const localResults = allSongs.filter(s =>
         s.title.toLowerCase().includes(query.toLowerCase()) ||
         s.artist.toLowerCase().includes(query.toLowerCase()) ||
         (s.album && s.album.toLowerCase().includes(query.toLowerCase()))
       );
-      
+
       if (localResults.length > 0) {
         searchResultSongs = localResults;
         renderSearchResults(localResults, query);
@@ -1371,18 +1708,18 @@ function initSearch() {
       if (query.length >= 2) {
         // Save to search history
         addToSearchHistory(query);
-        
+
         try {
           const [songsResult, playlistsResult, usersResult] = await Promise.all([
             searchSongs(query),
             searchPublicPlaylists(query),
             searchUsers(query)
           ]);
-          
+
           const songData = (!songsResult.error && songsResult.data) ? songsResult.data : localResults;
           const playlistData = (!playlistsResult.error && playlistsResult.data) ? playlistsResult.data : [];
           const userData = (!usersResult.error && usersResult.data) ? usersResult.data : [];
-          
+
           if (songData.length > 0 || playlistData.length > 0 || userData.length > 0) {
             searchResultSongs = songData;
             renderSearchResults(songData, query, playlistData, userData);
@@ -1401,7 +1738,7 @@ function initSearch() {
       }
     }, 200);
   });
-  
+
   // Enter tuşu ile de arama yap
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -1433,13 +1770,13 @@ function initSearch() {
       }
       return;
     }
-    
+
     // 2. Check for User Card click
     const card = e.target.closest('.user-search-card');
     if (card) {
       // Prevent click if we clicked the add friend or view artist button directly
       if (e.target.closest('.btn-add-friend') || e.target.closest('.btn-view-artist')) return;
-      
+
       const role = card.dataset.userRole;
       if (role === 'artist') {
         const artistName = card.dataset.userName;
@@ -1449,7 +1786,7 @@ function initSearch() {
         if (userId) loadPublicUserProfile(userId);
       }
     }
-    
+
     // 3. View Artist Button Focus
     const viewArtistBtn = e.target.closest('.btn-view-artist');
     if (viewArtistBtn) {
@@ -1463,41 +1800,45 @@ function initSearch() {
 function renderSearchResults(songs, query, playlists = [], users = []) {
   const container = document.getElementById('search-results');
   let html = '';
-  
+
   // Users section
   if (users.length > 0) {
     html += `
       <h2 class="section-title">👤 Kullanıcılar</h2>
       <div class="users-grid" style="display:flex;gap:12px;margin-bottom:24px;overflow-x:auto;padding-bottom:8px">
         ${users.map(u => {
-          const avatarHtml = u.avatar_url 
-            ? `<img src="${u.avatar_url}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">` 
-            : `<span style="width:50px;height:50px;border-radius:50%;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--ts)">${getInitials(u.username)}</span>`;
-          return `
+      let frameClass = '';
+      if (u.avatar_frame && u.avatar_frame !== 'none') {
+        frameClass = ' ' + getAvatarFrameClass(u.avatar_frame);
+      }
+      const avatarHtml = u.avatar_url
+        ? `<div class="search-avatar-wrapper${frameClass}" style="width:50px;height:50px;position:relative"><img src="${u.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;position:relative;z-index:2"></div>`
+        : `<div class="search-avatar-wrapper${frameClass}" style="width:50px;height:50px;position:relative"><span style="width:100%;height:100%;border-radius:50%;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--ts);position:relative;z-index:2">${getInitials(u.username)}</span></div>`;
+      return `
           <div class="user-search-card" data-user-id="${u.id}" data-user-role="${u.role}" data-user-name="${escapeHtml(u.username)}" style="background:var(--bg-card);padding:12px;border-radius:12px;display:flex;flex-direction:column;align-items:center;min-width:140px;border:1px solid var(--border)">
             ${avatarHtml}
             <div style="font-weight:600;margin-top:8px">${escapeHtml(u.username)}${u.role === 'artist' ? getVerifiedTick(u.username) : ''}</div>
-            ${u.role === 'artist' 
-              ? `<button class="btn-primary-small btn-view-artist" data-artist-name="${escapeHtml(u.username)}" style="margin-top:12px;width:100%;padding:6px;background:var(--bg-card-hover);border:1px solid var(--border);color:var(--tp)">Profili Gör</button>`
-              : `<button class="btn-primary-small btn-add-friend" data-user-id="${u.id}" style="margin-top:12px;width:100%;padding:6px">Arkadaş Ekle</button>`
-            }
+            ${u.role === 'artist'
+          ? `<button class="btn-primary-small btn-view-artist" data-artist-name="${escapeHtml(u.username)}" style="margin-top:12px;width:100%;padding:6px;background:var(--bg-card-hover);border:1px solid var(--border);color:var(--tp)">Profili Gör</button>`
+          : `<button class="btn-primary-small btn-add-friend" data-user-id="${u.id}" style="margin-top:12px;width:100%;padding:6px">Arkadaş Ekle</button>`
+        }
           </div>`;
-        }).join('')}
+    }).join('')}
       </div>
     `;
   }
-  
+
   // Public playlists section
   if (playlists.length > 0) {
     html += `
       <h2 class="section-title">🌐 Çalma Listeleri</h2>
       <div class="songs-grid">
         ${playlists.map(pl => {
-          const coverHtml = pl.cover_url 
-            ? `<img src="${pl.cover_url}" alt="${escapeHtml(pl.name)}" onerror="this.style.display='none'">` 
-            : `<svg class="default-cover" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
-          const ownerName = pl.profiles?.username || 'Kullanıcı';
-          return `
+      const coverHtml = pl.cover_url
+        ? `<img src="${pl.cover_url}" alt="${escapeHtml(pl.name)}" onerror="this.style.display='none'">`
+        : `<svg class="default-cover" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
+      const ownerName = pl.profiles?.username || 'Kullanıcı';
+      return `
           <div class="song-card playlist-card" data-playlist-id="${pl.id}">
             <div class="song-card-cover">
               ${coverHtml}
@@ -1505,11 +1846,11 @@ function renderSearchResults(songs, query, playlists = [], users = []) {
             <div class="song-card-title">${escapeHtml(pl.name)}</div>
             <div class="song-card-artist">${escapeHtml(ownerName)} <span class="playlist-card-public">🌐</span></div>
           </div>`;
-        }).join('')}
+    }).join('')}
       </div>
     `;
   }
-  
+
   // Songs section
   if (songs.length > 0) {
     html += `
@@ -1519,11 +1860,11 @@ function renderSearchResults(songs, query, playlists = [], users = []) {
       </div>
     `;
   }
-  
+
   if (!html) {
     html = `<div class="empty-state"><p>"${escapeHtml(query)}" için sonuç bulunamadı</p></div>`;
   }
-  
+
   container.innerHTML = html;
 }
 
@@ -1531,7 +1872,7 @@ function renderSearchResults(songs, query, playlists = [], users = []) {
 function initPlaylistModal() {
   const overlay = document.getElementById('modal-overlay');
   const input = document.getElementById('playlist-name-input');
-  
+
   const openModal = () => {
     overlay.style.display = 'flex';
     setTimeout(() => input.focus(), 100);
@@ -1548,7 +1889,7 @@ function initPlaylistModal() {
   document.getElementById('btn-create-playlist').addEventListener('click', openModal);
   const btnLib = document.getElementById('btn-create-playlist-library');
   if (btnLib) btnLib.addEventListener('click', openModal);
-  
+
   document.getElementById('btn-modal-cancel').addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
 
@@ -1565,28 +1906,28 @@ function initPlaylistModal() {
   document.getElementById('btn-modal-create').addEventListener('click', async () => {
     const name = input.value.trim();
     if (!name) { showToast('Lütfen bir ad girin', 'error'); return; }
-    
+
     const btn = document.getElementById('btn-modal-create');
     btn.textContent = 'Oluşturuluyor...';
     btn.disabled = true;
-    
+
     try {
       const user = await getCurrentUser();
       if (!user) { showToast('Giriş yapmanız gerekiyor', 'error'); return; }
-      
+
       // Profili garantile
       await ensureProfile(user.id, user.user_metadata?.username || user.email?.split('@')[0]);
-      
+
       const description = (document.getElementById('playlist-desc-input')?.value || '').trim();
       const is_public = document.getElementById('playlist-public-toggle')?.checked || false;
-      
+
       const { data, error } = await createPlaylist(name, user.id);
       if (error) {
         console.error('Playlist create error:', error);
         showToast('Çalma listesi oluşturulamadı: ' + (error.message || ''), 'error');
         return;
       }
-      
+
       // Update with description and public status
       if (data && data.id && (description || is_public)) {
         const updates = {};
@@ -1598,7 +1939,7 @@ function initPlaylistModal() {
           console.log('Playlist update extras error:', e);
         }
       }
-      
+
       // If there's a pending song from right-click, add it to the new playlist
       const pendingSongId = input.dataset.pendingSongId;
       if (pendingSongId && data && data.id) {
@@ -1613,7 +1954,7 @@ function initPlaylistModal() {
       } else {
         showToast(`"${name}" çalma listesi oluşturuldu! 🎵`, 'success');
       }
-      
+
       closeModal();
       loadPlaylists();
     } catch (err) {
@@ -1633,9 +1974,9 @@ async function loadPlaylists() {
     if (!user) return;
     const { data, error } = await fetchUserPlaylists(user.id);
     userPlaylists = data || [];
-    
+
     const list = document.getElementById('playlist-list');
-    
+
     const likedSongsHtml = `
       <div class="playlist-item" data-playlist-id="liked">
         <div class="playlist-item-cover" style="background: linear-gradient(135deg, #450af5, #c4efd9);">
@@ -1648,14 +1989,9 @@ async function loadPlaylists() {
       </div>
     `;
 
-    if (error || !data || data.length === 0) {
-      list.innerHTML = likedSongsHtml;
-      return;
-    }
-    
-    list.innerHTML = likedSongsHtml + data.map(pl => {
-      const coverHtml = pl.cover_url 
-        ? `<img src="${pl.cover_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:4px">` 
+    const playlistsHtml = (data || []).map(pl => {
+      const coverHtml = pl.cover_url
+        ? `<img src="${pl.cover_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
         : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
       const publicIcon = pl.is_public ? '<span class="pl-public-icon" title="Herkese Açık">🌐</span>' : '';
       return `
@@ -1670,6 +2006,34 @@ async function loadPlaylists() {
       </div>
     `;
     }).join('');
+
+    // Add Followed Artists Virtual Playlists
+    const { data: followedArtists } = await fetchFollowedArtists(user.id);
+    const hiddenArtistPlaylists = JSON.parse(localStorage.getItem('hiddenArtistPlaylists') || '[]');
+    let artistsHtml = '';
+
+    if (followedArtists && followedArtists.length > 0) {
+      artistsHtml = followedArtists
+        .filter(artist => !hiddenArtistPlaylists.includes(artist.id))
+        .map(artist => {
+          const coverHtml = artist.avatar_url
+            ? `<img src="${artist.avatar_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`
+            : `<div style="width:100%;height:100%;border-radius:4px;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:bold">${getInitials(artist.username || '?')}</div>`;
+          return `
+          <div class="playlist-item" data-playlist-id="artist_${artist.id}" data-artist-name="${escapeHtml(artist.username || '')}">
+            <div class="playlist-item-cover">
+              ${coverHtml}
+            </div>
+            <div class="playlist-item-info">
+              <div class="playlist-item-name">${escapeHtml(artist.username || '')}</div>
+              <div class="playlist-item-meta">Sanatçı Radyosu</div>
+            </div>
+          </div>
+          `;
+        }).join('');
+    }
+
+    list.innerHTML = likedSongsHtml + playlistsHtml + artistsHtml;
   } catch (err) {
     console.error('Playlists load error:', err);
   }
@@ -1681,9 +2045,9 @@ async function loadLibraryPage() {
     const user = await getCurrentUser();
     if (!user) return;
     const { data, error } = await fetchUserPlaylists(user.id);
-    
+
     const container = document.getElementById('library-playlists');
-    
+
     if (error || !data || data.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -1699,10 +2063,10 @@ async function loadLibraryPage() {
       });
       return;
     }
-    
-    container.innerHTML = data.map(pl => {
-      const coverHtml = pl.cover_url 
-        ? `<img src="${pl.cover_url}" alt="${escapeHtml(pl.name)}" onerror="this.style.display='none'">` 
+
+    const playlistsHtml = data.map(pl => {
+      const coverHtml = pl.cover_url
+        ? `<img src="${pl.cover_url}" alt="${escapeHtml(pl.name)}" onerror="this.style.display='none'">`
         : `<svg class="default-cover" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
       const publicBadge = pl.is_public ? '<span class="playlist-card-public">🌐 Public</span>' : '';
       return `
@@ -1715,10 +2079,36 @@ async function loadLibraryPage() {
       </div>
     `;
     }).join('');
+
+    // Add Followed Artists Virtual Playlists
+    const { data: followedArtists } = await fetchFollowedArtists(user.id);
+    const hiddenArtistPlaylists = JSON.parse(localStorage.getItem('hiddenArtistPlaylists') || '[]');
+    let artistsHtml = '';
+
+    if (followedArtists && followedArtists.length > 0) {
+      artistsHtml = followedArtists
+        .filter(artist => !hiddenArtistPlaylists.includes(artist.id))
+        .map(artist => {
+          const coverHtml = artist.avatar_url
+            ? `<img src="${artist.avatar_url}" alt="${escapeHtml(artist.username || '')}" onerror="this.style.display='none'">`
+            : `<div style="width:100%;height:100%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:bold">${getInitials(artist.username || '?')}</div>`;
+          return `
+          <div class="song-card playlist-card" data-playlist-id="artist_${artist.id}">
+            <div class="song-card-cover">
+              ${coverHtml}
+            </div>
+            <div class="song-card-title">${escapeHtml(artist.username || '')}</div>
+            <div class="song-card-artist">Sanatçı Radyosu</div>
+          </div>
+        `;
+        }).join('');
+    }
+
+    container.innerHTML = playlistsHtml + artistsHtml;
   } catch (err) {
     console.error('Library load error:', err);
   }
-  
+
   // Beğenilen şarkıları yükle
   await loadLibraryLikedSongs();
 }
@@ -1728,7 +2118,7 @@ async function loadLibraryLikedSongs() {
   try {
     const { data, error } = await fetchLikedSongs(currentUserId);
     const container = document.getElementById('liked-songs');
-    
+
     if (error || !data || data.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -1737,7 +2127,7 @@ async function loadLibraryLikedSongs() {
         </div>`;
       return;
     }
-    
+
     const songs = data.map(d => d.songs).filter(Boolean);
     if (songs.length > 0) {
       container.innerHTML = `
@@ -1759,41 +2149,41 @@ async function loadLibraryLikedSongs() {
 async function openPlaylistDetail(playlistId) {
   currentPlaylistId = playlistId;
   navigateTo('playlist');
-  
+
   if (playlistId === 'liked') {
     document.getElementById('playlist-detail-title').textContent = 'Beğenilen Şarkılar';
     const descEl = document.getElementById('playlist-detail-description');
     descEl.textContent = 'Otomatik Çalma Listesi';
     descEl.style.display = 'block';
-    
+
     document.getElementById('playlist-public-badge').style.display = 'none';
-    
+
     const editBtn = document.getElementById('btn-playlist-edit');
     const deleteBtn = document.getElementById('btn-playlist-delete');
     if (editBtn) editBtn.style.display = 'none';
     if (deleteBtn) deleteBtn.style.display = 'none';
-    
+
     document.getElementById('playlist-detail-user').textContent = document.getElementById('user-name').textContent;
     const avatarEl = document.getElementById('playlist-detail-avatar');
     const sidebarAvatar = document.getElementById('user-avatar');
     if (sidebarAvatar) avatarEl.innerHTML = sidebarAvatar.innerHTML;
-    
+
     const coverEl = document.getElementById('playlist-detail-cover');
     coverEl.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(135deg, #450af5, #c4efd9);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="white" width="48" height="48"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>`;
-    
+
     const songsContainer = document.getElementById('playlist-detail-songs');
     songsContainer.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Şarkılar yükleniyor...</p></div>`;
-    
+
     try {
       const { data } = await fetchLikedSongs(currentUserId);
       const songs = (data || []).map(d => d.songs).filter(Boolean);
       currentPlaylistSongs = songs;
-      
+
       document.getElementById('playlist-detail-count').textContent = `${songs.length} şarkı`;
       const totalDuration = songs.reduce((sum, s) => sum + (s.duration || 0), 0);
       const mins = Math.floor(totalDuration / 60);
-      document.getElementById('playlist-detail-duration').textContent = mins > 60 ? `${Math.floor(mins/60)} sa ${mins%60} dk` : `${mins} dk`;
-      
+      document.getElementById('playlist-detail-duration').textContent = mins > 60 ? `${Math.floor(mins / 60)} sa ${mins % 60} dk` : `${mins} dk`;
+
       if (songs.length > 0) {
         songsContainer.innerHTML = `
           <div class="song-list-header">
@@ -1811,12 +2201,75 @@ async function openPlaylistDetail(playlistId) {
             <p>Henüz beğendiğin şarkı yok</p>
           </div>`;
       }
-    } catch(err) {
+    } catch (err) {
       songsContainer.innerHTML = `<div class="empty-state"><p>Hata oluştu</p></div>`;
     }
     return;
   }
-  
+
+  if (playlistId && playlistId.startsWith('artist_')) {
+    const artistId = playlistId.split('_')[1];
+    const artistName = document.querySelector(`[data-playlist-id="${playlistId}"]`)?.dataset?.artistName || 'Sanatçı';
+
+    document.getElementById('playlist-detail-title').textContent = artistName;
+    const descEl = document.getElementById('playlist-detail-description');
+    descEl.textContent = 'Sanatçı Radyosu (Tüm Şarkılar)';
+    descEl.style.display = 'block';
+
+    document.getElementById('playlist-public-badge').style.display = 'none';
+
+    const editBtn = document.getElementById('btn-playlist-edit');
+    const deleteBtn = document.getElementById('btn-playlist-delete');
+    if (editBtn) editBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    document.getElementById('playlist-detail-user').textContent = 'Bekofy Otomatik Liste';
+    const avatarEl = document.getElementById('playlist-detail-avatar');
+
+    const coverEl = document.getElementById('playlist-detail-cover');
+    let coverHtml = `<div style="width:100%;height:100%;background:var(--green);display:flex;align-items:center;justify-content:center"><span style="font-size:32px;color:#fff;font-weight:bold">${getInitials(artistName)}</span></div>`;
+    const existingCover = document.querySelector(`[data-playlist-id="${playlistId}"] .playlist-item-cover img, [data-playlist-id="${playlistId}"] .song-card-cover img`);
+    if (existingCover) {
+      coverHtml = `<img src="${existingCover.src}" alt="${escapeHtml(artistName)}" style="width:100%;height:100%;object-fit:cover;">`;
+    }
+    coverEl.innerHTML = coverHtml;
+    avatarEl.innerHTML = `<div style="width:100%;height:100%;background:var(--green);display:flex;align-items:center;justify-content:center;border-radius:50%"><svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+
+    const songsContainer = document.getElementById('playlist-detail-songs');
+    songsContainer.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Şarkılar yükleniyor...</p></div>`;
+
+    try {
+      const { data: songs } = await getSongsByArtist(artistName);
+      currentPlaylistSongs = songs || [];
+
+      document.getElementById('playlist-detail-count').textContent = `${currentPlaylistSongs.length} şarkı`;
+      const totalDuration = currentPlaylistSongs.reduce((sum, s) => sum + (s.duration || 0), 0);
+      const mins = Math.floor(totalDuration / 60);
+      document.getElementById('playlist-detail-duration').textContent = mins > 60 ? `${Math.floor(mins / 60)} sa ${mins % 60} dk` : `${mins} dk`;
+
+      if (currentPlaylistSongs.length > 0) {
+        songsContainer.innerHTML = `
+          <div class="song-list-header">
+            <span>#</span>
+            <span>Başlık</span>
+            <span>Albüm</span>
+            <span>Süre</span>
+          </div>
+          ${currentPlaylistSongs.map((song, i) => renderSongListItem(song, i + 1)).join('')}
+        `;
+      } else {
+        songsContainer.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48" opacity="0.2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <p>Bu sanatçıya ait şarkı bulunamadı</p>
+          </div>`;
+      }
+    } catch (err) {
+      songsContainer.innerHTML = `<div class="empty-state"><p>Hata oluştu</p></div>`;
+    }
+    return;
+  }
+
   // Fetch fresh playlist data from Supabase
   let playlist = userPlaylists.find(p => p.id === playlistId);
   try {
@@ -1825,13 +2278,13 @@ async function openPlaylistDetail(playlistId) {
   } catch (e) {
     console.log('Fetch playlist error, using cached:', e);
   }
-  
+
   const playlistName = playlist ? playlist.name : 'Çalma Listesi';
   const isOwner = playlist && playlist.user_id === currentUserId;
-  
+
   // Set banner info
   document.getElementById('playlist-detail-title').textContent = playlistName;
-  
+
   // Description
   const descEl = document.getElementById('playlist-detail-description');
   if (playlist && playlist.description) {
@@ -1840,7 +2293,7 @@ async function openPlaylistDetail(playlistId) {
   } else {
     descEl.style.display = 'none';
   }
-  
+
   // Public badge
   const publicBadge = document.getElementById('playlist-public-badge');
   if (playlist && playlist.is_public) {
@@ -1848,14 +2301,14 @@ async function openPlaylistDetail(playlistId) {
   } else {
     publicBadge.style.display = 'none';
   }
-  
+
   // Show/hide edit and delete buttons based on ownership
   const actionsContainer = document.getElementById('playlist-detail-actions');
   const editBtn = document.getElementById('btn-playlist-edit');
   const deleteBtn = document.getElementById('btn-playlist-delete');
   if (editBtn) editBtn.style.display = isOwner ? 'flex' : 'none';
   if (deleteBtn) deleteBtn.style.display = isOwner ? 'flex' : 'none';
-  
+
   // User info
   if (isOwner) {
     const userName = document.getElementById('user-name').textContent;
@@ -1886,11 +2339,11 @@ async function openPlaylistDetail(playlistId) {
   if (playlist && playlist.cover_url) {
     coverEl.innerHTML = `<img src="${playlist.cover_url}" alt="">`;
   }
-  
+
   // Load songs
   const songsContainer = document.getElementById('playlist-detail-songs');
   songsContainer.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Şarkılar yükleniyor...</p></div>`;
-  
+
   try {
     const { data, error } = await getPlaylistSongs(playlistId);
     if (error || !data || data.length === 0) {
@@ -1905,16 +2358,16 @@ async function openPlaylistDetail(playlistId) {
         </div>`;
       return;
     }
-    
+
     const songs = data.map(d => d.songs).filter(Boolean);
     currentPlaylistSongs = songs;
-    
+
     // Update meta
     document.getElementById('playlist-detail-count').textContent = `${songs.length} şarkı`;
     const totalDuration = songs.reduce((sum, s) => sum + (s.duration || 0), 0);
     const mins = Math.floor(totalDuration / 60);
-    document.getElementById('playlist-detail-duration').textContent = mins > 60 ? `${Math.floor(mins/60)} sa ${mins%60} dk` : `${mins} dk`;
-    
+    document.getElementById('playlist-detail-duration').textContent = mins > 60 ? `${Math.floor(mins / 60)} sa ${mins % 60} dk` : `${mins} dk`;
+
     // Update cover (only if no playlist cover_url)
     if (!playlist || !playlist.cover_url) {
       if (songs[0] && songs[0].cover_url) {
@@ -1923,7 +2376,7 @@ async function openPlaylistDetail(playlistId) {
         coverEl.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48" opacity="0.5"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
       }
     }
-    
+
     // Render song list
     if (songs.length > 0) {
       songsContainer.innerHTML = `
@@ -1952,7 +2405,7 @@ function initPlaylistDetailActions() {
       showToast('Çalma listesinde şarkı yok', 'error');
     }
   });
-  
+
   // Shuffle play
   document.getElementById('btn-playlist-shuffle').addEventListener('click', () => {
     if (currentPlaylistSongs.length > 0) {
@@ -1962,28 +2415,28 @@ function initPlaylistDetailActions() {
       showToast('Çalma listesinde şarkı yok', 'error');
     }
   });
-  
+
   // Edit playlist
   document.getElementById('btn-playlist-edit').addEventListener('click', () => {
     if (currentPlaylistId) {
       openEditPlaylistModal(currentPlaylistId);
     }
   });
-  
+
   // Delete playlist
   document.getElementById('btn-playlist-delete').addEventListener('click', () => {
     if (currentPlaylistId) {
       confirmDeletePlaylist(currentPlaylistId);
     }
   });
-  
+
   // Collab playlist
   document.getElementById('btn-playlist-collab').addEventListener('click', () => {
     if (currentPlaylistId) {
       openCollabModal(currentPlaylistId);
     }
   });
-  
+
   // Edit playlist modal events
   initEditPlaylistModal();
   initCollabModal();
@@ -2000,7 +2453,7 @@ function initEditPlaylistModal() {
   const coverLabel = document.getElementById('edit-playlist-cover-label');
   const coverPreview = document.getElementById('edit-playlist-cover-preview');
   const coverRemove = document.getElementById('edit-playlist-cover-remove');
-  
+
   cancelBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
     editPlaylistCoverFile = null;
@@ -2011,14 +2464,13 @@ function initEditPlaylistModal() {
       editPlaylistCoverFile = null;
     }
   });
-  
+
   // Cover file selection
-  coverLabel.addEventListener('click', (e) => {
-    e.preventDefault();
+  coverLabel.addEventListener('click', () => {
     coverFileInput.value = '';
     coverFileInput.click();
   });
-  
+
   // Make cover preview image clickable to change cover
   const coverImg = document.getElementById('edit-playlist-cover-img');
   if (coverImg) {
@@ -2030,7 +2482,7 @@ function initEditPlaylistModal() {
       coverFileInput.click();
     });
   }
-  
+
   coverFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -2047,7 +2499,7 @@ function initEditPlaylistModal() {
     };
     reader.readAsDataURL(file);
   });
-  
+
   coverRemove.addEventListener('click', (e) => {
     e.stopPropagation();
     editPlaylistCoverFile = null;
@@ -2055,21 +2507,21 @@ function initEditPlaylistModal() {
     coverLabel.style.display = 'flex';
     coverFileInput.value = '';
   });
-  
+
   // Save
   saveBtn.addEventListener('click', async () => {
     const name = document.getElementById('edit-playlist-name').value.trim();
     const description = document.getElementById('edit-playlist-desc').value.trim();
     const is_public = document.getElementById('edit-playlist-public-toggle').checked;
-    
+
     if (!name) { showToast('Ad boş olamaz', 'error'); return; }
-    
+
     saveBtn.textContent = 'Kaydediliyor...';
     saveBtn.disabled = true;
-    
+
     try {
       const updates = { name, description: description || null, is_public };
-      
+
       // Upload cover if selected
       if (editPlaylistCoverFile && currentPlaylistId) {
         const { data: coverUrl, error: coverErr } = await uploadPlaylistCover(currentPlaylistId, editPlaylistCoverFile);
@@ -2079,14 +2531,14 @@ function initEditPlaylistModal() {
           updates.cover_url = coverUrl;
         }
       }
-      
+
       const { error } = await updatePlaylist(currentPlaylistId, updates);
       if (error) throw error;
-      
+
       showToast('Çalma listesi güncellendi ✅', 'success');
       overlay.style.display = 'none';
       editPlaylistCoverFile = null;
-      
+
       // Refresh
       await loadPlaylists();
       openPlaylistDetail(currentPlaylistId);
@@ -2100,44 +2552,161 @@ function initEditPlaylistModal() {
 }
 
 // ===== Collaborative Playlists Modal =====
+let collabSearchTimer = null;
+
 function initCollabModal() {
   const overlay = document.getElementById('overlay-collab');
   const closeBtn = document.getElementById('btn-close-collab');
-  const addBtn = document.getElementById('btn-add-collab');
-  
+  const usernameInput = document.getElementById('collab-username');
+  const searchResults = document.getElementById('collab-search-results');
+
   if (!overlay) return;
 
+  // Close modal
   closeBtn.addEventListener('click', () => {
     overlay.style.display = 'none';
+    searchResults.style.display = 'none';
+    usernameInput.value = '';
   });
 
-  addBtn.addEventListener('click', async () => {
-    const usernameInput = document.getElementById('collab-username');
-    const username = usernameInput.value.trim();
-    if (!username) {
-      showToast('Lütfen bir kullanıcı adı girin', 'error');
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.style.display = 'none';
+      searchResults.style.display = 'none';
+      usernameInput.value = '';
+    }
+  });
+
+  // Focus style for input
+  usernameInput.addEventListener('focus', () => {
+    usernameInput.style.borderColor = '#1DB954';
+    usernameInput.style.boxShadow = '0 0 0 3px rgba(29, 185, 84, 0.15)';
+  });
+  usernameInput.addEventListener('blur', () => {
+    // Delay to allow click on dropdown
+    setTimeout(() => {
+      usernameInput.style.borderColor = 'var(--border)';
+      usernameInput.style.boxShadow = 'none';
+      // Only hide if nothing selected
+      if (!usernameInput.value.trim()) {
+        searchResults.style.display = 'none';
+      }
+    }, 200);
+  });
+
+  // Autocomplete search with debounce
+  usernameInput.addEventListener('input', () => {
+    const query = usernameInput.value.trim();
+    
+    clearTimeout(collabSearchTimer);
+    
+    if (query.length < 1) {
+      searchResults.style.display = 'none';
       return;
     }
 
-    addBtn.textContent = 'Ekleniyor...';
-    addBtn.disabled = true;
+    collabSearchTimer = setTimeout(async () => {
+      try {
+        const { data: profiles, error } = await sb
+          .from('profiles')
+          .select('id, username, avatar_url, avatar_frame, role')
+          .ilike('username', `%${query}%`)
+          .neq('id', currentUserId)
+          .limit(8);
 
-    try {
-      const result = await addPlaylistCollaborator(currentPlaylistId, username);
-      if (result.error) {
-        showToast(result.error, 'error');
-      } else {
-        showToast('Ortak başarıyla eklendi!', 'success');
-        usernameInput.value = '';
-        renderCollabList(currentPlaylistId);
+        if (error || !profiles || profiles.length === 0) {
+          searchResults.innerHTML = `
+            <div style="padding:16px 20px; color:var(--tm); font-size:13px; text-align:center;">
+              Sonuç bulunamadı
+            </div>`;
+          searchResults.style.display = 'block';
+          return;
+        }
+
+        searchResults.innerHTML = profiles.map(profile => {
+          let frameClass = '';
+          if (profile.avatar_frame && profile.avatar_frame !== 'none') {
+            frameClass = ' ' + getAvatarFrameClass(profile.avatar_frame);
+          }
+          
+          const roleBadge = profile.role === 'premium' ? '<span style="font-size:10px; margin-left:4px;">✨</span>' 
+            : profile.role === 'artist' ? '<span style="font-size:10px; margin-left:4px;">🎤</span>'
+            : '';
+          
+          const avatarHtml = profile.avatar_url
+            ? `<div class="collab-avatar-wrap${frameClass}" style="width:36px; height:36px; flex-shrink:0; position:relative;">
+                <img src="${profile.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; position:relative; z-index:2;" alt="">
+               </div>`
+            : `<div class="collab-avatar-wrap${frameClass}" style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, rgba(29,185,84,0.2), rgba(29,185,84,0.05)); display:flex; align-items:center; justify-content:center; color:var(--green, #1DB954); font-size:15px; font-weight:700; flex-shrink:0; position:relative;">
+                <span style="position:relative; z-index:2;">${(profile.username || '?')[0].toUpperCase()}</span>
+               </div>`;
+
+          return `
+            <div class="collab-search-item" data-user-name="${escapeHtml(profile.username)}" 
+              style="display:flex; align-items:center; gap:12px; padding:10px 16px; cursor:pointer; transition:background 0.15s;">
+              ${avatarHtml}
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  ${escapeHtml(profile.username || 'Bilinmeyen')}${roleBadge}
+                </div>
+              </div>
+              <div style="flex-shrink:0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2" width="18" height="18">
+                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="8.5" cy="7" r="4"/>
+                  <line x1="20" y1="8" x2="20" y2="14"/>
+                  <line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+              </div>
+            </div>`;
+        }).join('');
+
+        searchResults.style.display = 'block';
+
+        // Add hover + click events
+        searchResults.querySelectorAll('.collab-search-item').forEach(item => {
+          item.addEventListener('mouseenter', () => {
+            item.style.background = 'rgba(255,255,255,0.06)';
+          });
+          item.addEventListener('mouseleave', () => {
+            item.style.background = 'transparent';
+          });
+          item.addEventListener('click', async () => {
+            const username = item.dataset.userName;
+            if (!username) return;
+
+            item.style.opacity = '0.5';
+            item.style.pointerEvents = 'none';
+
+            try {
+              const result = await addPlaylistCollaborator(currentPlaylistId, username);
+              if (result.error) {
+                showToast(result.error, 'error');
+                item.style.opacity = '1';
+                item.style.pointerEvents = 'auto';
+              } else {
+                showToast(`${username} ortak olarak eklendi! 🎉`, 'success');
+                usernameInput.value = '';
+                searchResults.style.display = 'none';
+                renderCollabList(currentPlaylistId);
+              }
+            } catch (e) {
+              console.error(e);
+              showToast('Bir hata oluştu.', 'error');
+              item.style.opacity = '1';
+              item.style.pointerEvents = 'auto';
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Collab search error:', err);
+        searchResults.innerHTML = `
+          <div style="padding:16px 20px; color:var(--error, #f44); font-size:13px; text-align:center;">
+            Arama hatası
+          </div>`;
+        searchResults.style.display = 'block';
       }
-    } catch (e) {
-      console.error(e);
-      showToast('Bir hata oluştu.', 'error');
-    } finally {
-      addBtn.textContent = 'Ekle';
-      addBtn.disabled = false;
-    }
+    }, 300); // 300ms debounce
   });
 }
 
@@ -2147,25 +2716,32 @@ async function openCollabModal(playlistId) {
   overlay.style.display = 'flex';
   document.getElementById('collab-username').value = '';
   
+  const searchResults = document.getElementById('collab-search-results');
+  if (searchResults) searchResults.style.display = 'none';
+
   await renderCollabList(playlistId);
 }
 
 async function renderCollabList(playlistId) {
   const listEl = document.getElementById('collab-list');
   listEl.innerHTML = '<div class="empty-state" style="padding:20px 0; font-size:13px; color:var(--tm)">Yükleniyor...</div>';
-  
+
   const collabs = await getPlaylistCollaborators(playlistId);
-  
+
   if (!collabs || collabs.length === 0) {
     listEl.innerHTML = '<div class="empty-state" style="padding:20px 0; font-size:13px; color:var(--tm)">Henüz kimse eklenmemiş.</div>';
     return;
   }
-  
+
   listEl.innerHTML = collabs.map(collab => {
-    const avatar = collab.profiles?.avatar_url 
-      ? `<img src="${collab.profiles.avatar_url}" style="width:32px; height:32px; border-radius:50%; object-fit:cover">`
-      : `<div style="width:32px; height:32px; border-radius:50%; background:var(--bg-highlight); display:flex; align-items:center; justify-content:center; color:var(--ts); font-size:14px; font-weight:bold">${collab.profiles?.username?.[0]?.toUpperCase() || '?'}</div>`;
-      
+    let frameClass = '';
+    if (collab.profiles?.avatar_frame && collab.profiles.avatar_frame !== 'none') {
+      frameClass = ' ' + getAvatarFrameClass(collab.profiles.avatar_frame);
+    }
+    const avatar = collab.profiles?.avatar_url
+      ? `<div class="collab-avatar-wrap${frameClass}" style="width:32px; height:32px; position:relative"><img src="${collab.profiles.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; position:relative; z-index:2"></div>`
+      : `<div class="collab-avatar-wrap${frameClass}" style="width:32px; height:32px; border-radius:50%; background:var(--bg-highlight); display:flex; align-items:center; justify-content:center; color:var(--ts); font-size:14px; font-weight:bold; position:relative"><span style="position:relative; z-index:2">${collab.profiles?.username?.[0]?.toUpperCase() || '?'}</span></div>`;
+
     return `
       <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:8px">
         <div style="display:flex; align-items:center; gap:12px">
@@ -2178,7 +2754,7 @@ async function renderCollabList(playlistId) {
       </div>
     `;
   }).join('');
-  
+
   // Attach remove listeners
   listEl.querySelectorAll('.btn-remove-collab').forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -2199,20 +2775,20 @@ async function renderCollabList(playlistId) {
 }
 async function openEditPlaylistModal(playlistId) {
   const overlay = document.getElementById('edit-playlist-overlay');
-  
+
   // Fetch current data
   let playlist = userPlaylists.find(p => p.id === playlistId);
   try {
     const { data } = await fetchPlaylistById(playlistId);
     if (data) playlist = data;
-  } catch (e) {}
-  
+  } catch (e) { }
+
   if (!playlist) return;
-  
+
   document.getElementById('edit-playlist-name').value = playlist.name || '';
   document.getElementById('edit-playlist-desc').value = playlist.description || '';
   document.getElementById('edit-playlist-public-toggle').checked = playlist.is_public || false;
-  
+
   // Show current cover
   const coverLabel = document.getElementById('edit-playlist-cover-label');
   const coverPreview = document.getElementById('edit-playlist-cover-preview');
@@ -2224,7 +2800,7 @@ async function openEditPlaylistModal(playlistId) {
     coverPreview.style.display = 'none';
     coverLabel.style.display = 'flex';
   }
-  
+
   editPlaylistCoverFile = null;
   overlay.style.display = 'flex';
 }
@@ -2233,7 +2809,7 @@ async function openEditPlaylistModal(playlistId) {
 function confirmDeletePlaylist(playlistId) {
   const playlist = userPlaylists.find(p => p.id === playlistId);
   const name = playlist ? playlist.name : 'Bu çalma listesi';
-  
+
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
   overlay.innerHTML = `
@@ -2247,10 +2823,10 @@ function confirmDeletePlaylist(playlistId) {
     </div>
   `;
   document.body.appendChild(overlay);
-  
+
   overlay.querySelector('#btn-confirm-cancel').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-  
+
   overlay.querySelector('#btn-confirm-delete').addEventListener('click', async () => {
     try {
       await deletePlaylist(playlistId);
@@ -2377,7 +2953,7 @@ function updateLikeButtonState() {
 
 // Update like button when song changes
 const origUpdateUI = player.updateUI.bind(player);
-player.updateUI = function(song) {
+player.updateUI = function (song) {
   origUpdateUI(song);
   updateLikeButtonState();
 };
@@ -2400,12 +2976,12 @@ function initContextMenu() {
       showPlaylistContextMenu(e.clientX, e.clientY);
       return;
     }
-    
+
     const songEl = e.target.closest('[data-song-id]');
     if (songEl) {
       e.preventDefault();
       contextMenuSongId = songEl.dataset.songId;
-      
+
       // Show/hide "remove from playlist" based on context
       const removeItem = document.getElementById('ctx-remove-from-playlist');
       const removeDivider = document.getElementById('ctx-remove-divider');
@@ -2416,7 +2992,7 @@ function initContextMenu() {
         removeItem.style.display = 'none';
         removeDivider.style.display = 'none';
       }
-      
+
       showContextMenu(e.clientX, e.clientY);
     }
   });
@@ -2461,7 +3037,7 @@ function initContextMenu() {
     }
     hideContextMenu();
   });
-  
+
   // Remove from playlist
   document.getElementById('ctx-remove-from-playlist').addEventListener('click', async () => {
     if (contextMenuSongId) {
@@ -2505,7 +3081,7 @@ function initContextMenu() {
 // ===== Playlist Context Menu =====
 function initPlaylistContextMenu() {
   const menu = document.getElementById('playlist-context-menu');
-  
+
   // Play all
   document.getElementById('pctx-play').addEventListener('click', async () => {
     if (contextMenuPlaylistId) {
@@ -2519,7 +3095,7 @@ function initPlaylistContextMenu() {
     }
     hideContextMenu();
   });
-  
+
   // Shuffle play
   document.getElementById('pctx-shuffle').addEventListener('click', async () => {
     if (contextMenuPlaylistId) {
@@ -2534,11 +3110,31 @@ function initPlaylistContextMenu() {
     }
     hideContextMenu();
   });
-  
+
   // Delete
   document.getElementById('pctx-delete').addEventListener('click', () => {
-    if (contextMenuPlaylistId) {
+    if (contextMenuPlaylistId && !contextMenuPlaylistId.startsWith('artist_')) {
       confirmDeletePlaylist(contextMenuPlaylistId);
+    }
+    hideContextMenu();
+  });
+
+  // Hide Artist Playlist
+  document.getElementById('pctx-hide').addEventListener('click', () => {
+    if (contextMenuPlaylistId && contextMenuPlaylistId.startsWith('artist_')) {
+      const artistId = contextMenuPlaylistId.split('_')[1];
+      const hiddenArtistPlaylists = JSON.parse(localStorage.getItem('hiddenArtistPlaylists') || '[]');
+      if (!hiddenArtistPlaylists.includes(artistId)) {
+        hiddenArtistPlaylists.push(artistId);
+        localStorage.setItem('hiddenArtistPlaylists', JSON.stringify(hiddenArtistPlaylists));
+        showToast('Sanatçı radyosu gizlendi', 'success');
+
+        // Refresh views
+        loadPlaylists();
+        if (currentPage === 'library') {
+          loadLibraryPage();
+        }
+      }
     }
     hideContextMenu();
   });
@@ -2547,10 +3143,10 @@ function initPlaylistContextMenu() {
 function showContextMenu(x, y) {
   // Hide playlist context menu if open
   document.getElementById('playlist-context-menu').style.display = 'none';
-  
+
   const menu = document.getElementById('context-menu');
   menu.style.display = 'block';
-  
+
   // Update like text
   const likeItem = document.getElementById('ctx-like');
   const likeSpan = likeItem.querySelector('span');
@@ -2559,13 +3155,13 @@ function showContextMenu(x, y) {
   } else {
     likeSpan.textContent = 'Beğen';
   }
-  
+
   // Position check - don't overflow screen
   const menuW = 220;
   const menuH = 300;
   if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 10;
   if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 10;
-  
+
   menu.style.left = x + 'px';
   menu.style.top = y + 'px';
   document.getElementById('ctx-playlist-submenu').style.display = 'none';
@@ -2575,15 +3171,37 @@ function showPlaylistContextMenu(x, y) {
   // Hide song context menu if open
   document.getElementById('context-menu').style.display = 'none';
   document.getElementById('ctx-playlist-submenu').style.display = 'none';
-  
+
   const menu = document.getElementById('playlist-context-menu');
   menu.style.display = 'block';
-  
+
+  // Toggle Hide/Delete based on playlist type
+  const deleteItem = document.getElementById('pctx-delete');
+  const hideItem = document.getElementById('pctx-hide');
+
+  if (contextMenuPlaylistId && contextMenuPlaylistId.startsWith('artist_')) {
+    if (deleteItem) deleteItem.style.display = 'none';
+    if (hideItem) hideItem.style.display = 'flex';
+  } else if (contextMenuPlaylistId === 'liked') {
+    if (deleteItem) deleteItem.style.display = 'none';
+    if (hideItem) hideItem.style.display = 'none';
+  } else {
+    // Check if user owns the playlist
+    const pl = userPlaylists.find(p => p.id === contextMenuPlaylistId);
+    if (pl && pl.user_id !== currentUserId) {
+      // It's a collaborated playlist or something they don't own
+      if (deleteItem) deleteItem.style.display = 'none';
+    } else {
+      if (deleteItem) deleteItem.style.display = 'flex';
+    }
+    if (hideItem) hideItem.style.display = 'none';
+  }
+
   const menuW = 220;
   const menuH = 150;
   if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 10;
   if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 10;
-  
+
   menu.style.left = x + 'px';
   menu.style.top = y + 'px';
 }
@@ -2667,7 +3285,27 @@ document.addEventListener('keydown', (e) => {
 function initAdminActions() {
   // Add song button
   document.getElementById('btn-admin-add-song').addEventListener('click', handleAddSong);
-  
+
+  document.getElementById('btn-admin-select-mp3').addEventListener('click', async () => {
+    const result = await window.electronAPI.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Audio', extensions: ['mp3', 'wav', 'ogg', 'aac'] }]
+    });
+    if (result && !result.canceled && result.filePaths.length > 0) {
+      document.getElementById('admin-song-url').value = result.filePaths[0];
+    }
+  });
+
+  document.getElementById('btn-admin-select-cover').addEventListener('click', async () => {
+    const result = await window.electronAPI.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'] }]
+    });
+    if (result && !result.canceled && result.filePaths.length > 0) {
+      document.getElementById('admin-song-cover').value = result.filePaths[0];
+    }
+  });
+
   // User search
   const searchInput = document.getElementById('admin-user-search');
   let searchTimer;
@@ -2705,7 +3343,7 @@ let allProfiles = [];
 async function loadAdminUsers() {
   const container = document.getElementById('admin-users-table');
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Y\u00fckleniyor...</p></div>';
-  
+
   try {
     const { data, error } = await fetchAllProfiles();
     if (error) {
@@ -2734,7 +3372,7 @@ function renderAdminUsers(profiles) {
     container.innerHTML = '<div class="empty-state"><p>Kullan\u0131c\u0131 bulunamad\u0131</p></div>';
     return;
   }
-  
+
   container.innerHTML = `
     <table class="admin-table">
       <thead>
@@ -2746,12 +3384,16 @@ function renderAdminUsers(profiles) {
       </thead>
       <tbody>
         ${profiles.map(p => {
-          const avatar = p.avatar_url 
-            ? `<span class="user-row-avatar"><img src="${p.avatar_url}" alt=""></span>` 
-            : `<span class="user-row-avatar">${getInitials(p.username || '?')}</span>`;
-          const date = p.created_at ? new Date(p.created_at).toLocaleDateString('tr-TR') : '-';
-          const isCurrentUser = p.id === currentUserId;
-          return `
+    let frameClass = '';
+    if (p.avatar_frame && p.avatar_frame !== 'none') {
+      frameClass = ' ' + getAvatarFrameClass(p.avatar_frame);
+    }
+    const avatar = p.avatar_url
+      ? `<span class="user-row-avatar${frameClass}" style="position:relative"><img src="${p.avatar_url}" alt="" style="position:relative; z-index:2"></span>`
+      : `<span class="user-row-avatar${frameClass}" style="position:relative"><span style="position:relative; z-index:2">${getInitials(p.username || '?')}</span></span>`;
+    const date = p.created_at ? new Date(p.created_at).toLocaleDateString('tr-TR') : '-';
+    const isCurrentUser = p.id === currentUserId;
+    return `
             <tr>
               <td>
                 ${avatar}
@@ -2770,11 +3412,11 @@ function renderAdminUsers(profiles) {
               <td class="user-row-date">${date}</td>
             </tr>
           `;
-        }).join('')}
+  }).join('')}
       </tbody>
     </table>
   `;
-  
+
   // Bind role change events
   container.querySelectorAll('.role-select').forEach(select => {
     select.addEventListener('change', async (e) => {
@@ -2800,7 +3442,7 @@ function filterAdminUsers(query) {
     renderAdminUsers(allProfiles);
     return;
   }
-  const filtered = allProfiles.filter(p => 
+  const filtered = allProfiles.filter(p =>
     (p.username || '').toLowerCase().includes(query) ||
     (p.id || '').toLowerCase().includes(query)
   );
@@ -2810,14 +3452,14 @@ function filterAdminUsers(query) {
 async function loadAdminSongs() {
   const container = document.getElementById('admin-songs-list');
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Y\u00fckleniyor...</p></div>';
-  
+
   try {
     const { data, error } = await fetchAllSongs();
     if (error || !data || data.length === 0) {
       container.innerHTML = '<div class="empty-state"><p>Şarkı bulunamadı</p></div>';
       return;
     }
-    
+
     container.innerHTML = data.map((song, i) => `
       <div class="admin-song-row" data-song-id="${song.id}">
         <span class="song-num">${i + 1}</span>
@@ -2829,7 +3471,7 @@ async function loadAdminSongs() {
         </button>
       </div>
     `).join('');
-    
+
     // Bind delete events
     container.querySelectorAll('[data-delete-song]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -2863,24 +3505,44 @@ async function handleAddSong() {
   const artist = document.getElementById('admin-song-artist').value.trim();
   const album = document.getElementById('admin-song-album').value.trim();
   const duration = parseInt(document.getElementById('admin-song-duration').value) || null;
-  const file_path = document.getElementById('admin-song-url').value.trim();
-  const cover_url = document.getElementById('admin-song-cover').value.trim();
-  
+  let file_path = document.getElementById('admin-song-url').value.trim();
+  let cover_url = document.getElementById('admin-song-cover').value.trim();
+
   if (!title || !artist || !file_path) {
-    showToast('Şarkı adı, sanatçı ve dosya URL gerekli', 'error');
+    showToast('Şarkı adı, sanatçı ve dosya gerekli', 'error');
     return;
   }
-  
+
   const btn = document.getElementById('btn-admin-add-song');
   btn.disabled = true;
-  btn.textContent = 'Ekleniyor...';
-  
+  btn.textContent = 'Yükleniyor... (Bu işlem biraz sürebilir)';
+
   try {
+    // R2 Upload for MP3
+    if (file_path && !file_path.startsWith('http')) {
+      const ext = file_path.split('.').pop() || 'mp3';
+      const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const r2FileName = `songs/${Date.now()}-${safeTitle}.${ext}`;
+      const uploadRes = await window.electronAPI.uploadToR2(file_path, r2FileName);
+      if (!uploadRes.success) throw new Error(uploadRes.error);
+      file_path = uploadRes.url;
+    }
+
+    // R2 Upload for Cover
+    if (cover_url && !cover_url.startsWith('http')) {
+      const ext = cover_url.split('.').pop();
+      const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const r2FileName = `covers/${Date.now()}-${safeTitle}.${ext}`;
+      const uploadRes = await window.electronAPI.uploadToR2(cover_url, r2FileName);
+      if (!uploadRes.success) throw new Error(uploadRes.error);
+      cover_url = uploadRes.url;
+    }
+
     const songData = { title, artist, file_path };
     if (album) songData.album = album;
     if (duration) songData.duration = duration;
     if (cover_url) songData.cover_url = cover_url;
-    
+
     const { data, error } = await addSong(songData);
     if (error) {
       showToast('Eklenemedi: ' + (error.message || ''), 'error');
@@ -2899,7 +3561,7 @@ async function handleAddSong() {
       loadSongs(); // Refresh main song list
     }
   } catch (err) {
-    showToast('Hata oluştu', 'error');
+    showToast('Hata oluştu: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="margin-right:6px"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>Şarkı Ekle';
@@ -2924,25 +3586,25 @@ function initProfilePage() {
           showToast('Dosya boyutu 5MB\'dan küçük olmalıdır', 'error');
           return;
         }
-        
+
         try {
           const sb = getSupabase();
           const ext = file.name.split('.').pop();
           const fileName = `${currentUserId}/avatar-${Date.now()}.${ext}`;
-          
+
           const { error: uploadError } = await sb.storage
             .from('avatars')
             .upload(fileName, file, { upsert: true });
-            
+
           if (uploadError) throw uploadError;
-          
+
           const { data: { publicUrl } } = sb.storage
             .from('avatars')
             .getPublicUrl(fileName);
-            
+
           const { error: updateError } = await updateProfile(currentUserId, { avatar_url: publicUrl });
           if (updateError) throw updateError;
-          
+
           showToast('Profil fotoğrafı güncellendi! 📸', 'success');
           loadProfilePage();
           loadUserInfo();
@@ -2953,7 +3615,7 @@ function initProfilePage() {
       input.click();
     });
   }
-  
+
   // Remove avatar button
   const removeAvatarBtn = document.getElementById('btn-remove-avatar');
   if (removeAvatarBtn) {
@@ -2975,53 +3637,61 @@ function initProfilePage() {
 async function loadProfilePage() {
   const user = await getCurrentUser();
   if (!user) return;
-  
+
   try {
     const { data: profile } = await fetchProfile(user.id);
     document.getElementById('profile-email').value = user.email || '';
     if (profile) {
       document.getElementById('profile-username').value = profile.username || '';
+      const titleEl = document.getElementById('own-profile-title');
+      if (titleEl) titleEl.textContent = profile.username || 'Kullanıcı';
       document.getElementById('profile-bio').value = profile.bio || '';
       document.getElementById('profile-date').textContent = new Date(profile.created_at || user.created_at).toLocaleDateString('tr-TR');
-      
+
       const roleText = {
         admin: 'Admin',
         yetkili: 'Yetkili',
         artist: 'Sanatçı',
         premium: 'Premium'
       }[profile.role] || 'Kullanıcı';
-      
+
       document.getElementById('profile-role-display').textContent = roleText;
-      
+
       const avatarEl = document.getElementById('profile-avatar-large');
       const removeBtn = document.getElementById('btn-remove-avatar');
       if (profile.avatar_url) {
-        avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar">`;
+        avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;position:relative;z-index:2">`;
         if (removeBtn) removeBtn.style.display = 'block';
       } else {
-        avatarEl.innerHTML = `<span style="font-size:40px;font-weight:700;color:var(--ts)">${getInitials(profile.username)}</span>`;
+        avatarEl.innerHTML = `<span class="avatar-initials" style="font-size:40px;font-weight:700;color:var(--ts);display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:var(--bg-elevated);position:relative;z-index:2">${getInitials(profile.username)}</span>`;
         if (removeBtn) removeBtn.style.display = 'none';
       }
-      
+      // Apply avatar frame
+      if (currentUserAvatarFrame && currentUserAvatarFrame !== 'none') {
+        avatarEl.className = 'premium-avatar ' + getAvatarFrameClass(currentUserAvatarFrame);
+      } else {
+        avatarEl.className = 'premium-avatar';
+      }
+
       // Show banner if loaded
       if (profile.banner_url) {
         currentUserBannerUrl = profile.banner_url;
         showBannerPreview(profile.banner_url);
       }
     }
-    
+
     const sb = getSupabase();
     const playlists = await sb.from('playlists').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
     const liked = await sb.from('liked_songs').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
-    
+
     // Follower count (people who added this user as a friend)
     const followers = await sb.from('friendships').select('*', { count: 'exact', head: true })
       .eq('friend_id', user.id)
       .eq('status', 'accepted'); // or ignore status, up to standard: .eq('status', 'accepted')
-    
+
     document.getElementById('profile-stat-playlists').textContent = playlists.count || 0;
     document.getElementById('profile-stat-liked').textContent = liked.count || 0;
-    
+
     const countEl = document.getElementById('profile-stat-followers');
     if (countEl) countEl.textContent = followers.count || 0;
   } catch (err) {
@@ -3033,15 +3703,15 @@ async function handleSaveProfile() {
   const username = document.getElementById('profile-username').value.trim();
   const bio = document.getElementById('profile-bio').value.trim();
   const btn = document.getElementById('btn-save-profile');
-  
+
   if (!username) {
     showToast('Kullanıcı adı boş olamaz', 'error');
     return;
   }
-  
+
   btn.classList.add('loading');
   btn.disabled = true;
-  
+
   try {
     let { error } = await updateProfile(currentUserId, { username, bio });
     if (error && error.message && error.message.includes('bio')) {
@@ -3052,6 +3722,8 @@ async function handleSaveProfile() {
     if (error) throw error;
     showToast('Profil kaydedildi ✅', 'success');
     loadUserInfo(); // Update sidebar name
+    const titleEl = document.getElementById('own-profile-title');
+    if (titleEl) titleEl.textContent = username;
   } catch (err) {
     showToast('Profil kaydedilemedi', 'error');
   } finally {
@@ -3068,7 +3740,7 @@ async function loadPublicUserProfile(userId) {
     navigateTo('profile');
     return;
   }
-  
+
   try {
     const { data: profile, error } = await fetchUserPublicProfile(userId);
     if (error || !profile) {
@@ -3076,23 +3748,30 @@ async function loadPublicUserProfile(userId) {
       navigateTo('home');
       return;
     }
-    
+
     currentPublicUserId = userId;
-    
+
     // Update Banner
     const usernameEl = document.getElementById('public-profile-username');
     usernameEl.innerHTML = `${escapeHtml(profile.username)}${profile.role === 'artist' ? getVerifiedTick() : ''}`;
-    
+
     document.getElementById('public-profile-followers').textContent = `${profile.followers_count} Takipçi`;
     document.getElementById('public-profile-playlists').textContent = `${profile.playlists_count} Herkese Açık Liste`;
-    
+
     const avatarEl = document.getElementById('public-profile-avatar');
     if (profile.avatar_url) {
-      avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar">`;
+      avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;position:relative;z-index:2">`;
     } else {
-      avatarEl.innerHTML = `<span style="font-size:60px;font-weight:700;color:var(--ts)">${getInitials(profile.username)}</span>`;
+      avatarEl.innerHTML = `<span class="avatar-initials" style="font-size:60px;font-weight:700;color:var(--ts);display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:var(--bg-elevated);position:relative;z-index:2">${getInitials(profile.username)}</span>`;
     }
-    
+    // Apply avatar frame
+    if (profile.avatar_frame && profile.avatar_frame !== 'none') {
+      const frameClass = getAvatarFrameClass(profile.avatar_frame);
+      avatarEl.className = 'premium-avatar ' + frameClass;
+    } else {
+      avatarEl.className = 'premium-avatar';
+    }
+
     // Show banner if exists
     const bannerImg = document.getElementById('public-profile-banner-img');
     if (bannerImg) {
@@ -3103,7 +3782,7 @@ async function loadPublicUserProfile(userId) {
         bannerImg.style.display = 'none';
       }
     }
-    
+
     // Setup Buttons
     const followBtn = document.getElementById('btn-public-follow');
     if (profile.is_following) {
@@ -3127,7 +3806,7 @@ async function loadPublicUserProfile(userId) {
         loadPublicUserProfile(userId); // reload
       };
     }
-    
+
     const blockBtn = document.getElementById('btn-public-block');
     blockBtn.onclick = async () => {
       if (!confirm(`${profile.username} isimli kullanıcıyı engellemek istediğinize emin misiniz?`)) return;
@@ -3135,16 +3814,16 @@ async function loadPublicUserProfile(userId) {
       showToast('Kullanıcı engellendi', 'success');
       navigateTo('home');
     };
-    
+
     // Fetch and render public playlists
     const sb = getSupabase();
     const { data: playlists } = await sb.from('playlists').select('*').eq('user_id', userId).eq('is_public', true).order('created_at', { ascending: false });
-    
+
     const playlistsGrid = document.getElementById('public-profile-playlists-grid');
     if (playlists && playlists.length > 0) {
       playlistsGrid.innerHTML = playlists.map(pl => {
-        const coverHtml = pl.cover_url 
-          ? `<img src="${pl.cover_url}" alt="${escapeHtml(pl.name)}" onerror="this.style.display='none'">` 
+        const coverHtml = pl.cover_url
+          ? `<img src="${pl.cover_url}" alt="${escapeHtml(pl.name)}" onerror="this.style.display='none'">`
           : `<svg class="default-cover" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
         return `
         <div class="song-card playlist-card" data-playlist-id="${pl.id}">
@@ -3157,10 +3836,10 @@ async function loadPublicUserProfile(userId) {
     } else {
       playlistsGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1"><p>Bu kullanıcının herkese açık listesi yok</p></div>`;
     }
-    
+
     // Show page
     navigateTo('user-profile');
-    
+
   } catch (err) {
     showToast('Profil yüklenemedi', 'error');
   }
@@ -3171,28 +3850,54 @@ async function loadPublicUserProfile(userId) {
 function initArtistPage() {
   const btn = document.getElementById('btn-artist-submit-song');
   if (btn) btn.addEventListener('click', handleArtistSubmitSong);
+
+  const btnMp3 = document.getElementById('btn-artist-select-mp3');
+  if (btnMp3) {
+    btnMp3.addEventListener('click', async () => {
+      const result = await window.electronAPI.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Audio', extensions: ['mp3', 'wav', 'ogg', 'aac'] }]
+      });
+      if (result && !result.canceled && result.filePaths.length > 0) {
+        document.getElementById('artist-song-url').value = result.filePaths[0];
+      }
+    });
+  }
+
+  const btnCover = document.getElementById('btn-artist-select-cover');
+  if (btnCover) {
+    btnCover.addEventListener('click', async () => {
+      const result = await window.electronAPI.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'] }]
+      });
+      if (result && !result.canceled && result.filePaths.length > 0) {
+        document.getElementById('artist-song-cover').value = result.filePaths[0];
+      }
+    });
+  }
 }
 
 async function loadArtistPage() {
   const container = document.getElementById('artist-submitted-songs');
   container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Y\u00fckleniyor...</p></div>';
-  
+
   try {
     const sb = getSupabase();
     const { data: profile } = await fetchProfile(currentUserId);
     if (!profile) return;
-    
+
     // Sadece sanatçının adına göre arama yapıyoruz (kendi yüklediklerini görebilsin diye)
     const { data, error } = await sb.from('songs')
       .select('*')
       .ilike('artist', `%${profile.username}%`)
       .order('created_at', { ascending: false });
-      
+
     if (error || !data || data.length === 0) {
       container.innerHTML = '<div class="empty-state"><p>Henüz şarkı göndermedin</p></div>';
       return;
     }
-    
+
     container.innerHTML = data.map(song => `
       <div class="pending-song-card" style="margin-bottom:8px">
         <div class="pending-song-info">
@@ -3205,7 +3910,7 @@ async function loadArtistPage() {
         </div>
       </div>
     `).join('');
-    
+
   } catch (err) {
     console.error('Artist songs load error:', err);
     container.innerHTML = '<div class="empty-state"><p>Hata oluştu</p></div>';
@@ -3216,38 +3921,48 @@ async function handleArtistSubmitSong() {
   const title = document.getElementById('artist-song-title').value.trim();
   const album = document.getElementById('artist-song-album').value.trim();
   const duration = parseInt(document.getElementById('artist-song-duration').value) || null;
-  const file_path = document.getElementById('artist-song-url').value.trim();
-  const cover_url = document.getElementById('artist-song-cover').value.trim();
-  
+  let file_path = document.getElementById('artist-song-url').value.trim();
+  let cover_url = document.getElementById('artist-song-cover').value.trim();
+
   if (!title || !file_path) {
-    showToast('Şarkı adı ve dosya URL gerekli', 'error');
+    showToast('Şarkı adı ve dosya gerekli', 'error');
     return;
   }
-  
+
   const btn = document.getElementById('btn-artist-submit-song');
   btn.disabled = true;
-  btn.textContent = 'Gönderiliyor...';
-  
+  btn.textContent = 'Yükleniyor... (Bu işlem biraz sürebilir)';
+
   try {
     const { data: profile } = await fetchProfile(currentUserId);
     const artistName = profile.username || 'Bilinmeyen Sanatçı';
-    
+
+    // R2 Upload for MP3
+    if (file_path && !file_path.startsWith('http')) {
+      const ext = file_path.split('.').pop() || 'mp3';
+      const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const r2FileName = `songs/artist-${Date.now()}-${safeTitle}.${ext}`;
+      const uploadRes = await window.electronAPI.uploadToR2(file_path, r2FileName);
+      if (!uploadRes.success) throw new Error(uploadRes.error);
+      file_path = uploadRes.url;
+    }
+
     const songData = { title, artist: artistName, file_path };
     if (album) songData.album = album;
     if (duration) songData.duration = duration;
     if (cover_url) songData.cover_url = cover_url;
-    
+
     const { error } = await submitSongForApproval(songData);
     if (error) throw error;
-    
+
     showToast(`"${title}" onaya gönderildi! 🕒`, 'success');
-    
+
     document.getElementById('artist-song-title').value = '';
     document.getElementById('artist-song-album').value = '';
     document.getElementById('artist-song-duration').value = '';
     document.getElementById('artist-song-url').value = '';
     document.getElementById('artist-song-cover').value = '';
-    
+
     loadArtistPage();
   } catch (err) {
     showToast('Hata oluştu: ' + err.message, 'error');
@@ -3259,7 +3974,7 @@ async function handleArtistSubmitSong() {
 
 // ===== Admin Pending Songs =====
 const originalLoadAdminPage = loadAdminPage;
-loadAdminPage = async function() {
+loadAdminPage = async function () {
   await originalLoadAdminPage();
   loadAdminPendingSongs();
 }
@@ -3285,7 +4000,7 @@ async function loadAdminPendingSongs() {
       adminPage.appendChild(pendingSection);
     }
   }
-  
+
   const container = document.getElementById('admin-pending-songs-list');
   try {
     const { data, error } = await fetchPendingSongs();
@@ -3293,10 +4008,10 @@ async function loadAdminPendingSongs() {
       container.innerHTML = '<div class="empty-state" style="margin-top:0;padding:24px"><p>Onay bekleyen şarkı yok</p></div>';
       return;
     }
-    
+
     container.innerHTML = data.map(song => {
-      const coverHtml = song.cover_url 
-        ? `<img src="${song.cover_url}" alt="" class="pending-song-cover">` 
+      const coverHtml = song.cover_url
+        ? `<img src="${song.cover_url}" alt="" class="pending-song-cover">`
         : `<div class="pending-song-cover pending-song-cover-default"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
       return `
       <div class="pending-song-card" style="margin-bottom:8px">
@@ -3319,7 +4034,7 @@ async function loadAdminPendingSongs() {
       </div>
     `;
     }).join('');
-    
+
     container.querySelectorAll('.btn-approve').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.approve;
@@ -3334,7 +4049,7 @@ async function loadAdminPendingSongs() {
         }
       });
     });
-    
+
     container.querySelectorAll('.btn-reject').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (!confirm('Şarkıyı reddedip silmek istediğinize emin misiniz?')) return;
@@ -3348,7 +4063,7 @@ async function loadAdminPendingSongs() {
         }
       });
     });
-    
+
     // Preview play button
     container.querySelectorAll('.btn-preview-song').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3363,7 +4078,7 @@ async function loadAdminPendingSongs() {
         showToast('Önizleme: ' + songObj.title + ' 🎧', 'success');
       });
     });
-    
+
   } catch (err) {
     console.error('Pending songs error', err);
     container.innerHTML = '<div class="empty-state"><p>Hata oluştu</p></div>';
@@ -3389,13 +4104,13 @@ async function loadAdminReservedNames() {
       <div id="reserved-names-list"></div>
     `;
     adminPage.appendChild(section);
-    
+
     // Add button handler
     document.getElementById('btn-add-reserved').addEventListener('click', async () => {
       const input = document.getElementById('reserved-name-input');
       const name = input.value.trim();
       if (!name) { showToast('İsim boş olamaz', 'error'); return; }
-      
+
       const { error } = await addReservedUsername(name, currentUserId);
       if (error) {
         if (error.message?.includes('duplicate') || error.code === '23505') {
@@ -3409,12 +4124,12 @@ async function loadAdminReservedNames() {
       input.value = '';
       loadAdminReservedNames();
     });
-    
+
     document.getElementById('reserved-name-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('btn-add-reserved').click();
     });
   }
-  
+
   const container = document.getElementById('reserved-names-list');
   try {
     const { data, error } = await fetchReservedUsernames();
@@ -3422,14 +4137,14 @@ async function loadAdminReservedNames() {
       container.innerHTML = '<div class="empty-state" style="padding:16px"><p>Henüz alınamayacak isim eklenmemiş</p></div>';
       return;
     }
-    
+
     container.innerHTML = `<div class="reserved-names-grid">${data.map(item => `
       <div class="reserved-name-tag">
         <span>${escapeHtml(item.username)}</span>
         <button class="reserved-name-remove" data-remove-id="${item.id}" title="Kaldır">✕</button>
       </div>
     `).join('')}</div>`;
-    
+
     container.querySelectorAll('.reserved-name-remove').forEach(btn => {
       btn.addEventListener('click', async () => {
         const { error } = await removeReservedUsername(btn.dataset.removeId);
@@ -3446,41 +4161,41 @@ async function loadAdminReservedNames() {
 // ===== Admin: Add Ban/Delete to User Table =====
 async function addAdminUserActions() {
   const rows = document.querySelectorAll('.admin-table tbody tr');
-  
+
   for (const row of rows) {
     if (row.querySelector('.admin-user-actions')) continue;
-    
+
     const roleSelect = row.querySelector('.role-select');
     if (!roleSelect) continue;
     const userId = roleSelect.dataset.userId;
     if (!userId || userId === currentUserId) continue;
-    
+
     // Fetch ban status
     const sb = getSupabase();
     const { data: userProfile } = await sb.from('profiles').select('is_banned').eq('id', userId).maybeSingle();
     const isBanned = userProfile?.is_banned || false;
-    
+
     const actionsCell = document.createElement('td');
     actionsCell.className = 'admin-user-actions';
     actionsCell.innerHTML = `
       <div style="display:flex;gap:6px;align-items:center">
-        ${isBanned 
-          ? `<button class="btn-admin-unban" data-unban-user="${userId}" title="Engeli Kaldır" style="padding:3px 10px;border:1px solid #4caf50;background:rgba(76,175,80,.1);color:#4caf50;border-radius:500px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Engeli Kaldır</button>`
-          : `<button class="btn-admin-ban" data-ban-user="${userId}" title="Engelle">
+        ${isBanned
+        ? `<button class="btn-admin-unban" data-unban-user="${userId}" title="Engeli Kaldır" style="padding:3px 10px;border:1px solid #4caf50;background:rgba(76,175,80,.1);color:#4caf50;border-radius:500px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Engeli Kaldır</button>`
+        : `<button class="btn-admin-ban" data-ban-user="${userId}" title="Engelle">
               <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
             </button>`
-        }
+      }
         <button class="btn-admin-delete" data-delete-user="${userId}" title="Hesabı Sil">
           <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
         </button>
       </div>
     `;
     row.appendChild(actionsCell);
-    
+
     // Ban/Unban handler
     const banBtn = actionsCell.querySelector('.btn-admin-ban');
     const unbanBtn = actionsCell.querySelector('.btn-admin-unban');
-    
+
     if (banBtn) {
       banBtn.addEventListener('click', async () => {
         if (!confirm('Bu kullanıcıyı engellemek istediğinize emin misiniz?')) return;
@@ -3492,7 +4207,7 @@ async function addAdminUserActions() {
         addAdminUserActions();
       });
     }
-    
+
     if (unbanBtn) {
       unbanBtn.addEventListener('click', async () => {
         if (!confirm('Bu kullanıcının engelini kaldırmak istediğinize emin misiniz?')) return;
@@ -3503,7 +4218,7 @@ async function addAdminUserActions() {
         addAdminUserActions();
       });
     }
-    
+
     // Delete handler
     actionsCell.querySelector('.btn-admin-delete').addEventListener('click', async () => {
       if (!confirm('Bu kullanıcının hesabını SİLMEK istediğinize emin misiniz? Bu işlem geri alınamaz!')) return;
@@ -3518,7 +4233,7 @@ async function addAdminUserActions() {
 
 // Override loadAdminPage again to include new sections
 const _prevLoadAdminPage = loadAdminPage;
-loadAdminPage = async function() {
+loadAdminPage = async function () {
   await _prevLoadAdminPage();
   loadAdminReservedNames();
   // Delay to let user table render first
@@ -3527,7 +4242,7 @@ loadAdminPage = async function() {
 
 // ===== Sidebar: Show verified tick for current user =====
 const _origLoadUserInfo = loadUserInfo;
-loadUserInfo = async function() {
+loadUserInfo = async function () {
   await _origLoadUserInfo();
   // Add verified tick if current user is artist
   if (currentUserRole === 'artist') {
@@ -3555,6 +4270,39 @@ function initNowPlayingOverlay() {
   const closeBtn = document.getElementById('np-close-btn');
   const npCover = document.getElementById('now-playing-cover');
   const npInfo = document.querySelector('.now-playing-info');
+
+  // Fullscreen button
+  const fsBtn = document.getElementById('np-fullscreen-btn');
+  if (fsBtn) {
+    fsBtn.addEventListener('click', () => {
+      overlay.classList.toggle('np-fullscreen');
+    });
+  }
+
+  // Resize handle
+  const resizeHandle = document.getElementById('np-resize-handle');
+  if (resizeHandle) {
+    let isResizing = false;
+    resizeHandle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      document.body.style.cursor = 'ew-resize';
+      resizeHandle.classList.add('active');
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth >= 250 && newWidth <= 800) {
+        overlay.style.width = newWidth + 'px';
+      }
+    });
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.cursor = '';
+        resizeHandle.classList.remove('active');
+      }
+    });
+  }
 
   // Open overlay when clicking cover or song info in player bar
   if (npCover) {
@@ -3733,16 +4481,16 @@ function updateCanvasBackground(coverUrl) {
       const canvas = document.getElementById('np-color-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      
+
       // Draw small version for performance
       const size = 64;
       canvas.width = size;
       canvas.height = size;
       ctx.drawImage(img, 0, 0, size, size);
-      
+
       const imageData = ctx.getImageData(0, 0, size, size).data;
       const colors = extractDominantColors(imageData, size, size, 4);
-      
+
       // Apply colors with nice opacity
       if (colors.length >= 4) {
         bgEl.style.setProperty('--canvas-color-1', `rgba(${colors[0].r}, ${colors[0].g}, ${colors[0].b}, 0.45)`);
@@ -3765,21 +4513,21 @@ function extractDominantColors(imageData, width, height, numColors) {
   // Simple color quantization: sample pixels and cluster
   const pixels = [];
   const step = 4; // sample every 4th pixel for performance
-  
+
   for (let i = 0; i < imageData.length; i += 4 * step) {
     const r = imageData[i];
     const g = imageData[i + 1];
     const b = imageData[i + 2];
     const a = imageData[i + 3];
-    
+
     // Skip transparent and very dark/very light pixels
     if (a < 128) continue;
     const brightness = (r + g + b) / 3;
     if (brightness < 20 || brightness > 240) continue;
-    
+
     pixels.push({ r, g, b });
   }
-  
+
   if (pixels.length < numColors) {
     // Not enough pixels, return defaults
     return [
@@ -3789,17 +4537,17 @@ function extractDominantColors(imageData, width, height, numColors) {
       { r: 200, g: 100, b: 50 }
     ];
   }
-  
+
   // K-means clustering (simplified)
   let centroids = [];
   const pixelStep = Math.floor(pixels.length / numColors);
   for (let i = 0; i < numColors; i++) {
     centroids.push({ ...pixels[i * pixelStep] });
   }
-  
+
   for (let iter = 0; iter < 10; iter++) {
     const clusters = Array.from({ length: numColors }, () => []);
-    
+
     for (const pixel of pixels) {
       let minDist = Infinity;
       let closest = 0;
@@ -3815,7 +4563,7 @@ function extractDominantColors(imageData, width, height, numColors) {
       }
       clusters[closest].push(pixel);
     }
-    
+
     for (let c = 0; c < numColors; c++) {
       if (clusters[c].length === 0) continue;
       const sum = clusters[c].reduce((acc, p) => ({
@@ -3830,7 +4578,7 @@ function extractDominantColors(imageData, width, height, numColors) {
       };
     }
   }
-  
+
   // Boost saturation slightly for more vivid blobs
   return centroids.map(c => {
     const max = Math.max(c.r, c.g, c.b);
@@ -3906,9 +4654,9 @@ async function loadNowPlayingLyrics(song) {
   currentLyricOffset = 0;
 
   const syncDisp = document.getElementById('sync-offset-display');
-  if(syncDisp) { syncDisp.textContent = '0.0s'; syncDisp.style.color = 'var(--ts)'; }
+  if (syncDisp) { syncDisp.textContent = '0.0s'; syncDisp.style.color = 'var(--ts)'; }
   const syncCtrl = document.getElementById('lyric-sync-controls');
-  if(syncCtrl) syncCtrl.style.display = 'none';
+  if (syncCtrl) syncCtrl.style.display = 'none';
 
   try {
     const result = await getLyrics(song);
@@ -3926,7 +4674,7 @@ async function loadNowPlayingLyrics(song) {
 
     // Render lyrics
     if (result.syncedLyrics) {
-      if(syncCtrl) syncCtrl.style.display = 'flex';
+      if (syncCtrl) syncCtrl.style.display = 'flex';
       // Parse and render synced lyrics
       parsedSyncedLyrics = parseLRC(result.syncedLyrics);
       renderSyncedLyrics(parsedSyncedLyrics);
@@ -4068,7 +4816,7 @@ function initLyricsToggle() {
   if (!toggleBtn || !container) return;
 
   // Prevent multiple bindings
-  if(toggleBtn.dataset.bound) return;
+  if (toggleBtn.dataset.bound) return;
   toggleBtn.dataset.bound = 'true';
 
   toggleBtn.addEventListener('click', () => {
@@ -4081,12 +4829,12 @@ function initLyricsToggle() {
 function initLyricsSyncControls() {
   const btnMinus = document.getElementById('btn-sync-minus');
   const btnPlus = document.getElementById('btn-sync-plus');
-  if(!btnMinus || !btnPlus) return;
+  if (!btnMinus || !btnPlus) return;
 
-  if(btnMinus.dataset.bound) return;
+  if (btnMinus.dataset.bound) return;
   btnMinus.dataset.bound = 'true';
   btnPlus.dataset.bound = 'true';
-  
+
   btnMinus.addEventListener('click', () => adjustLyricSync(-0.5));
   btnPlus.addEventListener('click', () => adjustLyricSync(0.5));
 }
@@ -4094,11 +4842,11 @@ function initLyricsSyncControls() {
 function adjustLyricSync(delta) {
   currentLyricOffset += delta;
   const disp = document.getElementById('sync-offset-display');
-  if(disp) {
+  if (disp) {
     disp.textContent = (currentLyricOffset > 0 ? '+' : '') + currentLyricOffset.toFixed(1) + 's';
     disp.style.color = currentLyricOffset === 0 ? 'var(--ts)' : 'var(--green)';
   }
-  if(parsedSyncedLyrics && parsedSyncedLyrics.length > 0) {
+  if (parsedSyncedLyrics && parsedSyncedLyrics.length > 0) {
     updateSyncedLyricsHighlight(player.audio.currentTime);
   }
 }
@@ -4125,7 +4873,7 @@ function syncNowPlayingLikeState() {
 function setupOverlaySync() {
   // Override the player's onTimeUpdate to also update overlay
   const originalOnTimeUpdate = player.onTimeUpdate.bind(player);
-  player.onTimeUpdate = function() {
+  player.onTimeUpdate = function () {
     originalOnTimeUpdate();
 
     const { currentTime, duration } = this.audio;
@@ -4152,7 +4900,7 @@ function setupOverlaySync() {
 
   // Override onLoaded to sync total time
   const originalOnLoaded = player.onLoaded.bind(player);
-  player.onLoaded = function() {
+  player.onLoaded = function () {
     originalOnLoaded();
     const timeTotal = document.getElementById('np-time-total');
     if (timeTotal) timeTotal.textContent = this.formatTime(this.audio.duration);
@@ -4160,14 +4908,14 @@ function setupOverlaySync() {
 
   // Override updatePlayButton to sync overlay
   const originalUpdatePlayButton = player.updatePlayButton.bind(player);
-  player.updatePlayButton = function() {
+  player.updatePlayButton = function () {
     originalUpdatePlayButton();
     if (npOverlayOpen) syncNowPlayingPlayState();
   };
 
   // Override updateUI to refresh overlay when song changes
   const originalUpdateUI = player.updateUI.bind(player);
-  player.updateUI = function(song) {
+  player.updateUI = function (song) {
     originalUpdateUI(song);
     // Reset lyrics for new song
     lastLyricsSongId = null;
@@ -4203,7 +4951,7 @@ async function loadNowPlayingArtistInfo(artistName) {
   // Try to find artist profile - check BOTH profiles AND artists table
   try {
     const sb = getSupabase();
-    
+
     // 1. Check profiles table first
     const { data: profiles } = await sb
       .from('profiles')
@@ -4332,10 +5080,10 @@ async function loadNowPlayingCredits(song) {
 
   // Parse multi-artist (comma-separated)
   const artistNames = song.artist ? song.artist.split(',').map(a => a.trim()).filter(Boolean) : [];
-  
+
   for (let idx = 0; idx < artistNames.length; idx++) {
     const name = artistNames[idx];
-    
+
     let avatarUrl = null;
     try {
       if (typeof getArtistByName === 'function') {
@@ -4347,7 +5095,7 @@ async function loadNowPlayingCredits(song) {
     } catch (e) {
       console.log('Credits artist fetch error:', e);
     }
-    
+
     credits.push({
       name: name,
       role: idx === 0 ? 'Ana Sanatçı' : 'İşbirliği',
@@ -4410,7 +5158,7 @@ let currentArtistProfileSongs = [];
 
 async function openArtistProfile(artistName) {
   if (!artistName) return;
-  
+
   // Navigate to artist profile page
   currentPage = 'artist-profile';
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -4424,16 +5172,16 @@ async function openArtistProfile(artistName) {
   }
   const main = document.getElementById('main-content');
   if (main) main.scrollTop = 0;
-  
+
   // Show loading
   document.getElementById('artist-profile-name').textContent = artistName;
   document.getElementById('artist-profile-song-count').textContent = 'Yükleniyor...';
   document.getElementById('artist-profile-songs').innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Yükleniyor...</p></div>';
-  
+
   try {
     // Get artist info
     const artist = await getArtistByName(artistName);
-    
+
     // Set avatar
     const avatarEl = document.getElementById('artist-profile-avatar');
     if (artist && artist.avatar_url) {
@@ -4443,16 +5191,16 @@ async function openArtistProfile(artistName) {
       const color = getAvatarColor(artistName);
       avatarEl.innerHTML = `<span style="font-size:60px;font-weight:700;color:#fff;background:${color};width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center">${initials}</span>`;
     }
-    
+
     // Set name with verified tick
     document.getElementById('artist-profile-name').innerHTML = `${escapeHtml(artistName)}${getVerifiedTick(artistName)}`;
-    
+
     // Get songs
     const { data: songs } = await getSongsByArtist(artistName);
     currentArtistProfileSongs = songs || [];
-    
+
     document.getElementById('artist-profile-song-count').textContent = `${currentArtistProfileSongs.length} Şarkı`;
-    
+
     // Render songs
     const songsContainer = document.getElementById('artist-profile-songs');
     if (currentArtistProfileSongs.length === 0) {
@@ -4469,10 +5217,10 @@ async function openArtistProfile(artistName) {
           <span>Süre</span>
         </div>
         ${currentArtistProfileSongs.map((song, i) => {
-          const coverHtml = song.cover_url 
-            ? `<img src="${song.cover_url}" alt="" onerror="this.style.display='none'">` 
-            : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
-          return `
+        const coverHtml = song.cover_url
+          ? `<img src="${song.cover_url}" alt="" onerror="this.style.display='none'">`
+          : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
+        return `
             <div class="song-list-item" data-song-id="${song.id}">
               <div class="song-list-num">${i + 1}</div>
               <div class="song-list-info">
@@ -4486,17 +5234,67 @@ async function openArtistProfile(artistName) {
               <div class="song-list-duration">${formatDuration(song.duration)}</div>
             </div>
           `;
-        }).join('')}
+      }).join('')}
       `;
     }
-    
+
     // Play all button
     document.getElementById('btn-artist-play-all').onclick = () => {
       if (currentArtistProfileSongs.length > 0) {
         player.playSong(currentArtistProfileSongs[0], currentArtistProfileSongs);
       }
     };
-    
+
+    // Follow button
+    const followBtn = document.getElementById('btn-artist-follow');
+    if (artist && artist.id) {
+      followBtn.style.display = 'inline-block';
+      let isFollowing = await checkFriendshipInternal(artist.id);
+
+      const updateFollowBtnState = () => {
+        if (isFollowing) {
+          followBtn.textContent = 'Takip Ediliyor';
+          followBtn.style.borderColor = 'var(--primary)';
+          followBtn.style.color = 'var(--primary)';
+        } else {
+          followBtn.textContent = 'Takip Et';
+          followBtn.style.borderColor = 'var(--bd)';
+          followBtn.style.color = 'var(--tf)';
+        }
+      };
+
+      updateFollowBtnState();
+
+      followBtn.onclick = async () => {
+        followBtn.disabled = true;
+        if (isFollowing) {
+          await removeFriend(artist.id);
+          isFollowing = false;
+        } else {
+          await addFriend(artist.id);
+          isFollowing = true;
+
+          // If we are un-hiding this artist
+          const hiddenArtistPlaylists = JSON.parse(localStorage.getItem('hiddenArtistPlaylists') || '[]');
+          const idx = hiddenArtistPlaylists.indexOf(artist.id);
+          if (idx !== -1) {
+            hiddenArtistPlaylists.splice(idx, 1);
+            localStorage.setItem('hiddenArtistPlaylists', JSON.stringify(hiddenArtistPlaylists));
+          }
+        }
+        updateFollowBtnState();
+        followBtn.disabled = false;
+
+        // Refresh sidebar
+        loadPlaylists();
+        if (currentPage === 'library') {
+          loadLibraryPage();
+        }
+      };
+    } else {
+      followBtn.style.display = 'none';
+    }
+
   } catch (err) {
     console.error('Artist profile error:', err);
     document.getElementById('artist-profile-songs').innerHTML = `<div class="empty-state"><p>Yüklenirken hata oluştu</p></div>`;
@@ -4602,6 +5400,7 @@ function cancelSleepTimer() {
   if (btn) btn.classList.remove('active');
 }
 
+
 // ===== QUEUE PANEL =====
 let queuePanelOpen = false;
 
@@ -4692,7 +5491,7 @@ function renderQueuePanel() {
 
 // Keep queue panel in sync
 const _origOnTimeUpdate2 = player.onTimeUpdate.bind(player);
-player.onTimeUpdate = function() {
+player.onTimeUpdate = function () {
   _origOnTimeUpdate2();
   if (queuePanelOpen) {
     // Only re-render when song changes (not every frame)
@@ -4702,7 +5501,6 @@ player.onTimeUpdate = function() {
 // ===== PREMIUM BADGE =====
 let currentUserIsPremium = false;
 let currentUserAvatarFrame = 'none';
-let currentUserTheme = 'default';
 let currentUserBannerUrl = null;
 
 function hasPremiumAccess() {
@@ -4719,62 +5517,8 @@ function getAvatarFrameClass(frame) {
   return `avatar-frame avatar-frame-${frame}`;
 }
 
-// ===== THEME SYSTEM =====
-function initThemeSelector() {
-  const selector = document.getElementById('theme-selector');
-  if (!selector) return;
 
-  selector.querySelectorAll('.theme-option').forEach(opt => {
-    opt.addEventListener('click', () => {
-      const theme = opt.dataset.theme;
-      if (theme !== 'default' && !hasPremiumAccess()) {
-        showToast('Özel temalar Premium üyelere özel 💎', 'error');
-        return;
-      }
-      applyTheme(theme);
-      selector.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      currentUserTheme = theme;
-      localStorage.setItem('bekofy_theme', theme);
-    });
-  });
 
-  // Mark non-default themes as locked for non-premium
-  updateThemeLocks();
-}
-
-function updateThemeLocks() {
-  const selector = document.getElementById('theme-selector');
-  if (!selector) return;
-  selector.querySelectorAll('.theme-option').forEach(opt => {
-    if (opt.dataset.theme !== 'default') {
-      opt.classList.toggle('locked', !hasPremiumAccess());
-    }
-  });
-  const note = document.getElementById('theme-premium-note');
-  if (note) note.textContent = hasPremiumAccess() ? '' : 'Özel temalar Premium üyelere özel';
-}
-
-function applyTheme(theme) {
-  if (theme === 'default') {
-    document.documentElement.removeAttribute('data-theme');
-  } else {
-    document.documentElement.setAttribute('data-theme', theme);
-  }
-}
-
-function loadSavedTheme() {
-  const saved = localStorage.getItem('bekofy_theme') || 'default';
-  if (saved !== 'default' && hasPremiumAccess()) {
-    applyTheme(saved);
-    currentUserTheme = saved;
-    const opt = document.querySelector(`.theme-option[data-theme="${saved}"]`);
-    if (opt) {
-      document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-    }
-  }
-}
 
 // ===== AVATAR FRAME SELECTOR =====
 function initFrameSelector() {
@@ -4837,6 +5581,8 @@ function initBannerUpload() {
       currentUserBannerUrl = null;
       document.getElementById('banner-preview').style.display = 'none';
       removeBtn.style.display = 'none';
+      const ownBannerImg = document.getElementById('own-profile-banner-img');
+      if (ownBannerImg) ownBannerImg.style.display = 'none';
       showToast('Banner kaldırıldı', 'success');
     });
   }
@@ -4846,10 +5592,24 @@ function showBannerPreview(url) {
   const preview = document.getElementById('banner-preview');
   const img = document.getElementById('banner-preview-img');
   const removeBtn = document.getElementById('btn-remove-banner');
+  const ownBannerImg = document.getElementById('own-profile-banner-img');
+
+  if (ownBannerImg) {
+    if (url) {
+      ownBannerImg.src = url;
+      ownBannerImg.style.display = 'block';
+    } else {
+      ownBannerImg.style.display = 'none';
+    }
+  }
+
   if (preview && img && url) {
     img.src = url;
     preview.style.display = 'block';
     if (removeBtn) removeBtn.style.display = 'inline-block';
+  } else if (preview) {
+    preview.style.display = 'none';
+    if (removeBtn) removeBtn.style.display = 'none';
   }
 }
 
@@ -4983,7 +5743,7 @@ async function loadWrappedPage() {
 
 // ===== LOAD PREMIUM DATA ON USER INFO =====
 const _origLoadUserInfoFinal = loadUserInfo;
-loadUserInfo = async function() {
+loadUserInfo = async function () {
   await _origLoadUserInfoFinal();
 
   // Load premium data
@@ -5009,16 +5769,22 @@ loadUserInfo = async function() {
         nameEl.appendChild(badge);
       }
 
-      // Apply avatar frame in sidebar
+      // Apply avatar frame in sidebar and other places
       const avatarEl = document.getElementById('user-avatar');
-      if (avatarEl && currentUserAvatarFrame !== 'none') {
-        const frameClass = getAvatarFrameClass(currentUserAvatarFrame);
-        if (frameClass) avatarEl.className = 'user-avatar ' + frameClass;
+      const topAvatarEl = document.getElementById('top-user-avatar');
+      const profileAvatarLargeEl = document.getElementById('profile-avatar-large');
+      
+      const frameClass = currentUserAvatarFrame !== 'none' ? getAvatarFrameClass(currentUserAvatarFrame) : '';
+      
+      if (avatarEl) {
+        avatarEl.className = 'user-avatar ' + frameClass;
       }
-
-      // Apply saved theme
-      loadSavedTheme();
-      updateThemeLocks();
+      if (topAvatarEl) {
+        topAvatarEl.className = 'top-user-avatar ' + frameClass;
+      }
+      if (profileAvatarLargeEl) {
+        profileAvatarLargeEl.className = 'premium-avatar ' + frameClass;
+      }
 
       // Show banner preview if exists
       if (currentUserBannerUrl) showBannerPreview(currentUserBannerUrl);
@@ -5039,7 +5805,7 @@ loadUserInfo = async function() {
 const _origSaveProfile = document.getElementById('btn-save-profile');
 // Override is handled in initProfilePage, we hook into it differently
 const _origInitProfilePage = initProfilePage;
-initProfilePage = function() {
+initProfilePage = function () {
   _origInitProfilePage();
 
   // Override save button to include theme + frame
@@ -5064,7 +5830,7 @@ initProfilePage = function() {
 
 // ===== NAVIGATION HOOK FOR WRAPPED =====
 const _origNavigateTo = navigateTo;
-navigateTo = function(page) {
+navigateTo = function (page) {
   _origNavigateTo(page);
   if (page === 'wrapped') {
     loadWrappedPage();
@@ -5076,7 +5842,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     initSleepTimer();
     initQueuePanel();
-    initThemeSelector();
+
     initFrameSelector();
     initBannerUpload();
     initOfflineDownload();
@@ -5094,19 +5860,19 @@ function initLyricShare() {
   const btnCancelSelection = document.getElementById('btn-share-cancel');
   const btnContinueSelection = document.getElementById('btn-share-continue');
   const countSpan = document.getElementById('lyrics-share-count');
-  
+
   if (!btnShare || !overlaySelection) return;
 
   function resetSelectionMode() {
     selectedLyricIndexes = [];
-    if(overlaySelection) overlaySelection.style.display = 'none';
+    if (overlaySelection) overlaySelection.style.display = 'none';
     selectionList.innerHTML = '';
     btnContinueSelection.disabled = true;
     countSpan.textContent = '0/2 Seçildi';
   }
 
   btnShare.addEventListener('click', () => {
-    if(!parsedSyncedLyrics || parsedSyncedLyrics.length === 0) {
+    if (!parsedSyncedLyrics || parsedSyncedLyrics.length === 0) {
       showToast('Paylaşılacak şarkı sözü bulunamadı', 'error');
       return;
     }
@@ -5133,7 +5899,7 @@ function initLyricShare() {
       div.className = 'share-lyric-line';
       div.textContent = text;
       div.dataset.index = i;
-      
+
       div.addEventListener('click', () => {
         const idx = parseInt(div.dataset.index);
         if (selectedLyricIndexes.includes(idx)) {
@@ -5144,17 +5910,17 @@ function initLyricShare() {
             selectedLyricIndexes.push(idx);
             div.classList.add('selected-for-share');
           } else {
-             showToast('En fazla 2 satır seçebilirsiniz', 'warning');
+            showToast('En fazla 2 satır seçebilirsiniz', 'warning');
           }
         }
         countSpan.textContent = `${selectedLyricIndexes.length}/2 Seçildi`;
         btnContinueSelection.disabled = selectedLyricIndexes.length === 0;
       });
-      
+
       selectionList.appendChild(div);
     });
 
-    if(overlaySelection) overlaySelection.style.display = 'flex';
+    if (overlaySelection) overlaySelection.style.display = 'flex';
   });
 
   btnCancelSelection.addEventListener('click', resetSelectionMode);
@@ -5167,31 +5933,31 @@ function initLyricShare() {
     if (!song) return;
 
     // Collect texts
-    selectedLyricIndexes.sort((a,b) => a - b);
+    selectedLyricIndexes.sort((a, b) => a - b);
     const texts = selectedLyricIndexes.map(idx => parsedSyncedLyrics[idx].text);
-    
+
     // Populate card
     document.getElementById('card-lyrics-text').innerHTML = '"' + texts.map(escapeHtml).join('<br>') + '"';
     document.getElementById('card-song-title').textContent = escapeHtml(song.title || 'Bilinmiyor');
     document.getElementById('card-song-artist').textContent = escapeHtml(song.artist || 'Sanatçı');
-    
+
     const coverUrl = song.cover_url || '';
     document.getElementById('card-cover-img').src = coverUrl;
 
     const overlayShare = document.getElementById('overlay-share-lyrics');
     const preview = document.getElementById('share-lyrics-preview-container');
     const downloadBtn = document.getElementById('btn-download-lyric-card');
-    
+
     preview.innerHTML = '<div class="spinner"></div>';
     resetSelectionMode(); // Close selection modal
-    if(overlayShare) overlayShare.style.display = 'flex'; // Open preview modal
+    if (overlayShare) overlayShare.style.display = 'flex'; // Open preview modal
 
     setTimeout(() => {
-      if(typeof html2canvas === 'undefined') {
+      if (typeof html2canvas === 'undefined') {
         preview.innerHTML = '<p style="color:white;padding:20px">html2canvas yüklenemedi.</p>';
         return;
       }
-      
+
       const template = document.getElementById('lyric-card-template');
       const bgEl = document.getElementById('np-canvas-bg');
       if (bgEl) {
@@ -5211,7 +5977,7 @@ function initLyricShare() {
       html2canvas(template, { scale: 1, useCORS: true, backgroundColor: null }).then(canvas => {
         const dataUrl = canvas.toDataURL('image/png');
         preview.innerHTML = `<img src="${dataUrl}" style="width:100%; height:auto; display:block">`;
-        
+
         downloadBtn.onclick = () => {
           const a = document.createElement('a');
           a.href = dataUrl;
@@ -5227,7 +5993,7 @@ function initLyricShare() {
   // Modal close
   document.getElementById('btn-close-share-lyrics')?.addEventListener('click', () => {
     const overlayShare = document.getElementById('overlay-share-lyrics');
-    if(overlayShare) overlayShare.style.display = 'none';
+    if (overlayShare) overlayShare.style.display = 'none';
   });
 }
 
@@ -5256,3 +6022,354 @@ function initMiniPlayerButton() {
     window.electronAPI.toggleMiniPlayer();
   });
 }
+// ===== Premium Page Logic =====
+document.addEventListener('DOMContentLoaded', () => {
+  const btnUpgrade = document.getElementById('btn-premium-upgrade');
+  if (btnUpgrade) {
+    btnUpgrade.addEventListener('click', () => {
+      // Assuming localhost:8080 or localhost:3000 for local dev
+      // Use window.location.origin or simply hardcode for testing
+      const siteUrl = 'http://localhost:3000/checkout.html?plan=bireysel';
+      if (window.electronAPI && window.electronAPI.openExternal) {
+        window.electronAPI.openExternal(siteUrl);
+      } else {
+        window.open(siteUrl, '_blank');
+      }
+    });
+  }
+
+  // Update premium page UI based on user role
+  const updatePremiumPageUI = async () => {
+    try {
+      const sb = getSupabase();
+      if (!sb) return;
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+
+      const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+      if (profile && (profile.role === 'premium' || profile.role === 'admin')) {
+        const title = document.getElementById('premium-page-title');
+        const desc = document.getElementById('premium-page-desc');
+        const bottomCta = document.querySelector('.premium-bottom-cta');
+        if (title) title.innerHTML = '<span class="premium-title-line">Zaten</span><span class="premium-title-gradient">Premium\'sun! 💎</span>';
+        if (desc) desc.textContent = 'Hesabın zaten Premium seviyesinde. Tüm özelliklerin kilidi açık.';
+        if (btnUpgrade) btnUpgrade.style.display = 'none';
+        if (bottomCta) bottomCta.style.display = 'none';
+      }
+    } catch (err) {
+      console.log('Premium role check error:', err);
+    }
+  };
+
+  // Run on page load
+  updatePremiumPageUI();
+
+  // also run when navigating to premium page
+  const premiumNav = document.getElementById('btn-top-premium');
+  if (premiumNav) {
+    premiumNav.addEventListener('click', updatePremiumPageUI);
+  }
+});
+
+
+// ===== Jam UI & Logic =====
+function initJamUI() {
+  const btnJam = document.getElementById('btn-jam');
+  const modal = document.getElementById('jam-modal');
+  const closeBtn = document.getElementById('jam-close');
+  const btnCreate = document.getElementById('btn-create-jam');
+  const btnJoin = document.getElementById('btn-join-jam');
+  const inputCode = document.getElementById('jam-code-input');
+  const btnLeave = document.getElementById('btn-leave-jam');
+
+  const createSection = document.getElementById('jam-create-section');
+  const activeSection = document.getElementById('jam-active-section');
+  const activeCodeText = document.getElementById('jam-active-code');
+  const activeBanner = document.getElementById('jam-active-banner');
+  const bannerCount = document.getElementById('jam-banner-count');
+  const bannerCode = document.getElementById('jam-banner-code');
+  const bannerLeave = document.getElementById('jam-banner-leave');
+
+  if (!btnJam) return;
+
+  const updateJamModalState = () => {
+    if (player.jamSessionId) {
+      createSection.style.display = 'none';
+      activeSection.style.display = 'block';
+      activeBanner.style.display = 'flex';
+      btnJam.classList.add('active');
+      btnJam.style.color = 'var(--primary-color)';
+    } else {
+      createSection.style.display = 'block';
+      activeSection.style.display = 'none';
+      activeBanner.style.display = 'none';
+      btnJam.classList.remove('active');
+      btnJam.style.color = '';
+    }
+  };
+
+  btnJam.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    updateJamModalState();
+  });
+
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  btnCreate.addEventListener('click', async () => {
+    if (!currentUserId) {
+      showToast('Jam oluşturmak için giriş yapmalısınız', 'error');
+      return;
+    }
+
+    btnCreate.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;"></div> Oluşturuluyor...';
+    btnCreate.disabled = true;
+
+    try {
+      const { data, error } = await createJamSession(currentUserId);
+      if (error) throw error;
+
+      activeCodeText.textContent = data.code;
+      bannerCode.textContent = '#' + data.code;
+
+      player.setJamSession(data.id, true);
+
+      const subscribed = await subscribeToJam(data.id, (payload) => {
+        player.handleJamEvent(payload);
+      });
+
+      if (!subscribed) {
+        console.error('[Jam] Host channel subscription failed');
+        showToast('Jam kanalına bağlanılamadı, tekrar deneyin', 'error');
+        player.clearJamSession();
+        return;
+      }
+
+      updateJamModalState();
+      refreshJamParticipants(data.id);
+
+      // Save initial state if already playing a song
+      const currentSong = player.getCurrentSong();
+      if (currentSong) {
+        updateJamState(data.id, currentSong.id, player.isPlaying, player.audio.currentTime || 0)
+          .catch(err => console.warn('[Jam] Initial state save error:', err));
+      }
+
+      // Share code to clipboard optionally
+      navigator.clipboard.writeText(data.code).then(() => {
+        showToast('Jam kodu panoya kopyalandı!', 'success');
+      });
+
+    } catch (err) {
+      console.error(err);
+      showToast('Jam oluşturulamadı', 'error');
+    } finally {
+      btnCreate.innerHTML = '✨ Jam Oluştur';
+      btnCreate.disabled = false;
+    }
+  });
+
+  btnJoin.addEventListener('click', async () => {
+    if (!currentUserId) {
+      showToast('Jam\'e katılmak için giriş yapmalısınız', 'error');
+      return;
+    }
+
+    const code = inputCode.value.trim();
+    if (code.length !== 6) {
+      showToast('Geçerli bir kod girin', 'error');
+      return;
+    }
+
+    btnJoin.disabled = true;
+    try {
+      const { data: session, error: findErr } = await findJamByCode(code);
+      if (findErr || !session) throw new Error('Oturum bulunamadı');
+
+      await joinJamSession(session.id, currentUserId);
+
+      activeCodeText.textContent = session.code;
+      bannerCode.textContent = '#' + session.code;
+
+      player.setJamSession(session.id, false);
+
+      const subscribed = await subscribeToJam(session.id, (payload) => {
+        player.handleJamEvent(payload);
+      });
+
+      if (!subscribed) {
+        console.error('[Jam] Guest channel subscription failed');
+        showToast('Jam kanalına bağlanılamadı, tekrar deneyin', 'error');
+        player.clearJamSession();
+        return;
+      }
+
+      updateJamModalState();
+      refreshJamParticipants(session.id);
+
+      // Fetch current playback state from DB and sync
+      try {
+        const jamState = await getJamSession(session.id);
+        if (jamState && jamState.current_song_id) {
+          const songToPlay = (typeof allSongs !== 'undefined' ? allSongs : []).find(s => s.id === jamState.current_song_id);
+          if (songToPlay) {
+            await player.playSong(songToPlay, typeof allSongs !== 'undefined' ? allSongs : [songToPlay]);
+            // Seek to the approximate position (account for network delay)
+            if (jamState.current_position > 0) {
+              const elapsed = (Date.now() - new Date(jamState.updated_at).getTime()) / 1000;
+              const targetPos = jamState.is_playing ? jamState.current_position + elapsed : jamState.current_position;
+              player.audio.currentTime = Math.min(targetPos, player.audio.duration || targetPos);
+            }
+            if (!jamState.is_playing) {
+              player.audio.pause();
+              player.isPlaying = false;
+              player.updatePlayButton();
+            }
+          }
+        }
+      } catch (syncErr) {
+        console.warn('[Jam] Initial state sync error:', syncErr);
+      }
+
+      showToast('Jam\'e katılıldı!', 'success');
+
+    } catch (err) {
+      console.error(err);
+      showToast('Jam oturumu bulunamadı veya katılamadınız', 'error');
+    } finally {
+      btnJoin.disabled = false;
+    }
+  });
+
+  const leaveJam = async () => {
+    if (!player.jamSessionId) return;
+    try {
+      if (player.isJamHost) {
+        await endJamSession(player.jamSessionId);
+        player.broadcastJamAction('end_session');
+      } else {
+        await leaveJamSession(player.jamSessionId, currentUserId);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    player.clearJamSession();
+    unsubscribeFromJam();
+    updateJamModalState();
+    modal.style.display = 'none';
+  };
+
+  btnLeave.addEventListener('click', leaveJam);
+  bannerLeave.addEventListener('click', leaveJam);
+}
+
+async function refreshJamParticipants(sessionId) {
+  const list = document.getElementById('jam-participants-list');
+  const countEl = document.getElementById('jam-modal-count');
+  const bannerCount = document.getElementById('jam-banner-count');
+  if (!list || !sessionId) return;
+
+  try {
+    const participants = await getJamParticipants(sessionId);
+    countEl.textContent = participants.length;
+    bannerCount.textContent = participants.length + ' kişi';
+
+    list.innerHTML = participants.map(p => {
+      let frameClass = '';
+      if (p.profiles?.avatar_frame && p.profiles.avatar_frame !== 'none') {
+        frameClass = ' ' + getAvatarFrameClass(p.profiles.avatar_frame);
+      }
+      return `
+      <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px;">
+        <div class="jam-avatar-wrap${frameClass}" style="position:relative; width:30px; height:30px; border-radius:50%">
+          <img src="${p.profiles?.avatar_url || '../assets/default_avatar.png'}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; position:relative; z-index:2">
+        </div>
+        <span style="flex: 1; font-size: 14px;">${p.profiles?.username || 'Kullanıcı'}</span>
+        ${p.user_id === player.jamSessionId ? '<span style="font-size: 10px; background: var(--primary-color); color: black; padding: 2px 6px; border-radius: 10px;">Kurucu</span>' : ''}
+      </div>
+    `}).join('');
+  } catch (err) {
+    console.error('Participant refresh err:', err);
+  }
+}
+
+// Called when the host ends the session (received by guests via broadcast)
+function onJamEnded() {
+  const activeBanner = document.getElementById('jam-active-banner');
+  if (activeBanner) activeBanner.style.display = 'none';
+  const btnJam = document.getElementById('btn-jam');
+  if (btnJam) {
+    btnJam.classList.remove('active');
+    btnJam.style.color = '';
+  }
+  const createSection = document.getElementById('jam-create-section');
+  const activeSection = document.getElementById('jam-active-section');
+  if (createSection) createSection.style.display = 'block';
+  if (activeSection) activeSection.style.display = 'none';
+  unsubscribeFromJam();
+}
+
+// Ensure initJamUI is called when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    initJamUI();
+    renderHeroBanner();
+    renderDailyMixes();
+  }, 1000);
+});
+
+
+// ===== Enhanced Profile Stats & Badges =====
+async function renderProfileEnhancedStats(userId) {
+  if (!userId) return;
+  const stats = await fetchUserStats(userId);
+  const profile = await fetchProfile(userId);
+
+  const elPlaylists = document.getElementById('profile-stat-playlists');
+  const elLiked = document.getElementById('profile-stat-liked');
+  const elFollowers = document.getElementById('profile-stat-followers');
+  const elFollowing = document.getElementById('profile-stat-following');
+
+  if (elPlaylists) elPlaylists.textContent = stats.playlists;
+  if (elLiked) elLiked.textContent = stats.liked;
+  if (elFollowers) elFollowers.textContent = stats.followers;
+  if (elFollowing) elFollowing.textContent = stats.following;
+
+  const badgesSection = document.getElementById('profile-badges-section');
+  const badgesGrid = document.getElementById('profile-badges-grid');
+
+  if (badgesSection && badgesGrid) {
+    const badges = getUserBadges(stats, profile.data);
+    if (badges.length > 0) {
+      badgesGrid.innerHTML = badges.map(b => `
+        <div class="profile-badge">
+          <span class="badge-icon">${b.icon}</span>
+          <div class="badge-info">
+            <span class="badge-name">${b.name}</span>
+            <span class="badge-desc">${b.desc}</span>
+          </div>
+        </div>
+      `).join('');
+      badgesSection.style.display = 'block';
+    } else {
+      badgesGrid.innerHTML = '<p style="color:var(--tm);font-size:13px;padding:12px;">Henüz rozet yok.</p>';
+    }
+  }
+}
+
+// Hook into existing profile load
+const originalLoadProfile = window.loadProfile;
+window.loadProfile = async () => {
+  if (typeof originalLoadProfile === 'function') await originalLoadProfile();
+  if (currentUserId) {
+    await renderProfileEnhancedStats(currentUserId);
+  }
+};
+
+// Save current playback time when the app/window closes
+window.addEventListener('beforeunload', () => {
+  if (typeof player !== 'undefined' && player.saveCurrentTime) {
+    player.saveCurrentTime();
+  }
+});

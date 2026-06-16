@@ -71,6 +71,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       planEl.innerHTML = `<span class="status-dot inactive"></span> ${r.plan}`;
     }
 
+    // Show artist panel link if user is an artist
+    if (role === 'artist') {
+      const artistLink = document.getElementById('nav-artist-link');
+      if (artistLink) artistLink.style.display = 'inline';
+    }
+
     // Avatar upload
     avatarEl.addEventListener('click', () => {
       const input = document.createElement('input');

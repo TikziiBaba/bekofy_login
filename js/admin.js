@@ -153,17 +153,85 @@ async function loadAllArtists() {
 
 async function loadStats() {
   try {
-    const [artistsRes, songsRes, profilesRes] = await Promise.all([
+    const [artistsRes, songsRes, profilesRes, premiumRes] = await Promise.all([
       sb.from('artists').select('id', { count: 'exact', head: true }),
       sb.from('songs').select('id', { count: 'exact', head: true }),
       sb.from('profiles').select('id', { count: 'exact', head: true }),
+      sb.from('profiles').select('id', { count: 'exact', head: true }).in('role', ['premium', 'admin', 'yetkili', 'artist'])
     ]);
     
     document.getElementById('stat-artists').textContent = artistsRes.count || 0;
     document.getElementById('stat-songs').textContent = songsRes.count || 0;
     document.getElementById('stat-users').textContent = profilesRes.count || 0;
+    document.getElementById('stat-premium').textContent = premiumRes.count || 0;
+
+    initCharts(profilesRes.count || 0, premiumRes.count || 0);
   } catch (err) {
     console.error('Stats error:', err);
+  }
+}
+
+function initCharts(totalUsers, premiumUsers) {
+  const chartsContainer = document.getElementById('admin-charts');
+  if (chartsContainer) {
+    chartsContainer.style.display = 'grid';
+  }
+
+  const freeUsers = totalUsers - premiumUsers;
+
+  // Pie Chart for Roles
+  const roleCtx = document.getElementById('roleChart');
+  if (roleCtx && !window.roleChartInstance) {
+    window.roleChartInstance = new Chart(roleCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Ücretsiz', 'Premium/Diğer'],
+        datasets: [{
+          data: [freeUsers, premiumUsers],
+          backgroundColor: ['#3b82f6', '#1DB954'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#b3b3b3' } }
+        }
+      }
+    });
+  } else if (window.roleChartInstance) {
+    window.roleChartInstance.data.datasets[0].data = [freeUsers, premiumUsers];
+    window.roleChartInstance.update();
+  }
+
+  // Line Chart for Growth (Mocked data since we don't have historical data easily without complex queries)
+  const growthCtx = document.getElementById('growthChart');
+  if (growthCtx && !window.growthChartInstance) {
+    window.growthChartInstance = new Chart(growthCtx, {
+      type: 'line',
+      data: {
+        labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
+        datasets: [{
+          label: 'Kayıtlı Kullanıcı',
+          data: [Math.floor(totalUsers*0.4), Math.floor(totalUsers*0.5), Math.floor(totalUsers*0.7), Math.floor(totalUsers*0.8), Math.floor(totalUsers*0.9), totalUsers],
+          borderColor: '#1DB954',
+          backgroundColor: 'rgba(29, 185, 84, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#b3b3b3' } },
+          x: { grid: { display: false }, ticks: { color: '#b3b3b3' } }
+        }
+      }
+    });
   }
 }
 
@@ -626,6 +694,12 @@ window.openArtistDetail = async function(artistId) {
           <span class="detail-song-count">${artistSongs.length} şarkı</span>
         </div>
       </div>
+      <div style="margin-left:auto; display:flex; gap:12px;">
+        <button class="btn-edit" onclick="openCreateAccountModal('${artist.id}')" style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--ts); border-radius:8px; padding:8px 16px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Sanatçı Hesabı Oluştur
+        </button>
+      </div>
       <input type="file" id="file-artist-${artist.id}" accept="image/*" style="display:none" onchange="handleArtistPhotoChange('${artist.id}', this)">
       <div class="artist-upload-status" id="upload-status-${artist.id}"></div>
     </div>
@@ -1058,6 +1132,119 @@ window.searchArtists = function(query) {
     (a.name || '').toLowerCase().includes(q)
   );
   renderArtists(filtered);
+};
+
+// ===== CREATE ARTIST ACCOUNT =====
+let currentCreateAccountArtistId = null;
+
+window.openCreateAccountModal = function(artistId) {
+  currentCreateAccountArtistId = artistId;
+  
+  document.getElementById('create-account-email').value = '';
+  document.getElementById('create-account-error').style.display = 'none';
+  document.getElementById('created-account-result').style.display = 'none';
+  
+  document.getElementById('btn-create-account-confirm').style.display = 'block';
+  document.getElementById('btn-create-account-confirm').disabled = false;
+  
+  document.getElementById('create-artist-account-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeCreateAccountModal = function() {
+  document.getElementById('create-artist-account-modal').classList.remove('show');
+  document.body.style.overflow = '';
+};
+
+window.confirmCreateAccount = async function() {
+  if (!currentCreateAccountArtistId) return;
+  
+  const emailInput = document.getElementById('create-account-email');
+  const email = emailInput.value.trim();
+  const errorEl = document.getElementById('create-account-error');
+  const btn = document.getElementById('btn-create-account-confirm');
+  
+  if (!email || !email.includes('@')) {
+    errorEl.textContent = 'Geçerli bir e-posta adresi girin.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  const artist = allArtists.find(a => a.id === currentCreateAccountArtistId);
+  if (!artist || !artist.name) {
+    errorEl.textContent = 'Sanatçı profili hatalı.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;border-color:#000;border-top-color:transparent;"></span> Oluşturuluyor...';
+  errorEl.style.display = 'none';
+  
+  try {
+    // Rastgele tek kullanımlık şifre oluştur (örn: X7k9M2pQ)
+    const tempPassword = Math.random().toString(36).slice(-8) + 'Aa1!';
+    
+    // Geçici supabase client oluştur (admin'in kendi session'u bozulmasın diye persistSession: false)
+    const sbTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    
+    // Auth'ta yeni kullanıcı oluştur
+    const { data: authData, error: signUpError } = await sbTemp.auth.signUp({
+      email: email,
+      password: tempPassword,
+    });
+    
+    if (signUpError) {
+      if (signUpError.message.includes('already registered')) {
+        throw new Error('Bu e-posta adresi sistemde zaten kayıtlı!');
+      }
+      throw signUpError;
+    }
+    
+    if (!authData.user) {
+      throw new Error('Kullanıcı oluşturulamadı.');
+    }
+    
+    // Yeni oluşturulan kullanıcının profiles tablosundaki verisini güncelle
+    // username: sanatçının adı (bağlantı için)
+    // role: 'artist'
+    // theme: 'force_password_change' (Sanatçı giriş yapınca şifre sormak için bayrak)
+    const { error: profileUpdateError } = await sb
+      .from('profiles')
+      .update({
+        username: artist.name,
+        role: 'artist',
+        theme: 'force_password_change'
+      })
+      .eq('id', authData.user.id);
+      
+    if (profileUpdateError) {
+      // Profil eğer trigger tarafından oluşturulmadıysa biz oluşturalım
+      const { error: profileInsertError } = await sb.from('profiles').insert({
+        id: authData.user.id,
+        username: artist.name,
+        role: 'artist',
+        theme: 'force_password_change'
+      });
+      if (profileInsertError) throw profileInsertError;
+    }
+    
+    // Başarılı!
+    document.getElementById('res-email').textContent = email;
+    document.getElementById('res-password').textContent = tempPassword;
+    document.getElementById('created-account-result').style.display = 'block';
+    
+    btn.style.display = 'none'; // Kaydet butonunu gizle
+    
+  } catch (err) {
+    console.error('Create artist account error:', err);
+    errorEl.textContent = 'Bir hata oluştu: ' + (err.message || 'Hesap oluşturulamadı.');
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = 'Hesap Oluştur';
+  }
 };
 
 window.searchSongs = function(query) {

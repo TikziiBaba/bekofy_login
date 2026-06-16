@@ -464,7 +464,7 @@ async function searchPublicPlaylists(query) {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('playlists')
-    .select('*, profiles(username, avatar_url)')
+    .select('*, profiles(username, avatar_url, avatar_frame)')
     .eq('is_public', true)
     .ilike('name', `%${query}%`)
     .order('created_at', { ascending: false })
@@ -481,7 +481,7 @@ async function searchUsers(query) {
 
   // Search profiles
   const profilesRes = await sb.from('profiles')
-    .select('id, username, avatar_url, role, is_banned')
+    .select('id, username, avatar_url, avatar_frame, role, is_banned')
     .neq('id', user.id)
     .ilike('username', `%${query}%`)
     .limit(20);
@@ -554,14 +554,14 @@ async function fetchUserPublicProfile(userId) {
   let profile, profileError;
   const res1 = await sb
     .from('profiles')
-    .select('id, username, avatar_url, role, banner_url')
+    .select('id, username, avatar_url, avatar_frame, role, banner_url')
     .eq('id', userId)
     .single();
   if (res1.error && res1.error.message && res1.error.message.includes('banner_url')) {
     // Fallback if banner_url column doesn't exist
     const res2 = await sb
       .from('profiles')
-      .select('id, username, avatar_url, role')
+      .select('id, username, avatar_url, avatar_frame, role')
       .eq('id', userId)
       .single();
     profile = res2.data;
@@ -666,21 +666,41 @@ async function checkFriendshipInternal(targetUserId) {
 
 async function uploadPlaylistCover(playlistId, file) {
   const sb = getSupabase();
-  const ext = file.name.split('.').pop();
+  const ext = file.name.split('.').pop().toLowerCase();
+  
+  // Validate file type
+  const allowedTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+  if (!allowedTypes.includes(ext)) {
+    return { data: null, error: { message: 'Desteklenmeyen dosya format. (jpg, png, webp, gif)' } };
+  }
   
   // Get current user's ID for storage policy compatibility
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return { data: null, error: { message: 'Oturum bulunamadı' } };
+  if (!user) return { data: null, error: { message: 'Oturum bulunamad.' } };
   
-  // Use folder path matching user ID for Supabase Storage RLS policy compatibility
-  const fileName = `${user.id}/playlist-${playlistId}-${Date.now()}.${ext}`;
+  // Use user's folder in avatars bucket (same pattern as avatar upload which works)
+  const fileName = user.id + '/playlist_cover_' + playlistId + '.' + ext;
   
   try {
+    // First, try to remove old cover files for this playlist to avoid accumulation
+    try {
+      const { data: existingFiles } = await sb.storage
+        .from('avatars')
+        .list(user.id, { search: 'playlist_cover_' + playlistId });
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToRemove = existingFiles.map(f => user.id + '/' + f.name);
+        await sb.storage.from('avatars').remove(filesToRemove);
+      }
+    } catch (cleanErr) {
+      console.log('Old cover cleanup skipped:', cleanErr);
+    }
+    
     const { error: uploadError } = await sb.storage
       .from('avatars')
       .upload(fileName, file, { 
         upsert: true,
-        contentType: file.type
+        contentType: file.type || 'image/' + ext,
+        cacheControl: '3600'
       });
       
     if (uploadError) {
@@ -692,9 +712,15 @@ async function uploadPlaylistCover(playlistId, file) {
       .from('avatars')
       .getPublicUrl(fileName);
     
-    // Update the playlist row in the database since the user might complain it doesn't persist
+    // Add cache-busting timestamp
     const coverUrl = urlData.publicUrl + '?t=' + Date.now();
-    await sb.from('playlists').update({ cover_url: coverUrl }).eq('id', playlistId);
+    
+    // Update the playlist record with the new cover URL
+    const { error: updateError } = await sb.from('playlists').update({ cover_url: coverUrl }).eq('id', playlistId);
+    if (updateError) {
+      console.error('Playlist cover_url update error:', updateError);
+      // Still return the URL since upload succeeded
+    }
     
     return { data: coverUrl, error: null };
   } catch (err) {
@@ -702,6 +728,7 @@ async function uploadPlaylistCover(playlistId, file) {
     return { data: null, error: err };
   }
 }
+
 // ===== Collaborative Playlists =====
 async function getPlaylistCollaborators(playlistId) {
   const sb = getSupabase();
@@ -712,7 +739,7 @@ async function getPlaylistCollaborators(playlistId) {
       id,
       user_id,
       added_at,
-      profiles!inner(username, avatar_url)
+      profiles!inner(username, avatar_url, avatar_frame)
     `)
     .eq('playlist_id', playlistId)
     .order('added_at', { ascending: true });
@@ -828,6 +855,25 @@ async function getRecommendedSongs(userId, allSongs, likedSongIds) {
   return recommended.slice(0, 8);
 }
 
+async function getPersonalizedMix(userId, allSongs, likedSongIds) {
+  const liked = allSongs.filter(s => likedSongIds.has(s.id));
+  const recommended = await getRecommendedSongs(userId, allSongs, likedSongIds);
+  // Pick some liked, some recommended
+  const mix = [...liked.sort(() => 0.5 - Math.random()).slice(0, 4), ...recommended.slice(0, 6)];
+  return mix.sort(() => 0.5 - Math.random());
+}
+
+async function fetchNewReleases() {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('songs')
+    .select('*')
+    .or('status.eq.approved,status.is.null')
+    .order('created_at', { ascending: false })
+    .limit(15);
+  return { data, error };
+}
+
 // ===== Reserved Usernames (Admin) =====
 
 async function fetchReservedUsernames() {
@@ -934,14 +980,14 @@ async function fetchFriends(userId) {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('friendships')
-    .select('*, profiles!friendships_friend_id_fkey(id, username, avatar_url, role)')
+    .select('*, profiles!friendships_friend_id_fkey(id, username, avatar_url, avatar_frame, role)')
     .eq('user_id', userId)
     .eq('status', 'accepted');
   
   // Also fetch where user is friend_id
   const { data: data2 } = await sb
     .from('friendships')
-    .select('*, profiles!friendships_user_id_fkey(id, username, avatar_url, role)')
+    .select('*, profiles!friendships_user_id_fkey(id, username, avatar_url, avatar_frame, role)')
     .eq('friend_id', userId)
     .eq('status', 'accepted');
   
@@ -952,17 +998,34 @@ async function fetchPendingFriendRequests(userId) {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('friendships')
-    .select('*, profiles!friendships_user_id_fkey(id, username, avatar_url, role)')
+    .select('*, profiles!friendships_user_id_fkey(id, username, avatar_url, avatar_frame, role)')
     .eq('friend_id', userId)
     .eq('status', 'pending');
   return { data, error };
+}
+
+async function fetchFollowedArtists(userId) {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('friendships')
+    .select('*, profiles!friendships_friend_id_fkey(id, username, avatar_url, avatar_frame, role)')
+    .eq('user_id', userId)
+    .eq('status', 'accepted');
+    
+  if (error || !data) return { data: [], error };
+  
+  const artists = data
+    .map(f => f.profiles)
+    .filter(p => p && p.role === 'artist');
+    
+  return { data: artists, error: null };
 }
 
 async function fetchBlockedUsers(userId) {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('blocked_users')
-    .select('*, profiles!blocked_users_blocked_id_fkey(id, username, avatar_url)')
+    .select('*, profiles!blocked_users_blocked_id_fkey(id, username, avatar_url, avatar_frame)')
     .eq('user_id', userId);
   return { data, error };
 }
@@ -973,7 +1036,7 @@ async function getArtistProfiles() {
   const sb = getSupabase();
   // Fetch from both profiles (role=artist) and artists table
   const [profilesRes, artistsRes] = await Promise.all([
-    sb.from('profiles').select('id, username, avatar_url, role').eq('role', 'artist'),
+    sb.from('profiles').select('id, username, avatar_url, avatar_frame, role').eq('role', 'artist'),
     sb.from('artists').select('id, name, avatar_url').catch(() => ({ data: [], error: null }))
   ]);
   
@@ -1155,4 +1218,248 @@ async function getLyrics(song) {
   }
 
   return null;
+}
+
+// ===== Jam Session Functions (Birlikte Dinleme) =====
+
+function generateJamCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function createJamSession(hostId) {
+  const sb = getSupabase();
+  const code = generateJamCode();
+  const { data, error } = await sb
+    .from('jam_sessions')
+    .insert({ code, host_id: hostId })
+    .select()
+    .single();
+  if (error) return { data: null, error };
+  // Host also joins as participant
+  await sb.from('jam_participants').insert({ session_id: data.id, user_id: hostId });
+  return { data, error: null };
+}
+
+async function findJamByCode(code) {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('jam_sessions')
+    .select('*')
+    .eq('code', code.toUpperCase().trim())
+    .single();
+  return { data, error };
+}
+
+async function joinJamSession(sessionId, userId) {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('jam_participants')
+    .insert({ session_id: sessionId, user_id: userId })
+    .select()
+    .single();
+  return { data, error };
+}
+
+async function leaveJamSession(sessionId, userId) {
+  const sb = getSupabase();
+  await sb
+    .from('jam_participants')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('user_id', userId);
+}
+
+async function endJamSession(sessionId) {
+  const sb = getSupabase();
+  // Delete participants first (cascade should handle but be safe)
+  await sb.from('jam_participants').delete().eq('session_id', sessionId);
+  await sb.from('jam_sessions').delete().eq('id', sessionId);
+}
+
+async function updateJamState(sessionId, songId, isPlaying, position) {
+  const sb = getSupabase();
+  await sb
+    .from('jam_sessions')
+    .update({
+      current_song_id: songId,
+      is_playing: isPlaying,
+      current_position: position,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', sessionId);
+}
+
+async function getJamParticipants(sessionId) {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from('jam_participants')
+    .select('*')
+    .eq('session_id', sessionId)
+    .order('joined_at', { ascending: true });
+
+  if (data && data.length > 0) {
+    const userIds = data.map(p => p.user_id);
+    const { data: profiles } = await sb.from('profiles').select('id, username, avatar_url, avatar_frame').in('id', userIds);
+    return data.map(p => ({
+      ...p,
+      profiles: profiles?.find(prof => prof.id === p.user_id) || null
+    }));
+  }
+  return [];
+}
+
+async function getJamSession(sessionId) {
+  const sb = getSupabase();
+  const { data } = await sb
+    .from('jam_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+  return data;
+}
+
+// Supabase Realtime Broadcast for Jam
+let _jamChannel = null;
+
+function subscribeToJam(sessionId, onEvent) {
+  const sb = getSupabase();
+  if (_jamChannel) {
+    sb.removeChannel(_jamChannel);
+    _jamChannel = null;
+  }
+
+  return new Promise((resolve) => {
+    _jamChannel = sb.channel(`jam:${sessionId}`, {
+      config: { broadcast: { self: false } }
+    });
+    _jamChannel
+      .on('broadcast', { event: 'jam_sync' }, (payload) => {
+        console.log('[Jam] Received sync event:', payload.payload?.type);
+        onEvent(payload.payload);
+      })
+      .on('broadcast', { event: 'jam_chat' }, (payload) => {
+        onEvent({ type: 'chat', ...payload.payload });
+      })
+      .subscribe((status) => {
+        console.log('[Jam] Channel status:', status);
+        if (status === 'SUBSCRIBED') {
+          resolve(true);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('[Jam] Channel subscription failed:', status);
+          resolve(false);
+        }
+      });
+
+    // Safety timeout: resolve after 8 seconds even if no status callback fires
+    setTimeout(() => resolve(false), 8000);
+  });
+}
+
+function broadcastJamEvent(eventData) {
+  if (!_jamChannel) {
+    console.warn('[Jam] No active channel to broadcast on');
+    return;
+  }
+  console.log('[Jam] Broadcasting event:', eventData.type);
+  _jamChannel.send({
+    type: 'broadcast',
+    event: 'jam_sync',
+    payload: eventData
+  });
+}
+
+function unsubscribeFromJam() {
+  if (_jamChannel) {
+    const sb = getSupabase();
+    sb.removeChannel(_jamChannel);
+    _jamChannel = null;
+  }
+}
+
+// ===== User Profile Stats =====
+
+async function fetchUserStats(userId) {
+  const sb = getSupabase();
+  const [likedRes, playlistRes, followersRes, followingRes] = await Promise.all([
+    sb.from('liked_songs').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+    sb.from('playlists').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+    sb.from('friendships').select('*', { count: 'exact', head: true }).eq('friend_id', userId).eq('status', 'accepted'),
+    sb.from('friendships').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'accepted'),
+  ]);
+  return {
+    liked: likedRes.count || 0,
+    playlists: playlistRes.count || 0,
+    followers: followersRes.count || 0,
+    following: followingRes.count || 0,
+  };
+}
+
+function getUserBadges(stats, profile) {
+  const badges = [];
+  if (stats.liked >= 1) badges.push({ icon: '❤️', name: 'Müzik Sever', desc: 'İlk şarkını beğendin' });
+  if (stats.liked >= 10) badges.push({ icon: '🎵', name: 'Melodi Avcısı', desc: '10+ şarkı beğendin' });
+  if (stats.liked >= 50) badges.push({ icon: '🔥', name: 'Müzik Tutkunu', desc: '50+ şarkı beğendin' });
+  if (stats.playlists >= 1) badges.push({ icon: '📋', name: 'DJ Adayı', desc: 'İlk çalma listeni oluşturdun' });
+  if (stats.playlists >= 5) badges.push({ icon: '🎧', name: 'Küratör', desc: '5+ çalma listesi oluşturdun' });
+  if (stats.followers >= 1) badges.push({ icon: '⭐', name: 'Yükselen Yıldız', desc: 'İlk takipçini kazandın' });
+  if (stats.followers >= 10) badges.push({ icon: '🌟', name: 'Sosyal Kelebek', desc: '10+ takipçi' });
+  if (profile?.role === 'admin') badges.push({ icon: '👑', name: 'Admin', desc: 'Platform yöneticisi' });
+  if (profile?.role === 'artist') badges.push({ icon: '🎤', name: 'Sanatçı', desc: 'Doğrulanmış sanatçı' });
+  if (profile?.is_premium) badges.push({ icon: '💎', name: 'Premium', desc: 'Premium üye' });
+  return badges;
+}
+
+// ===== Friend Activity (Realtime) =====
+
+async function updateUserActivity(songId, isPlaying) {
+  const sb = getSupabase();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+
+  try {
+    await sb.from('profiles').update({
+      current_song_id: songId,
+      is_playing: isPlaying,
+      last_activity: new Date().toISOString()
+    }).eq('id', user.id);
+  } catch (err) {
+    console.error('Failed to update user activity:', err);
+  }
+}
+
+let _friendActivityChannel = null;
+
+function subscribeToFriendActivity(friendIds, onUpdate) {
+  const sb = getSupabase();
+  
+  if (_friendActivityChannel) {
+    sb.removeChannel(_friendActivityChannel);
+  }
+  
+  if (!friendIds || friendIds.length === 0) return;
+
+  // We construct a filter string to listen only to friends
+  const filterString = `id=in.(${friendIds.join(',')})`;
+
+  _friendActivityChannel = sb.channel('public:profiles_activity')
+    .on('postgres_changes', { 
+      event: 'UPDATE', 
+      schema: 'public', 
+      table: 'profiles',
+      filter: filterString
+    }, (payload) => {
+      onUpdate(payload.new);
+    })
+    .subscribe();
+}
+
+function unsubscribeFromFriendActivity() {
+  if (_friendActivityChannel) {
+    const sb = getSupabase();
+    sb.removeChannel(_friendActivityChannel);
+    _friendActivityChannel = null;
+  }
 }

@@ -27,6 +27,9 @@ class MusicPlayer {
     this.canvasCtx = null;
     this.animationId = null;
     this.isFullscreen = false;
+
+    this.animationId = null;
+    this.isFullscreen = false;
   }
 
   saveState(song) {
@@ -34,21 +37,46 @@ class MusicPlayer {
       localStorage.setItem('bekofy_last_song', JSON.stringify({
         song: song,
         queue: this.queue,
-        currentIndex: this.currentIndex
+        currentIndex: this.currentIndex,
+        currentTime: this.audio ? this.audio.currentTime : 0
       }));
     }
   }
 
+  saveCurrentTime() {
+    const saved = localStorage.getItem('bekofy_last_song');
+    if (saved && this.audio && !isNaN(this.audio.currentTime) && this.audio.currentTime > 0) {
+      try {
+        const state = JSON.parse(saved);
+        state.currentTime = this.audio.currentTime;
+        localStorage.setItem('bekofy_last_song', JSON.stringify(state));
+      } catch (e) {}
+    }
+  }
+
   loadState() {
+    this.updateVolumeUI(); // Ensure volume bar matches saved volume on load
     const saved = localStorage.getItem('bekofy_last_song');
     if (saved) {
       try {
-        const { song, queue, currentIndex } = JSON.parse(saved);
+        const { song, queue, currentIndex, currentTime } = JSON.parse(saved);
         if (song) {
           this.queue = queue || [song];
           this.currentIndex = currentIndex || 0;
           this.updateUI(song);
-          // Just prepare UI, don't auto play
+          
+          // Preload audio so the duration is visible on the UI
+          if (typeof getSongUrl === 'function') {
+            getSongUrl(song.file_path).then(url => {
+              this.audio.src = url;
+              this.audio.addEventListener('loadedmetadata', () => {
+                if (currentTime) {
+                  this.audio.currentTime = currentTime;
+                  this.onTimeUpdate(); // Update progress bar
+                }
+              }, { once: true });
+            }).catch(e => console.warn('Preload error:', e));
+          }
         }
       } catch (e) {
         console.error('State load error:', e);
@@ -66,11 +94,13 @@ class MusicPlayer {
       this.initVisualizer();
       const url = await getSongUrl(song.file_path);
       this.audio.src = url;
+      this.audio.volume = this.volume;
       // Because audio context needs user interaction to resume
       if (this.audioCtx && this.audioCtx.state === 'suspended') {
         this.audioCtx.resume();
       }
       this.audio.play();
+
       this.isPlaying = true;
       this.updateUI(song);
       this.updatePlayButton();
@@ -82,6 +112,14 @@ class MusicPlayer {
 
       // Mini Player sync
       this.syncMiniPlayer(song);
+
+      // Jam broadcast
+      this.broadcastJamAction('play_song');
+
+      // Friend Activity broadcast
+      if (typeof updateUserActivity === 'function') {
+        updateUserActivity(song.id, true).catch(err => console.warn('Activity update error:', err));
+      }
     } catch (err) {
       console.error('Error playing song:', err);
       showToast('Şarkı oynatılamadı', 'error');
@@ -89,7 +127,13 @@ class MusicPlayer {
   }
 
   togglePlay() {
-    if (!this.audio.src) return;
+    if (!this.audio.src) {
+      const song = this.getCurrentSong();
+      if (song) {
+        this.playSong(song);
+      }
+      return;
+    }
     if (this.isPlaying) {
       this.audio.pause();
     } else {
@@ -98,11 +142,31 @@ class MusicPlayer {
     this.isPlaying = !this.isPlaying;
     this.updatePlayButton();
 
-    // Discord RPC & Mini Player sync
     const song = this.getCurrentSong();
     if (song) {
-      this.updateDiscordRPC(song, this.isPlaying);
+      if (this.isPlaying) {
+        this.updateDiscordRPC(song, true);
+      } else {
+        // Save current time when paused
+        this.saveCurrentTime();
+        
+        // Duraklatıldığında Discord RPC'yi tamamen kaldır (sayaç başlamasın)
+        if (window.electronAPI && window.electronAPI.clearDiscordRPC) {
+          window.electronAPI.clearDiscordRPC();
+        }
+      }
       this.syncMiniPlayer(song);
+    }
+
+    // Jam broadcast
+    this.broadcastJamAction(this.isPlaying ? 'resume' : 'pause');
+
+    // Friend Activity broadcast
+    if (typeof updateUserActivity === 'function') {
+      const currentSong = this.getCurrentSong();
+      if (currentSong) {
+        updateUserActivity(currentSong.id, this.isPlaying).catch(err => console.warn('Activity update error:', err));
+      }
     }
   }
 
@@ -139,6 +203,9 @@ class MusicPlayer {
     if (song && this.isPlaying) {
       this.updateDiscordRPC(song, true);
     }
+
+    // Jam broadcast
+    this.broadcastJamAction('seek');
   }
 
   setVolume(vol) {
@@ -160,6 +227,7 @@ class MusicPlayer {
     this.repeatMode = modes[(idx + 1) % 3];
     const btn = document.getElementById('btn-repeat');
     btn.classList.toggle('active', this.repeatMode !== 'none');
+    btn.classList.toggle('active-one', this.repeatMode === 'one');
   }
 
   // Event Handlers
@@ -179,7 +247,6 @@ class MusicPlayer {
     if (fsKnob) fsKnob.style.left = percent + '%';
     if (fsTime) fsTime.textContent = this.formatTime(currentTime);
 
-    // Mini Player progress sync
     if (window.electronAPI && window.electronAPI.updateMiniPlayerProgress) {
       window.electronAPI.updateMiniPlayerProgress({ percent });
     }
@@ -211,6 +278,14 @@ class MusicPlayer {
       // Clear Discord RPC when playback ends
       if (window.electronAPI && window.electronAPI.clearDiscordRPC) {
         window.electronAPI.clearDiscordRPC();
+      }
+      
+      // Friend Activity broadcast
+      if (typeof updateUserActivity === 'function') {
+        const currentSong = this.getCurrentSong();
+        if (currentSong) {
+          updateUserActivity(currentSong.id, false).catch(err => console.warn('Activity update error:', err));
+        }
       }
     }
   }
@@ -244,6 +319,8 @@ class MusicPlayer {
       console.warn('Web Audio API desteklenmiyor veya engellendi:', e);
     }
   }
+
+
 
   drawVisualizer() {
     if (!this.isFullscreen || !this.analyser || !this.canvas || !this.canvasCtx) return;
@@ -451,6 +528,138 @@ class MusicPlayer {
       });
     } catch (e) {
       // Silent fail
+    }
+  }
+
+  // ===== Jam (Birlikte Dinleme) =====
+  jamSessionId = null;
+  isJamHost = false;
+  _jamSyncInterval = null;
+
+  setJamSession(sessionId, isHost) {
+    this.jamSessionId = sessionId;
+    this.isJamHost = isHost;
+    // Host broadcasts position every 5 seconds for drift correction
+    if (isHost) {
+      this._jamSyncInterval = setInterval(() => {
+        if (this.jamSessionId && this.isJamHost && this.isPlaying) {
+          const song = this.getCurrentSong();
+          if (song) {
+            broadcastJamEvent({
+              type: 'position_sync',
+              songId: song.id,
+              position: this.audio.currentTime,
+              isPlaying: this.isPlaying,
+              timestamp: Date.now()
+            });
+          }
+        }
+      }, 5000);
+    }
+  }
+
+  clearJamSession() {
+    this.jamSessionId = null;
+    this.isJamHost = false;
+    if (this._jamSyncInterval) {
+      clearInterval(this._jamSyncInterval);
+      this._jamSyncInterval = null;
+    }
+  }
+
+  // Called when host changes song/plays/pauses/seeks
+  broadcastJamAction(action, extra = {}) {
+    if (!this.jamSessionId || !this.isJamHost) return;
+    const song = this.getCurrentSong();
+    const eventData = {
+      type: action,
+      songId: song?.id || null,
+      position: this.audio.currentTime || 0,
+      isPlaying: this.isPlaying,
+      timestamp: Date.now(),
+      ...extra
+    };
+    broadcastJamEvent(eventData);
+
+    // Persist state to database so late-joining guests can fetch it
+    if (typeof updateJamState === 'function') {
+      updateJamState(this.jamSessionId, song?.id || null, this.isPlaying, this.audio.currentTime || 0)
+        .catch(err => console.warn('[Jam] DB state update error:', err));
+    }
+  }
+
+  // Called when a Jam event comes in from the host (for guests)
+  async handleJamEvent(event) {
+    if (this.isJamHost) return; // Host doesn't listen to own events
+    if (!event || !event.type) return;
+
+    switch (event.type) {
+      case 'play_song': {
+        // Find the song in allSongs (global) and play it
+        const song = (typeof allSongs !== 'undefined' ? allSongs : []).find(s => s.id === event.songId);
+        if (song) {
+          await this.playSong(song, typeof allSongs !== 'undefined' ? allSongs : [song]);
+          if (event.position > 0) {
+            this.audio.currentTime = event.position;
+          }
+        }
+        break;
+      }
+      case 'pause': {
+        if (this.isPlaying) {
+          this.audio.pause();
+          this.isPlaying = false;
+          this.updatePlayButton();
+        }
+        break;
+      }
+      case 'resume': {
+        if (!this.isPlaying && this.audio.src) {
+          this.audio.play();
+          this.isPlaying = true;
+          this.updatePlayButton();
+        }
+        break;
+      }
+      case 'seek': {
+        if (this.audio.src && event.position !== undefined) {
+          this.audio.currentTime = event.position;
+        }
+        break;
+      }
+      case 'position_sync': {
+        // Drift correction: if off by more than 3 seconds, resync
+        if (this.audio.src && event.songId === this.getCurrentSong()?.id) {
+          const drift = Math.abs(this.audio.currentTime - event.position);
+          if (drift > 3) {
+            this.audio.currentTime = event.position;
+          }
+          // Sync play/pause state
+          if (event.isPlaying && !this.isPlaying) {
+            this.audio.play();
+            this.isPlaying = true;
+            this.updatePlayButton();
+          } else if (!event.isPlaying && this.isPlaying) {
+            this.audio.pause();
+            this.isPlaying = false;
+            this.updatePlayButton();
+          }
+        } else if (event.songId && event.songId !== this.getCurrentSong()?.id) {
+          // Different song, switch
+          const song = (typeof allSongs !== 'undefined' ? allSongs : []).find(s => s.id === event.songId);
+          if (song) {
+            await this.playSong(song, typeof allSongs !== 'undefined' ? allSongs : [song]);
+            if (event.position > 0) this.audio.currentTime = event.position;
+          }
+        }
+        break;
+      }
+      case 'end_session': {
+        this.clearJamSession();
+        if (typeof showToast === 'function') showToast('Jam oturumu sona erdi', 'info');
+        if (typeof onJamEnded === 'function') onJamEnded();
+        break;
+      }
     }
   }
 }
