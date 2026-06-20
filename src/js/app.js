@@ -553,6 +553,8 @@ async function loadUserInfo() {
     const user = await getCurrentUser();
     if (user) {
       currentUserId = user.id;
+      window.currentUserId = user.id;
+      localStorage.setItem('bekofy_current_user_id', user.id);
       const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
 
       const nameEl = document.getElementById('user-name');
@@ -769,7 +771,7 @@ async function loadFriendActivity() {
       .in('id', friendIds);
 
     if (profileErr) throw profileErr;
-
+    
     if (profiles) {
       profiles.forEach(p => {
         if (p.role === 'user') p.avatar_frame = 'none';
@@ -2621,7 +2623,7 @@ function initCollabModal() {
           .ilike('username', `%${query}%`)
           .neq('id', currentUserId)
           .limit(8);
-
+          
         if (profiles) {
           profiles.forEach(p => {
             if (p.role === 'user') p.avatar_frame = 'none';
@@ -2876,6 +2878,8 @@ function initLogout() {
     logoutBtn.addEventListener('click', async () => {
       try {
         await signOut();
+        localStorage.removeItem('bekofy_current_user_id');
+        window.currentUserId = null;
         if (window.electronAPI && window.electronAPI.navigateToAuth) {
           window.electronAPI.navigateToAuth();
         }
@@ -3387,6 +3391,14 @@ function renderAdminUsers(profiles) {
     return;
   }
 
+  const roleWeights = { admin: 1, yetkili: 2, artist: 3, premium: 4, user: 5 };
+  const sortedProfiles = [...profiles].sort((a, b) => {
+    const wA = roleWeights[a.role || 'user'] || 6;
+    const wB = roleWeights[b.role || 'user'] || 6;
+    if (wA !== wB) return wA - wB;
+    return (a.username || '').localeCompare(b.username || '');
+  });
+
   container.innerHTML = `
     <table class="admin-table">
       <thead>
@@ -3397,7 +3409,7 @@ function renderAdminUsers(profiles) {
         </tr>
       </thead>
       <tbody>
-        ${profiles.map(p => {
+        ${sortedProfiles.map(p => {
     let frameClass = '';
     if (p.avatar_frame && p.avatar_frame !== 'none') {
       frameClass = ' ' + getAvatarFrameClass(p.avatar_frame);
@@ -4288,17 +4300,12 @@ function initNowPlayingOverlay() {
   // Fullscreen button
   const fsBtn = document.getElementById('np-fullscreen-btn');
   if (fsBtn) {
-    fsBtn.addEventListener('click', () => {
-      overlay.classList.toggle('np-fullscreen');
-      if (overlay.classList.contains('np-fullscreen')) {
-        overlay.style.width = ''; // clear inline style
-        document.documentElement.requestFullscreen().catch(err => console.warn(err));
-      } else {
-        if (document.fullscreenElement) {
-          document.exitFullscreen().catch(err => console.warn(err));
+      fsBtn.addEventListener('click', () => {
+        overlay.classList.toggle('np-fullscreen');
+        if (overlay.classList.contains('np-fullscreen')) {
+          overlay.style.width = ''; // clear inline style
         }
-      }
-    });
+      });
   }
 
   // Resize handle
@@ -4335,6 +4342,11 @@ function initNowPlayingOverlay() {
   }
   if (npInfo) {
     npInfo.addEventListener('click', (e) => {
+      const artistLink = e.target.closest('.artist-link[data-artist-name]');
+      if (artistLink) {
+        // Let it bubble up to the document level event delegation
+        return;
+      }
       e.stopPropagation();
       if (player.getCurrentSong()) openNowPlayingOverlay();
     });

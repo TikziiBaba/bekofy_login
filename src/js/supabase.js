@@ -578,8 +578,7 @@ async function fetchUserPublicProfile(userId) {
     profile = res1.data;
     profileError = res1.error;
   }
-    
-  if (profileError) return { data: null, error: profileError };
+      if (profileError) return { data: null, error: profileError };
   
   if (profile && profile.role === 'user') {
     profile.avatar_frame = 'none';

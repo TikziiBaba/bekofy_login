@@ -1,0 +1,105 @@
+:root {
+  --green: #1DB954;
+  --green-light: #1ed760;
+  --bg: #0a0a0a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: #fff;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ===== Container ===== */
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ===== Logo ===== */
+.logo-icon {
+  width: 88px;
+  height: 88px;
+  opacity: 0;
+  transform: scale(0.85);
+  animation: logoFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+
+@keyframes logoFadeIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== Brand Name ===== */
+.brand-name {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeUp 0.6s ease-out 0.6s forwards;
+}
+
+/* ===== Tagline ===== */
+.brand-tagline {
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadeUp 0.6s ease-out 0.9s forwards;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Loading Bar ===== */
+.loading-bar {
+  width: 120px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 12px;
+  opacity: 0;
+  animation: fadeUp 0.4s ease-out 1.2s forwards;
+}
+
+.loading-bar-fill {
+  width: 40%;
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  animation: loadSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes loadSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(200%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
