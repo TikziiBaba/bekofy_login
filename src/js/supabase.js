@@ -1057,7 +1057,7 @@ async function getArtistProfiles() {
   // Fetch from both profiles (role=artist) and artists table
   const [profilesRes, artistsRes] = await Promise.all([
     sb.from('profiles').select('id, username, avatar_url, avatar_frame, role').eq('role', 'artist'),
-    sb.from('artists').select('id, name, avatar_url').catch(() => ({ data: [], error: null }))
+    sb.from('artists').select('id, name, avatar_url').then(res => res, err => ({ data: [], error: null }))
   ]);
   
   const profileArtists = (profilesRes.data || []).map(p => ({
