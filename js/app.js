@@ -6401,3 +6401,87 @@ window.addEventListener('beforeunload', () => {
     player.saveCurrentTime();
   }
 });
+
+
+// ===== What's New Modal Logic =====
+async function checkAndShowWhatsNew() {
+  try {
+    const response = await fetch('updates.json?t=' + new Date().getTime());
+    if (!response.ok) return;
+    const updateData = await response.json();
+    
+    const lastVersion = localStorage.getItem('bekofy-last-version');
+    
+    if (lastVersion !== updateData.version) {
+      injectWhatsNewModal(updateData);
+      localStorage.setItem('bekofy-last-version', updateData.version);
+    }
+  } catch (err) {
+    console.error("Yenilikler kontrol edilemedi:", err);
+  }
+}
+
+function injectWhatsNewModal(data) {
+  // Prevent duplicate modals
+  if (document.getElementById('whats-new-modal-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'whats-new-overlay';
+  overlay.id = 'whats-new-modal-overlay';
+  
+  // Format current date nicely or use date from JSON
+  const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+  const formattedDate = data.date || new Date().toLocaleDateString('tr-TR', dateOptions);
+
+  const featuresList = data.features.map(f => {
+    // Parse bold text **text** to <strong>text</strong>
+    const parsedText = f.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    return `<li>${parsedText}</li>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div class="whats-new-modal" id="whats-new-modal">
+      <div class="whats-new-header">
+        <div>
+          <h2>Yenilikler</h2>
+          <span class="whats-new-date">${formattedDate} (v${data.version})</span>
+        </div>
+        <button class="whats-new-close" id="whats-new-close">&times;</button>
+      </div>
+      <div class="whats-new-content">
+        <div class="whats-new-banner">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        </div>
+        <div class="whats-new-body">
+          <p>${data.description}</p>
+          <div class="whats-new-subheading">${data.subheading || 'MUAZZAM YENİ ÖZELLİKLER'}</div>
+          <ul class="whats-new-list">
+            ${featuresList}
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Trigger animation
+  setTimeout(() => overlay.classList.add('active'), 100);
+
+  // Close handlers
+  const closeBtn = document.getElementById('whats-new-close');
+  const overlayEl = document.getElementById('whats-new-modal-overlay');
+  
+  const closeModal = () => {
+    overlay.classList.remove('active');
+    setTimeout(() => overlay.remove(), 400);
+  };
+
+  closeBtn.addEventListener('click', closeModal);
+  overlayEl.addEventListener('click', (e) => {
+    if (e.target === overlayEl) closeModal();
+  });
+}
+
+// Call the check function when the DOM is fully loaded or app initialized
+setTimeout(checkAndShowWhatsNew, 1500);

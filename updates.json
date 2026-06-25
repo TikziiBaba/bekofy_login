@@ -1,0 +1,10 @@
+{
+  "version": "1.4.4",
+  "title": "Basit Güncelleme Sistemi",
+  "description": "Artık güncellemeleri doğrudan bu dosyadan yönetebilirsiniz. Kodları değiştirmenize gerek kalmadı!",
+  "subheading": "Neler Yeni?",
+  "features": [
+    "**Dinamik Güncellemeler:** Bu JSON dosyasını düzenleyerek anında kullanıcılara yeni bir bildirim gösterebilirsiniz.",
+    "**Kolay Yönetim:** Kodlara dokunmadan başlıkları, içerikleri ve özellikleri tek bir basit dosyadan güncelleyebilirsiniz."
+  ]
+}
