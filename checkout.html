@@ -472,13 +472,6 @@
           </svg>
           <span id="btn-pay-text">Ödeme Yap</span>
         </button>
-
-        <button class="btn-checkout btn-checkout-test" id="btn-test-pay">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          TEST: Ödemeyi Simüle Et (Geliştirici)
-        </button>
       </div>
 
       <div class="checkout-secure">
@@ -503,6 +496,21 @@
     <a href="dashboard.html" class="btn btn-primary" style="padding:16px 40px; font-size:16px;">
       Hesabıma Git
     </a>
+  </div>
+
+  <!-- Error Overlay -->
+  <div class="checkout-success" id="checkout-error" style="background: rgba(30,5,5,0.95);">
+    <div class="success-icon" style="background: rgba(255,77,77,0.15); box-shadow: none; animation: none; color: var(--error);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="48" height="48">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </div>
+    <h2 style="color: var(--error);">Ödeme Başarısız 😔</h2>
+    <p>Kartınız reddedildi. Bakiye yetersiz olabilir veya bankanız işlemi onaylamamış olabilir.</p>
+    <button class="btn btn-secondary" onclick="document.getElementById('checkout-error').classList.remove('active')" style="padding:16px 40px; font-size:16px;">
+      Tekrar Dene
+    </button>
   </div>
 
   <footer>

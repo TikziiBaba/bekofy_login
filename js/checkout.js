@@ -13,11 +13,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Check if already premium
   const { data: profile } = await sb.from('profiles').select('role').eq('id', userId).single();
   if (profile && (profile.role === 'premium' || profile.role === 'admin')) {
-    document.querySelector('.checkout-form h3').textContent = 'Zaten Premium\'sun! ✨';
-    document.querySelector('.checkout-form > p').textContent = 'Hesabın zaten Premium seviyesinde. Ekstra işlem gerekmez.';
-    document.getElementById('btn-pay').style.display = 'none';
-    document.getElementById('btn-test-pay').style.display = 'none';
-    return;
+    document.querySelector('.checkout-form h3').textContent = 'Zaten Premium\'sun! ✨ (Test Modu)';
+    document.querySelector('.checkout-form > p').textContent = 'Hesabın zaten Premium. Ancak sistemi test etmek için sahte ödeme işlemini yapabilirsin.';
+    // document.getElementById('btn-pay').style.display = 'none'; // Kapatmıyoruz ki test edebilsin
   }
 
   // Read plan from URL
@@ -41,28 +39,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnPay = document.getElementById('btn-pay');
 
   cardName.addEventListener('input', () => {
+    // Sadece harf girilmesine izin ver
+    cardName.value = cardName.value.replace(/[0-9]/g, '');
     document.getElementById('card-display-name').textContent = cardName.value.toUpperCase() || 'AD SOYAD';
     checkFormValid();
   });
 
+  const preventNonDigits = (e) => {
+    if (!/^[\d]$/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+    }
+  };
+
+  cardNumber.addEventListener('keydown', preventNonDigits);
+  cardExpiry.addEventListener('keydown', preventNonDigits);
+  cardCvv.addEventListener('keydown', preventNonDigits);
+
   cardNumber.addEventListener('input', (e) => {
-    // Format: 1234 5678 9012 3456
     let val = e.target.value.replace(/\D/g, '').substring(0, 16);
-    val = val.replace(/(.{4})/g, '$1 ').trim();
-    e.target.value = val;
-    document.getElementById('card-display-number').textContent = val || '•••• •••• •••• ••••';
+    let formatted = val.match(/.{1,4}/g)?.join(' ') || '';
+    e.target.value = formatted;
+    document.getElementById('card-display-number').textContent = formatted || '•••• •••• •••• ••••';
     checkFormValid();
   });
 
   cardExpiry.addEventListener('input', (e) => {
     let val = e.target.value.replace(/\D/g, '').substring(0, 4);
-    if (val.length >= 2) val = val.substring(0, 2) + ' / ' + val.substring(2);
+    if (val.length >= 2) {
+      val = val.substring(0, 2) + ' / ' + val.substring(2);
+    }
     e.target.value = val;
     document.getElementById('card-display-expiry').textContent = val || 'MM/YY';
     checkFormValid();
   });
 
-  cardCvv.addEventListener('input', () => checkFormValid());
+  cardCvv.addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
+    checkFormValid();
+  });
 
   function checkFormValid() {
     const nameOk = cardName.value.trim().length >= 3;
@@ -72,39 +86,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnPay.disabled = !(nameOk && numOk && expOk && cvvOk);
   }
 
-  // Pay button (placeholder - would connect to real POS)
+  // Pay button fake logic
   btnPay.addEventListener('click', async () => {
     btnPay.disabled = true;
-    document.getElementById('btn-pay-text').textContent = 'İşleniyor...';
+    const originalText = document.getElementById('btn-pay-text').textContent;
+    document.getElementById('btn-pay-text').textContent = 'Bankaya Bağlanılıyor...';
 
-    // Simulate processing delay
-    await new Promise(r => setTimeout(r, 2000));
+    // Simulate connection delay
+    await new Promise(r => setTimeout(r, 1200));
+    document.getElementById('btn-pay-text').textContent = 'Ödeme İşleniyor...';
+    await new Promise(r => setTimeout(r, 1500));
 
-    // For now, activate premium via test
+    // Get the card details to determine success or failure
+    const num = cardNumber.value.replace(/\D/g, '');
+    const cvv = cardCvv.value;
+    
+    // Simulate payment failure if card ends with 0000 or CVV is 000
+    if (num.endsWith('0000') || cvv === '000') {
+      document.getElementById('checkout-error').classList.add('active');
+      btnPay.disabled = false;
+      document.getElementById('btn-pay-text').textContent = originalText;
+      return;
+    }
+
     try {
       await sb.from('profiles').update({ role: 'premium' }).eq('id', userId);
       showSuccess();
     } catch (err) {
-      showToast('Ödeme hatası: ' + err.message, 'error');
+      showToast('Kritik Hata: ' + err.message, 'error');
       btnPay.disabled = false;
-      document.getElementById('btn-pay-text').textContent = 'Ödeme Yap';
-    }
-  });
-
-  // Test payment
-  document.getElementById('btn-test-pay').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-test-pay');
-    btn.disabled = true;
-    btn.textContent = 'İşleniyor...';
-
-    try {
-      const { error } = await sb.from('profiles').update({ role: 'premium' }).eq('id', userId);
-      if (error) throw error;
-      showSuccess();
-    } catch (err) {
-      showToast('Hata: ' + err.message, 'error');
-      btn.disabled = false;
-      btn.textContent = 'TEST: Ödemeyi Simüle Et (Geliştirici)';
+      document.getElementById('btn-pay-text').textContent = originalText;
     }
   });
 });

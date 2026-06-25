@@ -3,376 +3,534 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bekofy - Hesabım</title>
+  <title>Bekofy - Kumanda Merkezi</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <style>
+    /* Ambient Glowing Background */
+    body {
+      background-color: #050505;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    .ambient-glow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 80vw;
+      height: 80vw;
+      max-width: 1000px;
+      max-height: 1000px;
+      background: radial-gradient(circle, rgba(29, 185, 84, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none;
+      animation: pulseGlow 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+      100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ambient-glow-2 {
+      position: fixed;
+      top: -10%;
+      right: -10%;
+      width: 50vw;
+      height: 50vw;
+      background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+      z-index: 0;
+      pointer-events: none;
+      animation: pulseGlow 15s ease-in-out infinite alternate-reverse;
+    }
+
     /* Dashboard Layout */
     .dashboard {
       padding: 120px 20px 60px;
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       position: relative;
       z-index: 10;
     }
 
-    .dashboard-header {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      margin-bottom: 48px;
-      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .dash-header-title {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin-bottom: 40px;
+      text-align: center;
+      background: linear-gradient(135deg, #fff, #a0a0a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
+    /* Bento Grid System */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(200px, auto);
+      gap: 24px;
+    }
+
+    .bento-card {
+      background: rgba(25, 25, 25, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      padding: 32px;
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    .bento-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 32px;
+      padding: 2px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .bento-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(29, 185, 84, 0.15);
+      border-color: rgba(29, 185, 84, 0.4);
+    }
+
+    /* Grid Areas */
+    .card-profile { grid-column: span 8; animation-delay: 0.1s; display: flex; flex-direction: row; align-items: center; gap: 32px; }
+    .card-wallet { grid-column: span 4; animation-delay: 0.2s; }
+    .card-settings { grid-column: span 4; animation-delay: 0.3s; }
+    .card-security { grid-column: span 4; animation-delay: 0.4s; }
+    .card-info { grid-column: span 4; animation-delay: 0.5s; }
+    .card-cta { grid-column: span 12; animation-delay: 0.6s; text-align: center; align-items: center; background: linear-gradient(135deg, rgba(29,185,84,0.15), rgba(0,0,0,0.5)); border-color: rgba(29,185,84,0.3); }
+
+    /* Profile Specifics */
     .dash-avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: var(--bg-secondary);
-      border: 3px solid var(--border);
+      width: 160px;
+      height: 160px;
+      border-radius: 40px;
+      background: rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.1);
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
-      font-weight: 800;
-      font-family: var(--font-heading);
+      font-size: 56px;
+      font-weight: 900;
       color: var(--green);
       cursor: pointer;
       position: relative;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      transition: all 0.4s;
       flex-shrink: 0;
+      transform: rotate(-3deg);
     }
 
     .dash-avatar:hover {
       border-color: var(--green);
-      box-shadow: 0 0 24px var(--green-glow);
+      box-shadow: 0 0 40px rgba(29, 185, 84, 0.6);
+      transform: rotate(0deg) scale(1.05);
     }
 
-    .dash-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .dash-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
     .dash-avatar-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.7);
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       transition: opacity 0.3s;
-      border-radius: 50%;
     }
 
-    .dash-avatar:hover .dash-avatar-overlay {
-      opacity: 1;
-    }
+    .dash-avatar:hover .dash-avatar-overlay { opacity: 1; }
 
     .dash-info h1 {
-      font-size: 36px;
-      letter-spacing: -1px;
-      margin-bottom: 4px;
+      font-size: 48px;
+      letter-spacing: -2px;
+      margin-bottom: 8px;
+      line-height: 1;
     }
 
     .dash-info-email {
       color: var(--text-secondary);
-      font-size: 15px;
-      margin-bottom: 8px;
-    }
-
-    .dash-role-badge {
-      display: inline-block;
-      padding: 4px 14px;
-      border-radius: 100px;
-      font-size: 13px;
-      font-weight: 700;
-      font-family: var(--font-heading);
-    }
-
-    .dash-role-badge.user {
-      background: rgba(255,255,255,0.08);
-      color: var(--text-secondary);
-    }
-
-    .dash-role-badge.premium {
-      background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.2));
-      color: #ffd700;
-      border: 1px solid rgba(255,215,0,0.3);
-    }
-
-    .dash-role-badge.artist {
-      background: rgba(29, 185, 84, 0.15);
-      color: var(--green);
-      border: 1px solid rgba(29, 185, 84, 0.3);
-    }
-
-    .dash-role-badge.admin {
-      background: rgba(255, 77, 77, 0.15);
-      color: #ff6b6b;
-      border: 1px solid rgba(255, 77, 77, 0.3);
-    }
-
-    /* Dashboard Cards Grid */
-    .dash-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    .dash-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 32px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .dash-card:nth-child(2) { animation-delay: 0.1s; }
-    .dash-card:nth-child(3) { animation-delay: 0.2s; }
-    .dash-card:nth-child(4) { animation-delay: 0.3s; }
-
-    .dash-card:hover {
-      border-color: rgba(29, 185, 84, 0.3);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-    }
-
-    .dash-card-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      font-size: 18px;
       margin-bottom: 20px;
     }
 
-    .dash-card-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
+    /* Badges & Icons */
+    .dash-role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .dash-role-badge.premium { background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.2)); color: #ffd700; border: 1px solid rgba(255,215,0,0.4); box-shadow: 0 0 20px rgba(255,215,0,0.2); }
+    .dash-role-badge.user { background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.1); }
+    .dash-role-badge.artist { background: rgba(29, 185, 84, 0.15); color: var(--green); border: 1px solid rgba(29, 185, 84, 0.4); }
+
+    .bento-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      margin-bottom: 24px;
+      font-size: 28px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
     }
 
-    .dash-card-icon.green {
-      background: rgba(29, 185, 84, 0.12);
-      color: var(--green);
-    }
+    .bento-icon.green { color: var(--green); background: rgba(29, 185, 84, 0.1); border-color: rgba(29, 185, 84, 0.3); box-shadow: 0 0 30px rgba(29, 185, 84, 0.2); }
 
-    .dash-card-icon.blue {
-      background: rgba(59, 130, 246, 0.12);
-      color: #3b82f6;
-    }
+    .bento-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .bento-desc { color: var(--text-secondary); font-size: 15px; margin-bottom: 24px; line-height: 1.6; }
 
-    .dash-card-icon.purple {
-      background: rgba(147, 51, 234, 0.12);
-      color: #9333ea;
-    }
-
-    .dash-card-icon.orange {
-      background: rgba(249, 115, 22, 0.12);
-      color: #f97316;
-    }
-
-    .dash-card-title {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .dash-card-desc {
-      color: var(--text-secondary);
-      font-size: 14px;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-
-    /* Form Fields inside Cards */
-    .dash-field {
-      margin-bottom: 16px;
-    }
-
-    .dash-field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-    }
-
-    .dash-field-value {
-      padding: 12px 16px;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-size: 15px;
-      font-family: var(--font-body);
-    }
-
+    /* Forms */
+    .dash-field { margin-bottom: 20px; }
+    .dash-field label { display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .dash-field-value { padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: #fff; font-size: 16px; font-weight: 600; }
+    
     .dash-field input {
       width: 100%;
-      padding: 12px 16px;
+      padding: 16px;
       background: rgba(0,0,0,0.4);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-family: var(--font-body);
-      font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
       transition: all 0.3s;
       outline: none;
     }
 
     .dash-field input:focus {
       border-color: var(--green);
-      box-shadow: 0 0 0 4px rgba(29, 185, 84, 0.1);
+      background: rgba(0,0,0,0.6);
+      box-shadow: 0 0 0 4px rgba(29, 185, 84, 0.15);
     }
 
+    /* Buttons */
     .dash-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: 10px;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 24px;
+      border-radius: 16px;
       font-family: var(--font-heading);
-      font-weight: 600;
-      font-size: 14px;
+      font-weight: 800;
+      font-size: 15px;
       cursor: pointer;
       border: none;
-      transition: all 0.3s;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .dash-btn-primary {
-      background: var(--green);
-      color: #000;
-    }
+    .dash-btn-primary { background: var(--green); color: #000; }
+    .dash-btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 25px rgba(29, 185, 84, 0.4); }
+    
+    .dash-btn-danger { background: rgba(255, 77, 77, 0.1); color: #ff6b6b; border: 1px solid rgba(255, 77, 77, 0.3); }
+    .dash-btn-danger:hover { background: rgba(255, 77, 77, 0.2); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(255, 77, 77, 0.3); }
 
-    .dash-btn-primary:hover {
-      background: var(--green-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 14px var(--green-glow);
-    }
+    .dash-btn-outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+    .dash-btn-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; transform: translateY(-2px); }
 
-    .dash-btn-danger {
-      background: rgba(255, 77, 77, 0.12);
-      color: #ff6b6b;
-      border: 1px solid rgba(255, 77, 77, 0.2);
-    }
-
-    .dash-btn-danger:hover {
-      background: rgba(255, 77, 77, 0.2);
-      transform: translateY(-1px);
-    }
-
-    .dash-btn-secondary {
-      background: rgba(255,255,255,0.06);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-    }
-
-    .dash-btn-secondary:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: var(--border-hover);
-    }
-
-    /* Download App CTA */
-    .dash-cta {
-      background: linear-gradient(135deg, rgba(29, 185, 84, 0.08) 0%, rgba(29, 185, 84, 0.02) 100%);
-      border: 1px solid rgba(29, 185, 84, 0.2);
-      border-radius: 20px;
-      padding: 40px;
-      text-align: center;
-      margin-top: 12px;
-      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
-      opacity: 0;
-    }
-
-    .dash-cta h3 {
-      font-size: 24px;
-      margin-bottom: 12px;
-    }
-
-    .dash-cta p {
-      color: var(--text-secondary);
-      font-size: 15px;
-      margin-bottom: 24px;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .dash-cta .btn {
-      padding: 14px 32px;
-    }
-
-    /* Status Indicator */
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 8px;
-    }
-
-    .status-dot.active { background: var(--green); box-shadow: 0 0 8px var(--green-glow); }
-    .status-dot.inactive { background: var(--text-muted); }
-
-    /* Toast container for dashboard */
-    .toast-container {
-      position: fixed;
-      top: 100px;
+    /* macOS Window Dots */
+    .mac-dots {
+      position: absolute;
+      top: 24px;
       right: 24px;
-      z-index: 9999;
       display: flex;
-      flex-direction: column;
       gap: 8px;
     }
+    .mac-dot { width: 12px; height: 12px; border-radius: 50%; opacity: 0.5; }
+    .mac-dot.red { background: #ff5f56; }
+    .mac-dot.yellow { background: #ffbd2e; }
+    .mac-dot.green { background: #27c93f; }
 
-    .toast {
-      padding: 14px 20px;
-      border-radius: 12px;
+    /* Theme Picker */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .theme-option {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-option:hover {
+      border-color: rgba(255,255,255,0.4);
+      transform: scale(1.08);
+    }
+
+    .theme-option.active {
+      border-color: var(--green);
+      box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
+    }
+
+    .theme-option.active::after {
+      content: '✓';
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
       font-size: 14px;
-      font-weight: 500;
-      animation: slideUpFade 0.3s ease;
-      backdrop-filter: blur(20px);
+      color: var(--green);
+      font-weight: 900;
     }
 
-    .toast.success {
-      background: var(--success-bg);
-      color: var(--success);
-      border: 1px solid rgba(29,185,84,0.2);
+    /* Recently Played */
+    .recent-list { list-style: none; padding: 0; margin: 0; }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      transition: all 0.25s;
+      cursor: default;
     }
 
-    .toast.error {
-      background: var(--error-bg);
-      color: var(--error);
-      border: 1px solid rgba(255,77,77,0.2);
+    .recent-item:hover {
+      background: rgba(255,255,255,0.05);
     }
 
-    /* Responsive */
-    @media (max-width: 600px) {
-      .dashboard-header {
-        flex-direction: column;
-        text-align: center;
-      }
-      .dash-info h1 { font-size: 28px; }
-      .dash-avatar { width: 100px; height: 100px; font-size: 34px; }
+    .recent-item-art {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
     }
+
+    .recent-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recent-item-title {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .recent-item-artist {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .recent-item-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* Mood Chart */
+    .mood-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 120px;
+      margin-top: 16px;
+    }
+
+    .mood-bar-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .mood-bar {
+      width: 100%;
+      border-radius: 6px;
+      background: var(--green);
+      transition: height 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      min-height: 4px;
+      opacity: 0.7;
+    }
+
+    .mood-bar:hover { opacity: 1; }
+
+    .mood-day {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    /* Grid Areas Additional */
+    .card-stats { grid-column: span 4; animation-delay: 0.6s; }
+    .card-audio { grid-column: span 4; animation-delay: 0.7s; }
+    .card-notifs { grid-column: span 4; animation-delay: 0.8s; }
+    .card-theme { grid-column: span 3; animation-delay: 0.9s; }
+    .card-recent { grid-column: span 5; animation-delay: 1.0s; }
+    .card-mood { grid-column: span 4; animation-delay: 1.1s; }
+    .card-cta { grid-column: span 12; animation-delay: 1.2s; text-align: center; align-items: center; background: linear-gradient(135deg, rgba(29,185,84,0.15), rgba(0,0,0,0.5)); border-color: rgba(29,185,84,0.3); }
+
+    /* Toggles and Selects */
+    .dash-select {
+      width: 100%;
+      padding: 16px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.3s;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .dash-select:focus {
+      border-color: var(--green);
+      background: rgba(0,0,0,0.8);
+      box-shadow: 0 0 0 4px rgba(29, 185, 84, 0.15);
+    }
+
+    .dash-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+    }
+
+    .dash-toggle-row span {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Modern CSS Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255,255,255,0.1);
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: var(--green); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* Stats Bar */
+    .dash-stat-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+    .stat-value { font-size: 28px; font-weight: 900; color: var(--green); }
+    .stat-label { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+    
+    .stat-bar-container { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 10px; margin-bottom: 8px;}
+    .stat-bar-fill { height: 100%; background: var(--green); border-radius: 4px; width: 0%; transition: width 1s ease-out; }
+    .stat-sub { font-size: 12px; color: var(--text-muted); }
+
+    @media (max-width: 900px) {
+      .card-profile, .card-wallet, .card-settings, .card-security, .card-info, .card-stats, .card-audio, .card-notifs, .card-theme, .card-recent, .card-mood { grid-column: span 12; }
+      .card-profile { flex-direction: column; text-align: center; }
+      .dash-avatar { transform: rotate(0); margin: 0 auto; }
+    }
+    
+    /* Status Indicator */
+    .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .status-dot.active { background: var(--green); box-shadow: 0 0 12px var(--green-glow); }
+    .status-dot.inactive { background: #ff5f56; box-shadow: 0 0 12px rgba(255,95,86,0.6); }
+
+    /* Toast container */
+    .toast-container { position: fixed; top: 100px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; animation: slideUpFade 0.3s ease; backdrop-filter: blur(20px); }
+    .toast.success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(29,185,84,0.2); }
+    .toast.error { background: var(--error-bg); color: var(--error); border: 1px solid rgba(255,77,77,0.2); }
   </style>
 </head>
 <body>
 
+  <!-- Background Orbs -->
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow-2"></div>
+  <div style="position:fixed;bottom:-10%;left:-10%;width:40vw;height:40vw;background:radial-gradient(circle,rgba(59,130,246,0.08) 0%,rgba(0,0,0,0) 70%);z-index:0;pointer-events:none;animation:pulseGlow 12s ease-in-out infinite alternate;"></div>
+
   <!-- Navbar -->
-  <nav class="navbar">
+  <nav class="navbar" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(30px);">
     <a href="index.html" class="nav-logo">
       <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
         <circle cx="24" cy="24" r="22" fill="url(#nlg)" />
@@ -391,156 +549,340 @@
       <a href="index.html">Ana Sayfa</a>
       <a href="premium.html">Premium</a>
       <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank">İndir</a>
-      <a href="artist.html" id="nav-artist-link" style="display:none; color:#1DB954; font-weight:700;">🎤 Sanatçı Paneli</a>
-      <button id="btn-logout" class="btn btn-secondary" style="padding: 10px 24px; font-size: 14px; cursor:pointer;">Çıkış Yap</button>
+      <a href="artist.html" id="nav-artist-link" style="display:none; color:#1DB954; font-weight:800;">🎤 Sanatçı Kulisi</a>
+      <button id="btn-logout" class="btn dash-btn-outline" style="padding: 8px 20px; font-size: 13px; border-radius: 10px;">Çıkış Yap</button>
     </div>
   </nav>
 
   <!-- Dashboard -->
   <main class="dashboard">
+    <h2 class="dash-header-title">Kumanda Merkezi</h2>
 
-    <!-- Profile Header -->
-    <div class="dashboard-header">
-      <div class="dash-avatar" id="dash-avatar" title="Profil fotoğrafını değiştir">
-        <span id="dash-avatar-initials">?</span>
-        <div class="dash-avatar-overlay">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="28" height="28">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-        </div>
-      </div>
-      <div class="dash-info">
-        <h1 id="dash-username">Yükleniyor...</h1>
-        <div class="dash-info-email" id="dash-email">—</div>
-        <span class="dash-role-badge user" id="dash-role-badge">Ücretsiz</span>
-      </div>
-    </div>
+    <div class="bento-grid">
 
-    <!-- Cards Grid -->
-    <div class="dash-grid">
-
-      <!-- Profile Settings Card -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div class="dash-card-icon green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+      <!-- Profile Header (Wide Card) -->
+      <div class="bento-card card-profile">
+        <div class="mac-dots"><div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div></div>
+        
+        <div class="dash-avatar" id="dash-avatar" title="Karizmanı göster, foto yükle">
+          <span id="dash-avatar-initials">?</span>
+          <div class="dash-avatar-overlay">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="36" height="36">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
             </svg>
           </div>
-          <div class="dash-card-title">Profil Ayarları</div>
         </div>
-        <div class="dash-card-desc">Kullanıcı adını ve profil bilgilerini güncelle.</div>
-        <div class="dash-field">
-          <label>Kullanıcı Adı</label>
-          <input type="text" id="edit-username" placeholder="Yeni kullanıcı adı">
+        
+        <div class="dash-info">
+          <h1 id="dash-username">Yükleniyor...</h1>
+          <div class="dash-info-email" id="dash-email">Sisteme soruyoruz</div>
+          <span class="dash-role-badge user" id="dash-role-badge">Tespiti Bekleniyor</span>
         </div>
-        <button class="dash-btn dash-btn-primary" id="btn-save-username">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-          Kaydet
-        </button>
       </div>
 
-      <!-- Password Change Card -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div class="dash-card-icon blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-          </div>
-          <div class="dash-card-title">Şifre Değiştir</div>
-        </div>
-        <div class="dash-card-desc">Hesap güvenliğini artırmak için şifreni güncelle.</div>
-        <div class="dash-field">
-          <label>Yeni Şifre</label>
-          <input type="password" id="edit-password" placeholder="Yeni şifre (min. 6 karakter)">
-        </div>
-        <button class="dash-btn dash-btn-primary" id="btn-change-password">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-          Şifreyi Güncelle
-        </button>
-      </div>
-
-      <!-- Subscription Card -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div class="dash-card-icon purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </div>
-          <div class="dash-card-title">Abonelik</div>
-        </div>
-        <div class="dash-card-desc">Mevcut abonelik planını görüntüle ve yönet.</div>
-        <div class="dash-field">
-          <label>Mevcut Plan</label>
-          <div class="dash-field-value" id="dash-plan">
-            <span class="status-dot inactive"></span> Ücretsiz Plan
+      <!-- Wallet / Subscription -->
+      <div class="bento-card card-wallet hover-tilt">
+        <div>
+          <div class="bento-icon green">💳</div>
+          <div class="bento-title">Cüzdan Durumu</div>
+          <div class="bento-desc">Sistemdeki statün tam olarak burada. Paran varsa kralsın.</div>
+          
+          <div class="dash-field">
+            <label>Mevcut Statü</label>
+            <div class="dash-field-value" id="dash-plan">
+              <span class="status-dot inactive"></span> Bilinmiyor
+            </div>
           </div>
         </div>
-        <a href="premium.html" class="dash-btn dash-btn-primary" style="text-decoration:none; display:inline-flex; margin-top:4px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          Premium'a Geç
+        
+        <a href="premium.html" class="dash-btn dash-btn-primary" style="text-decoration:none; margin-top:20px;">
+          Sisteme Para Kazandır
         </a>
       </div>
 
-      <!-- Account Info Card -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div class="dash-card-icon orange">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
+      <!-- Identity Settings -->
+      <div class="bento-card card-settings hover-tilt">
+        <div>
+          <div class="bento-icon">🎭</div>
+          <div class="bento-title">Kimlik Değişimi</div>
+          <div class="bento-desc">Yeni bir hayata başlamak istiyorsan adını buradan değiştirebilirsin.</div>
+          
+          <div class="dash-field">
+            <label>Yeni Mahlasın (Kullanıcı Adı)</label>
+            <input type="text" id="edit-username" placeholder="Havalı bir şey yaz...">
           </div>
-          <div class="dash-card-title">Hesap Bilgileri</div>
         </div>
-        <div class="dash-card-desc">Hesap detaylarını incele.</div>
-        <div class="dash-field">
-          <label>Kullanıcı ID</label>
-          <div class="dash-field-value" id="dash-uid" style="font-size:12px; word-break:break-all; color: var(--text-muted);">—</div>
-        </div>
-        <div class="dash-field">
-          <label>Kayıt Tarihi</label>
-          <div class="dash-field-value" id="dash-created">—</div>
-        </div>
-        <button class="dash-btn dash-btn-danger" id="btn-logout-bottom">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          Çıkış Yap
+        
+        <button class="dash-btn dash-btn-outline" id="btn-save-username" style="margin-top:20px;">
+          Kimliği Güncelle
         </button>
       </div>
 
-    </div>
+      <!-- Security Settings -->
+      <div class="bento-card card-security hover-tilt">
+        <div>
+          <div class="bento-icon">🔐</div>
+          <div class="bento-title">Güvenlik Duvarı</div>
+          <div class="bento-desc">Lütfen şifreni "123456" yapma. En azından sonuna bi ünlem falan koy.</div>
+          
+          <div class="dash-field">
+            <label>Yeni Şifre (Zor Olsun)</label>
+            <input type="password" id="edit-password" placeholder="En az 6 karakter...">
+          </div>
+        </div>
+        
+        <button class="dash-btn dash-btn-outline" id="btn-change-password" style="margin-top:20px;">
+          Kırılmaz Şifreyi Kur
+        </button>
+      </div>
 
-    <!-- Download CTA -->
-    <div class="dash-cta">
-      <h3>🎵 Müzik Dinlemek İçin Uygulamayı İndir</h3>
-      <p>Bekofy masaüstü uygulaması ile şarkı sözleri, çevrimdışı dinleme, Mini Player ve daha fazlasını deneyimle.</p>
-      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="btn btn-primary">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Masaüstü Uygulamasını İndir
-      </a>
+      <!-- Secret Files -->
+      <div class="bento-card card-info hover-tilt">
+        <div>
+          <div class="bento-icon">🗄️</div>
+          <div class="bento-title">Devlet Sırları</div>
+          <div class="bento-desc">Aramızda kalacak dedik ama veri tabanında tutuyoruz sonuçta. İşte detaylar:</div>
+          
+          <div class="dash-field">
+            <label>Benzersiz Veritabanı ID'n</label>
+            <div class="dash-field-value" id="dash-uid" style="font-size:12px; word-break:break-all; font-family: monospace; color: var(--green);">—</div>
+          </div>
+          <div class="dash-field">
+            <label>Aramıza Katıldığın Tarih</label>
+            <div class="dash-field-value" id="dash-created">—</div>
+          </div>
+        </div>
+        
+        <button class="dash-btn dash-btn-danger" id="btn-logout-bottom" style="margin-top:20px;">
+          Sistemi Terk Et (Çıkış)
+        </button>
+      </div>
+
+      <!-- Listening Stats -->
+      <div class="bento-card card-stats hover-tilt">
+        <div>
+          <div class="bento-icon">🔥</div>
+          <div class="bento-title">Aylık İstatistikler</div>
+          <div class="bento-desc">Biz seni dinliyoruz, sen müziği. İşte özetin:</div>
+          
+          <div class="dash-stat-row" style="margin-top:20px;">
+            <span class="stat-value" id="stat-hours">142</span>
+            <span class="stat-label">Saat Müzik Dinlendi</span>
+          </div>
+          
+          <div class="dash-stat-row">
+            <span class="stat-value" style="font-size: 20px;">Müslüm Gürses</span>
+            <span class="stat-label">Bu Ayın Favorisi</span>
+          </div>
+
+          <div class="stat-bar-container">
+            <div class="stat-bar-fill" style="width: 78%;"></div>
+          </div>
+          <span class="stat-sub">Dünyanın %78'inden daha fazla dinliyorsun</span>
+        </div>
+      </div>
+
+      <!-- Audio Quality -->
+      <div class="bento-card card-audio hover-tilt">
+        <div>
+          <div class="bento-icon">🎧</div>
+          <div class="bento-title">Ses Kalitesi</div>
+          <div class="bento-desc">Gereksiz veri harcamayı seviyorsan kaliteyi artır.</div>
+          
+          <div class="dash-field">
+            <label>Aktarım Kalitesi</label>
+            <select id="audio-quality" class="dash-select">
+              <option value="low">Patates (Veri Tasarrufu)</option>
+              <option value="normal" selected>Standart (İdare Eder)</option>
+              <option value="high">Yüksek (Kulaklıklar Isınır)</option>
+              <option value="lossless">Kayıpsız (Sadece Premium)</option>
+            </select>
+          </div>
+        </div>
+        
+        <button class="dash-btn dash-btn-outline" id="btn-save-audio" style="margin-top:20px;">
+          Sesi Kökleyelim
+        </button>
+      </div>
+
+      <!-- Notifications -->
+      <div class="bento-card card-notifs hover-tilt">
+        <div>
+          <div class="bento-icon">📩</div>
+          <div class="bento-title">Spam Merkezi</div>
+          <div class="bento-desc">Bizi görmezden mi geleceksin? Ne bildirim alacağını seç.</div>
+          
+          <div class="dash-toggle-row" style="margin-top: 20px;">
+            <span>Yeni Şarkı Çıkışları</span>
+            <label class="switch">
+              <input type="checkbox" id="notif-releases" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="dash-toggle-row">
+            <span>Sanatçı Dedikoduları</span>
+            <label class="switch">
+              <input type="checkbox" id="notif-news">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="dash-toggle-row">
+            <span>Gereksiz Bekofy Reklamları</span>
+            <label class="switch">
+              <input type="checkbox" id="notif-spam" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Selector -->
+      <div class="bento-card card-theme hover-tilt">
+        <div>
+          <div class="bento-icon">🎨</div>
+          <div class="bento-title">Tema</div>
+          <div class="bento-desc">Göz zevkini seç:</div>
+          
+          <div class="theme-grid">
+            <div class="theme-option active" data-theme="dark" style="background: linear-gradient(135deg, #0a0a0a, #1a1a1a);" title="Karanlık">🌙</div>
+            <div class="theme-option" data-theme="green" style="background: linear-gradient(135deg, #0a1f0a, #0d2e0d);" title="Orman">🌲</div>
+            <div class="theme-option" data-theme="purple" style="background: linear-gradient(135deg, #1a0a2e, #2d1b4e);" title="Mor Rüya">🔮</div>
+            <div class="theme-option" data-theme="blue" style="background: linear-gradient(135deg, #0a0a2e, #1b2d4e);" title="Okyanus">🌊</div>
+            <div class="theme-option" data-theme="red" style="background: linear-gradient(135deg, #2e0a0a, #4e1b1b);" title="Ateş">🔥</div>
+            <div class="theme-option" data-theme="gold" style="background: linear-gradient(135deg, #2e2a0a, #4e3f1b);" title="Altın">👑</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Played -->
+      <div class="bento-card card-recent hover-tilt">
+        <div>
+          <div class="bento-icon">⏱️</div>
+          <div class="bento-title">Son Dinlenenler</div>
+          <div class="bento-desc">Geçmiş takıntılarının kanıtı:</div>
+          
+          <ul class="recent-list">
+            <li class="recent-item">
+              <div class="recent-item-art" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🎵</div>
+              <div class="recent-item-info">
+                <div class="recent-item-title">İtirazım Var</div>
+                <div class="recent-item-artist">Müslüm Gürses</div>
+              </div>
+              <div class="recent-item-time">2 dk önce</div>
+            </li>
+            <li class="recent-item">
+              <div class="recent-item-art" style="background: linear-gradient(135deg, #3498db, #2980b9);">🎶</div>
+              <div class="recent-item-info">
+                <div class="recent-item-title">Firuze</div>
+                <div class="recent-item-artist">Sezen Aksu</div>
+              </div>
+              <div class="recent-item-time">18 dk önce</div>
+            </li>
+            <li class="recent-item">
+              <div class="recent-item-art" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">🎤</div>
+              <div class="recent-item-info">
+                <div class="recent-item-title">Yalnızım Dostlarım</div>
+                <div class="recent-item-artist">Barış Manço</div>
+              </div>
+              <div class="recent-item-time">45 dk önce</div>
+            </li>
+            <li class="recent-item">
+              <div class="recent-item-art" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">💿</div>
+              <div class="recent-item-info">
+                <div class="recent-item-title">Adını Her Duyduğumda</div>
+                <div class="recent-item-artist">Tarkan</div>
+              </div>
+              <div class="recent-item-time">1 saat önce</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Weekly Mood Chart -->
+      <div class="bento-card card-mood hover-tilt">
+        <div>
+          <div class="bento-icon">📊</div>
+          <div class="bento-title">Haftalık Mood</div>
+          <div class="bento-desc">Hangi gün daha çok takıldın?</div>
+          
+          <div class="mood-chart" id="mood-chart">
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="45%"></div><span class="mood-day">Pzt</span></div>
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="70%"></div><span class="mood-day">Sal</span></div>
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="55%"></div><span class="mood-day">Çar</span></div>
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="90%"></div><span class="mood-day">Per</span></div>
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="100%"></div><span class="mood-day">Cum</span></div>
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="80%" style="background: linear-gradient(to top, var(--green), #ffd700);"></div><span class="mood-day">Cmt</span></div>
+            <div class="mood-bar-wrapper"><div class="mood-bar" data-height="30%"></div><span class="mood-day">Paz</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ultimate CTA -->
+      <div class="bento-card card-cta">
+        <h3 class="bento-title" style="font-size: 32px;">🎵 Uygulamayı İndirdin Mi?</h3>
+        <p class="bento-desc" style="font-size: 18px; max-width: 600px; margin: 0 auto 32px;">
+          Tarayıcıda sekmeler arasında müzik ararken kanser olmaya son. Bekofy masaüstü sürümünü indir, kafan rahat etsin. 
+        </p>
+        <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="dash-btn dash-btn-primary" style="width: auto; padding: 20px 48px; font-size: 18px; border-radius: 100px;">
+          Virüssüz Masaüstü İndir
+        </a>
+      </div>
+
     </div>
 
   </main>
 
-  <footer>
-    <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
+  <footer style="text-align: center; padding: 40px; color: var(--text-muted);">
+    <p>© 2026 Bekofy. Bütün şarkılar bizim değil ama idare et.</p>
   </footer>
 
+  <script>
+    // Mood chart bar animation on load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.querySelectorAll('.mood-bar').forEach(bar => {
+          bar.style.height = bar.dataset.height;
+        });
+      }, 800);
+
+      // Theme picker
+      const themeOptions = document.querySelectorAll('.theme-option');
+      const saved = localStorage.getItem('bekofy_theme') || 'dark';
+      themeOptions.forEach(opt => {
+        if (opt.dataset.theme === saved) {
+          opt.classList.add('active');
+        } else {
+          opt.classList.remove('active');
+        }
+        opt.addEventListener('click', () => {
+          themeOptions.forEach(o => o.classList.remove('active'));
+          opt.classList.add('active');
+          localStorage.setItem('bekofy_theme', opt.dataset.theme);
+
+          // Apply ambient glow color based on theme
+          const glow = document.querySelector('.ambient-glow');
+          const colors = {
+            dark: 'rgba(29, 185, 84, 0.15)',
+            green: 'rgba(29, 185, 84, 0.25)',
+            purple: 'rgba(147, 51, 234, 0.2)',
+            blue: 'rgba(59, 130, 246, 0.2)',
+            red: 'rgba(255, 77, 77, 0.2)',
+            gold: 'rgba(255, 215, 0, 0.15)'
+          };
+          if (glow) {
+            glow.style.background = `radial-gradient(circle, ${colors[opt.dataset.theme] || colors.dark} 0%, rgba(0,0,0,0) 70%)`;
+          }
+        });
+      });
+
+      // Trigger saved theme glow on load
+      const activeTheme = document.querySelector(`.theme-option[data-theme="${saved}"]`);
+      if (activeTheme) activeTheme.click();
+    });
+  </script>
+
+  <!-- Mevcut JS dosyamız bozulmadan duruyor -->
   <script src="js/dashboard.js"></script>
 </body>
 </html>

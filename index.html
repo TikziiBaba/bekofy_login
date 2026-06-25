@@ -1,95 +1,759 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy - Sınırsız Müzik Deneyimi</title>
-  <meta name="description" content="Bekofy ile milyonlarca şarkıyı ücretsiz keşfet. Premium ile reklamsız, çevrimdışı ve yüksek kalitede müzik dinle.">
+  <meta name="description"
+    content="Bekofy ile milyonlarca şarkıyı ücretsiz keşfet. Premium ile reklamsız, çevrimdışı ve yüksek kalitede müzik dinle.">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <style>
     /* Animated Gradient Hero */
-    .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:120px 20px 60px; position:relative; z-index:10; overflow:hidden; }
-    .hero::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(29,185,84,0.25),transparent 70%); top:-10%; left:50%; transform:translateX(-50%); filter:blur(80px); animation:heroGlow 6s ease-in-out infinite alternate; pointer-events:none; }
-    @keyframes heroGlow { 0%{transform:translateX(-50%) scale(1);opacity:0.8} 100%{transform:translateX(-50%) scale(1.3);opacity:1} }
-    .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:8px 20px; background:rgba(29,185,84,0.1); border:1px solid rgba(29,185,84,0.3); border-radius:100px; color:var(--green); font-size:14px; font-weight:600; margin-bottom:28px; animation:slideDown 0.6s ease-out; }
-    .hero-badge .pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:pulseDot 2s ease infinite; }
-    @keyframes pulseDot { 0%,100%{box-shadow:0 0 0 0 rgba(29,185,84,0.5)} 50%{box-shadow:0 0 0 8px rgba(29,185,84,0)} }
-    .hero h1 { font-size:clamp(44px,8vw,88px); letter-spacing:-3px; margin-bottom:24px; max-width:950px; animation:slideUp 0.8s ease-out 0.2s both; line-height:1.05; }
-    .hero h1 .gradient-text { background:linear-gradient(135deg,#1DB954 0%,#a8edba 50%,#1ed760 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:gradShift 4s ease infinite; }
-    @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-    .hero p { font-size:clamp(17px,3vw,21px); color:var(--text-secondary); max-width:650px; margin-bottom:44px; animation:slideUp 0.8s ease-out 0.4s both; }
-    .hero-buttons { display:flex; gap:16px; animation:slideUp 0.8s ease-out 0.6s both; flex-wrap:wrap; justify-content:center; }
-    @keyframes slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 20px 60px;
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(29, 185, 84, 0.25), transparent 70%);
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      filter: blur(80px);
+      animation: heroGlow 6s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes heroGlow {
+      0% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.8
+      }
+
+      100% {
+        transform: translateX(-50%) scale(1.3);
+        opacity: 1
+      }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: rgba(29, 185, 84, 0.1);
+      border: 1px solid rgba(29, 185, 84, 0.3);
+      border-radius: 100px;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 28px;
+      animation: slideDown 0.6s ease-out;
+    }
+
+    .hero-badge .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulseDot 2s ease infinite;
+    }
+
+    @keyframes pulseDot {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.5)
+      }
+
+      50% {
+        box-shadow: 0 0 0 8px rgba(29, 185, 84, 0)
+      }
+    }
+
+    .hero h1 {
+      font-size: clamp(44px, 8vw, 88px);
+      letter-spacing: -3px;
+      margin-bottom: 24px;
+      max-width: 950px;
+      animation: slideUp 0.8s ease-out 0.2s both;
+      line-height: 1.05;
+    }
+
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #1DB954 0%, #a8edba 50%, #1ed760 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% 200%;
+      animation: gradShift 4s ease infinite;
+    }
+
+    @keyframes gradShift {
+      0% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+
+      100% {
+        background-position: 0% 50%
+      }
+    }
+
+    .hero p {
+      font-size: clamp(17px, 3vw, 21px);
+      color: var(--text-secondary);
+      max-width: 650px;
+      margin-bottom: 44px;
+      animation: slideUp 0.8s ease-out 0.4s both;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      animation: slideUp 0.8s ease-out 0.6s both;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
 
     /* Stats */
-    .stats-section { padding:60px 20px; max-width:1100px; margin:0 auto; z-index:10; position:relative; }
-    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-    .stat-item { text-align:center; padding:28px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); backdrop-filter:blur(20px); transition:all 0.4s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden; }
-    .stat-item::before { content:''; position:absolute; inset:0; background:var(--grad-card); opacity:0; transition:opacity 0.4s; }
-    .stat-item:hover { border-color:var(--border-green); transform:translateY(-4px); box-shadow:var(--shadow-glow); }
-    .stat-item:hover::before { opacity:1; }
-    .stat-icon { width:44px; height:44px; border-radius:12px; background:var(--green-subtle); border:1px solid var(--border-green); display:flex; align-items:center; justify-content:center; color:var(--green); margin:0 auto 14px; position:relative; z-index:1; }
-    .stat-number { font-size:36px; font-weight:800; font-family:var(--font-heading); color:var(--green); display:block; position:relative; z-index:1; }
-    .stat-label { color:var(--text-secondary); font-size:13px; margin-top:4px; position:relative; z-index:1; }
+    .stats-section {
+      padding: 60px 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      z-index: 10;
+      position: relative;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 28px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-card);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .stat-item:hover {
+      border-color: var(--border-green);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .stat-item:hover::before {
+      opacity: 1;
+    }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--green-subtle);
+      border: 1px solid var(--border-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      margin: 0 auto 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: 800;
+      font-family: var(--font-heading);
+      color: var(--green);
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 4px;
+      position: relative;
+      z-index: 1;
+    }
 
     /* How It Works */
-    .how-section { padding:100px 20px 60px; max-width:1000px; margin:0 auto; position:relative; z-index:10; }
-    .how-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:48px; counter-reset:step; }
-    .how-step { text-align:center; padding:40px 24px; position:relative; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); transition:all 0.3s; }
-    .how-step:hover { border-color:var(--border-green); transform:translateY(-4px); }
-    .how-step::before { counter-increment:step; content:counter(step); width:52px; height:52px; border-radius:50%; background:var(--green-subtle); border:2px solid var(--green); color:var(--green); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:20px; font-weight:800; font-family:var(--font-heading); }
-    .how-step h3 { font-size:18px; margin-bottom:10px; }
-    .how-step p { color:var(--text-secondary); font-size:14px; line-height:1.6; }
+    .how-section {
+      padding: 100px 20px 60px;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 48px;
+      counter-reset: step;
+    }
+
+    .how-step {
+      text-align: center;
+      padding: 40px 24px;
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      transition: all 0.3s;
+    }
+
+    .how-step:hover {
+      border-color: var(--border-green);
+      transform: translateY(-4px);
+    }
+
+    .how-step::before {
+      counter-increment: step;
+      content: counter(step);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--green-subtle);
+      border: 2px solid var(--green);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--font-heading);
+    }
+
+    .how-step h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .how-step p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
 
     /* Features */
-    .features { padding:80px 20px 40px; max-width:1200px; margin:0 auto; position:relative; z-index:10; }
-    .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
-    .feature-card { background:var(--bg-card); border:1px solid var(--border); padding:32px 24px; border-radius:var(--radius-lg); backdrop-filter:blur(20px); transition:all 0.4s cubic-bezier(0.4,0,0.2,1); position:relative; overflow:hidden; }
-    .feature-card::before { content:''; position:absolute; inset:0; background:var(--grad-card); opacity:0; transition:opacity 0.4s; }
-    .feature-card:hover { transform:translateY(-6px); border-color:var(--border-green); box-shadow:0 12px 40px rgba(0,0,0,0.4); }
-    .feature-card:hover::before { opacity:1; }
-    .feature-icon { width:48px; height:48px; background:var(--green-subtle); border:1px solid var(--border-green); border-radius:14px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; color:var(--green); position:relative; z-index:1; }
-    .feature-card h3 { font-size:18px; margin-bottom:8px; position:relative; z-index:1; }
-    .feature-card p { color:var(--text-secondary); font-size:14px; line-height:1.6; position:relative; z-index:1; }
+    .features {
+      padding: 80px 20px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px 24px;
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-card);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--border-green);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--green-subtle);
+      border: 1px solid var(--border-green);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      color: var(--green);
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
 
     /* Showcase */
-    .showcase-section { padding:80px 20px; max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; position:relative; z-index:10; }
-    .showcase-text h2 { font-size:clamp(32px,4vw,44px); letter-spacing:-1.5px; margin-bottom:18px; line-height:1.15; }
-    .showcase-text p { font-size:16px; color:var(--text-secondary); margin-bottom:28px; line-height:1.7; }
-    .showcase-image { position:relative; max-width:480px; margin:0 auto; }
-    .showcase-image img { width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-card); transition:transform 0.5s cubic-bezier(0.16,1,0.3,1); aspect-ratio:16/10; object-fit:cover; }
-    .showcase-image:hover img { transform:scale(1.03) rotate(0.5deg); }
-    .showcase-image::after { content:''; position:absolute; inset:-8px; border-radius:var(--radius-xl); border:1px solid var(--border); pointer-events:none; }
-    .showcase-glow { position:absolute; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(29,185,84,0.2),transparent 70%); filter:blur(50px); bottom:-40px; right:-40px; pointer-events:none; }
+    .showcase-section {
+      padding: 80px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .showcase-text h2 {
+      font-size: clamp(32px, 4vw, 44px);
+      letter-spacing: -1.5px;
+      margin-bottom: 18px;
+      line-height: 1.15;
+    }
+
+    .showcase-text p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    .showcase-image {
+      position: relative;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .showcase-image img {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      aspect-ratio: 16/10;
+      object-fit: cover;
+    }
+
+    .showcase-image:hover img {
+      transform: scale(1.03) rotate(0.5deg);
+    }
+
+    .showcase-image::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      pointer-events: none;
+    }
+
+    .showcase-glow {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(29, 185, 84, 0.2), transparent 70%);
+      filter: blur(50px);
+      bottom: -40px;
+      right: -40px;
+      pointer-events: none;
+    }
 
     /* Premium CTA */
-    .premium-cta { padding:80px 20px; position:relative; z-index:10; }
-    .premium-cta-inner { max-width:900px; margin:0 auto; text-align:center; padding:56px 40px; border-radius:var(--radius-xl); background:linear-gradient(135deg,rgba(29,185,84,0.1) 0%,rgba(29,185,84,0.02) 100%); border:1px solid var(--border-green); position:relative; overflow:hidden; }
-    .premium-cta-inner::before { content:''; position:absolute; top:-50%; right:-30%; width:300px; height:300px; background:radial-gradient(circle,rgba(29,185,84,0.15),transparent 70%); filter:blur(60px); pointer-events:none; }
-    .premium-cta-inner::after { content:''; position:absolute; bottom:-40%; left:-20%; width:250px; height:250px; background:radial-gradient(circle,rgba(29,185,84,0.1),transparent 70%); filter:blur(60px); pointer-events:none; }
-    .premium-cta-inner h2 { font-size:clamp(28px,4vw,36px); margin-bottom:14px; letter-spacing:-1px; position:relative; z-index:1; }
-    .premium-cta-inner p { color:var(--text-secondary); font-size:16px; max-width:550px; margin:0 auto 28px; position:relative; z-index:1; }
-    .premium-cta-inner .btn { padding:16px 40px; font-size:16px; position:relative; z-index:1; }
+    .premium-cta {
+      padding: 80px 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .premium-cta-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 56px 40px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(29, 185, 84, 0.02) 100%);
+      border: 1px solid var(--border-green);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .premium-cta-inner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(29, 185, 84, 0.15), transparent 70%);
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .premium-cta-inner::after {
+      content: '';
+      position: absolute;
+      bottom: -40%;
+      left: -20%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(29, 185, 84, 0.1), transparent 70%);
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .premium-cta-inner h2 {
+      font-size: clamp(28px, 4vw, 36px);
+      margin-bottom: 14px;
+      letter-spacing: -1px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .premium-cta-inner p {
+      color: var(--text-secondary);
+      font-size: 16px;
+      max-width: 550px;
+      margin: 0 auto 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .premium-cta-inner .btn {
+      padding: 16px 40px;
+      font-size: 16px;
+      position: relative;
+      z-index: 1;
+    }
 
     @media(max-width:900px) {
-      .showcase-section { grid-template-columns:1fr; text-align:center; gap:32px; }
-      .showcase-image { max-width:360px; }
+      .showcase-section {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 32px;
+      }
+
+      .showcase-image {
+        max-width: 360px;
+      }
     }
+
     @media(max-width:768px) {
-      .stats-grid { grid-template-columns:repeat(2,1fr); }
-      .how-grid { grid-template-columns:1fr; }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .how-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Comparison Table */
+    .compare-section {
+      padding: 80px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 40px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .compare-table thead th {
+      padding: 20px 16px;
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      background: rgba(18, 18, 18, 0.8);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table thead th:first-child {
+      text-align: left;
+    }
+
+    .compare-table thead th.highlight {
+      color: var(--green);
+      background: rgba(29, 185, 84, 0.08);
+    }
+
+    .compare-table tbody td {
+      padding: 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: background 0.3s;
+    }
+
+    .compare-table tbody td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .compare-table tbody td.highlight {
+      background: rgba(29, 185, 84, 0.04);
+    }
+
+    .compare-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .compare-table tbody tr:hover td.highlight {
+      background: rgba(29, 185, 84, 0.08);
+    }
+
+    .compare-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .check {
+      color: var(--green);
+      font-size: 20px;
+    }
+
+    .cross {
+      color: var(--error);
+      font-size: 20px;
+    }
+
+    .maybe {
+      color: #facc15;
+      font-size: 16px;
+    }
+
+    /* Floating Particles */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 24px;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(0deg)
+      }
+
+      10% {
+        opacity: 0.6
+      }
+
+      90% {
+        opacity: 0.6
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-10vh) rotate(360deg)
+      }
+    }
+
+    /* Tech Badges */
+    .tech-section {
+      padding: 60px 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .tech-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 32px;
+    }
+
+    .tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+      cursor: default;
+      backdrop-filter: blur(10px);
+    }
+
+    .tech-badge:hover {
+      border-color: var(--border-green);
+      color: var(--green);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .tech-badge span {
+      font-size: 18px;
+    }
+
+    /* Animated Fun Tilt */
+    .hover-tilt {
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+    }
+
+    .hover-tilt:hover {
+      transform: translateY(-10px) rotate(2deg);
+      box-shadow: 0 15px 30px rgba(29, 185, 84, 0.2);
+      border-color: var(--green);
+    }
+
+    @keyframes borderGlow {
+      0% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+
+      100% {
+        background-position: 0% 50%
+      }
+    }
+
+    /* Typewriter */
+    .typewriter {
+      display: inline-block;
+      border-right: 3px solid var(--green);
+      animation: blink 0.8s step-end infinite;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    @keyframes blink {
+      50% {
+        border-color: transparent
+      }
     }
   </style>
 </head>
+
 <body>
 
   <!-- Navbar -->
   <nav class="navbar">
     <a href="index.html" class="nav-logo">
-      <svg viewBox="0 0 48 48" fill="none" width="36" height="36"><circle cx="24" cy="24" r="22" fill="url(#nlg)"/><path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/><defs><linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#1DB954"/><stop offset="100%" stop-color="#1ed760"/></linearGradient></defs></svg>
+      <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
+        <circle cx="24" cy="24" r="22" fill="url(#nlg)" />
+        <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round"
+          fill="none" />
+        <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round"
+          fill="none" />
+        <defs>
+          <linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48">
+            <stop offset="0%" stop-color="#1DB954" />
+            <stop offset="100%" stop-color="#1ed760" />
+          </linearGradient>
+        </defs>
+      </svg>
       <span class="nav-logo-text">Bekofy</span>
     </a>
     <div class="nav-links">
@@ -103,12 +767,18 @@
 
   <!-- Hero -->
   <main class="hero">
-    <div class="hero-badge"><span class="pulse-dot"></span> Yeni Sürüm 2.0 Yayında</div>
+    <div class="hero-badge"><span class="pulse-dot"></span> Spotify İptal Etme Vakti Geldi 🚀</div>
     <h1>Müziğin<br><span class="gradient-text">Geleceğini</span> Dinle</h1>
-    <p>Bekofy ile milyonlarca şarkıya ücretsiz eriş. Canlı şarkı sözleri, Discord entegrasyonu ve Mini Player ile müzik deneyimini başka bir seviyeye taşı.</p>
+    <p>Bekofy ile milyonlarca şarkıya ücretsiz eriş. Canlı şarkı sözleri, Discord entegrasyonu ve Mini Player ile müzik
+      deneyimini başka bir seviyeye taşı.</p>
     <div class="hero-buttons">
-      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="btn btn-primary" style="padding:18px 40px;font-size:18px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="btn btn-primary"
+        style="padding:18px 40px;font-size:18px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
         Uygulamayı İndir
       </a>
       <a href="premium.html" class="btn btn-secondary" style="padding:18px 40px;font-size:18px;">Premium'u Keşfet</a>
@@ -120,28 +790,42 @@
     <div class="stats-grid">
       <div class="stat-item">
         <div class="stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
         </div>
         <span class="stat-number" id="stat-users" data-target="0">—</span>
         <span class="stat-label">Kayıtlı Kullanıcı</span>
       </div>
       <div class="stat-item">
         <div class="stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
         </div>
         <span class="stat-number" id="stat-songs" data-target="0">—</span>
         <span class="stat-label">Şarkı Kataloğu</span>
       </div>
       <div class="stat-item">
         <div class="stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
         </div>
         <span class="stat-number" id="stat-playlists" data-target="0">—</span>
         <span class="stat-label">Çalma Listesi</span>
       </div>
       <div class="stat-item">
         <div class="stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
         </div>
         <span class="stat-number" id="stat-likes" data-target="0">—</span>
         <span class="stat-label">Beğenilen Şarkı</span>
@@ -151,68 +835,97 @@
 
   <!-- How It Works -->
   <section class="how-section reveal">
-    <h2 class="section-title">Nasıl Çalışır?</h2>
+    <h2 class="section-title">3 Adımda Başla (Çay Demlenene Kadar Biter) </h2>
     <div class="how-grid">
       <div class="how-step reveal">
-        <h3>Uygulamayı İndir</h3>
-        <p>Windows için Bekofy masaüstü uygulamasını indir ve hemen kur. Kurulum 30 saniyede tamamlanır.</p>
+        <h3>İndir, Kur, Bitti 📥</h3>
+        <p>GitHub'dan indir, çift tıkla, kur. Anneannen bile yapar. 30 saniye sürer, söz.</p>
       </div>
       <div class="how-step reveal">
-        <h3>Hesabını Oluştur</h3>
-        <p>Ücretsiz hesap aç veya Google ile hızlıca giriş yap. Kişisel müzik deneyimin başlasın.</p>
+        <h3>Hesap Aç (Bedava Tabii) 🆓</h3>
+        <p>Mail at ya da Google ile giriş yap. Kredi kartı falan sormuyoruz, rahat ol.</p>
       </div>
       <div class="how-step reveal">
-        <h3>Dinlemeye Başla</h3>
-        <p>Keşfet, listele, paylaş. Milyonlarca şarkıya anında eriş ve kendi çalma listelerini oluştur.</p>
+        <h3>Aç Müziği, Kapat Dünyayı 🎶</h3>
+        <p>Ara, bul, dinle, listele. Discord'a yansıt, arkadaşlarını kıskandır. Bu kadar basit.</p>
       </div>
     </div>
   </section>
 
-  <!-- Features -->
   <section class="features">
-    <h2 class="section-title">Neden Bekofy?</h2>
+    <h2 class="section-title">Neden Bekofy? 🤔</h2>
     <div class="features-grid">
       <div class="feature-card reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
         </div>
-        <h3>Tamamen Ücretsiz</h3>
-        <p>Arama, dinleme, liste oluşturma ve paylaşma özellikleri ücretsiz. Müzik herkes için olmalı.</p>
+        <h3>Beş Kuruş Bile Almıyoruz 💸</h3>
+        <p>Dinle, ara, liste yap, paylaş — hepsi bedava. Spotify'a verdiğin parayı git kenara koy, yazın tatile
+          gidersin.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
         </div>
-        <h3>Canlı Şarkı Sözleri</h3>
-        <p>Senkronize şarkı sözleriyle her nota anında ekranda. Karaoke modunda söyle, paylaş.</p>
+        <h3>Sözleri Uydurma Devri Bitti 🎵</h3>
+        <p>Şarkı söylerken "nanay nanay" diye geçiştirdiğin kısımlar artık ekranda. Senkronize sözlerle banyoda bile
+          profesyonel şarkıcı ol.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
         </div>
-        <h3>Mini Player</h3>
-        <p>Çalışırken veya oyun oynarken kompakt Mini Player ile müziğini kontrol et, hiç pencere değiştirmeden.</p>
+        <h3>Mini Player = Hayat Kurtarıcı 🖥️</h3>
+        <p>Ödev yaparken, oyun oynarken, iş yapar gibi yaparken… Ufacık bir pencereyle müziğini kontrol et, kimse fark
+          etmez bile.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
         </div>
-        <h3>Çevrimdışı Dinleme</h3>
-        <p>Premium ile favori şarkılarını indir, internet olmadan uçakta veya doğada dinle.</p>
+        <h3>İnternetsiz Dağ Başında Müzik 🏕️</h3>
+        <p>Premium al, şarkıları indir, telefonu uçak moduna al. Köyde, otobüste, dağ başında — internet yoksa da müzik
+          var.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
         </div>
-        <h3>Arkadaşlarla Dinle</h3>
-        <p>Ortak çalma listeleri oluştur, arkadaşlarını takip et ve müzik zevklerini paylaş.</p>
+        <h3>Arkadaşlarınla Kapış 🎧</h3>
+        <p>Ortak liste yap, birbirinizi takip edin, müzik zevkini paylaş. "Sen de mi bunu dinliyorsun ya!" anları
+          garanti.</p>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+            <line x1="9" y1="9" x2="9.01" y2="9" />
+            <line x1="15" y1="9" x2="15.01" y2="9" />
+          </svg>
         </div>
-        <h3>Discord Entegrasyonu</h3>
-        <p>Dinlediğin şarkı Discord profilinde otomatik gösterilsin. Arkadaşların ne dinlediğini görsün.</p>
+        <h3>Discord'da Hava At 😎</h3>
+        <p>Dinlediğin şarkı anında Discord profilinde görünsün. Herkes "vay be zevkine hayran kaldım" desin. Ya da
+          demesin, ama görsün.</p>
       </div>
     </div>
   </section>
@@ -236,13 +949,156 @@
   <!-- Showcase -->
   <section class="showcase-section reveal">
     <div class="showcase-text">
-      <h2>Müziği Daha Yakından<br><span class="gradient-text">Hissedin.</span></h2>
-      <p>Animasyonlu arka planlar, senkronize şarkı sözleri ve söz paylaşım kartlarıyla müzik deneyimin bir adım öteye geçiyor.</p>
-      <a href="register.html" class="btn btn-primary btn-lg">Hemen Katıl</a>
+      <h2>Spotify Bile Kıskanır<br><span class="gradient-text">İddiası. 😏</span></h2>
+      <p>Animasyonlu arka planlar, senkronize şarkı sözleri, Mini Player, Discord RPC… Üstelik hepsi bedava. "Bu kadar
+        özellik bedava mı olur ya?" diyenlerin ağzı açık kalıyor.</p>
+      <a href="register.html" class="btn btn-primary btn-lg">Hadi Bi' Dene Bakalım</a>
     </div>
     <div class="showcase-image">
-      <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=600" alt="Bekofy Experience">
+      <img src="src/ss_home.png" alt="Bekofy Experience">
       <div class="showcase-glow"></div>
+    </div>
+  </section>
+
+
+  <!-- Neden Biz (Humorous) -->
+  <section class="testimonials-section reveal">
+    <h2 class="section-title">Neden Biz? (Ama Harbi Neden?)</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial-card hover-tilt">
+        <div class="stars">🤑</div>
+        <h3 style="margin-bottom:10px; color:var(--green);">Cüzdan Dostu Değil, Direkt Bedava</h3>
+        <p>"Aylık 50 lira vereyim de müzik dinleyeyim" devri kapandı. Paranı git dönere göm, müzik bizden. Hem de araya
+          giren "Premium'a geç" ablaları olmadan.</p>
+      </div>
+      <div class="testimonial-card hover-tilt">
+        <div class="stars">🎮</div>
+        <h3 style="margin-bottom:10px; color:var(--green);">Oyun Oynarken Alt+Tab İşkencesine Son</h3>
+        <p>Lol'de takım savaşı ortasındayken arkadaki hüzünlü şarkıyı değiştirmek için Alt+Tab atmaya son. Mini Player
+          var, hayat var. Arkadaşların "ne dinliyor bu" diye Discord'dan stalklayabilir.</p>
+      </div>
+      <div class="testimonial-card hover-tilt">
+        <div class="stars">🎤</div>
+        <h3 style="margin-bottom:10px; color:var(--green);">Banyoda Konser Verenlere Özel</h3>
+        <p>Senkronize şarkı sözleriyle "Acaba burada ne diyor ya?" derdine son veriyoruz. İngilizcen gelişir, banyo
+          konserlerinin kalitesi artar. Tarkan gibi söyle, biz arkandayız.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Table -->
+  <section class="compare-section reveal">
+    <h2 class="section-title">Rakiplerle Kapışma 🥊</h2>
+    <p class="section-subtitle">Biz demiyoruz, tablo diyor. (Tamam biz de diyoruz.)</p>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Özellik</th>
+          <th>Spotify</th>
+          <th>YouTube Music</th>
+          <th class="highlight">Bekofy 💚</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ücretsiz Dinleme</td>
+          <td><span class="maybe">⚠️ Reklamlı</span></td>
+          <td><span class="maybe">⚠️ Reklamlı</span></td>
+          <td class="highlight"><span class="check">✅</span></td>
+        </tr>
+        <tr>
+          <td>Canlı Şarkı Sözleri</td>
+          <td><span class="check">✅</span></td>
+          <td><span class="cross">❌</span></td>
+          <td class="highlight"><span class="check">✅</span></td>
+        </tr>
+        <tr>
+          <td>Mini Player</td>
+          <td><span class="cross">❌</span></td>
+          <td><span class="cross">❌</span></td>
+          <td class="highlight"><span class="check">✅</span></td>
+        </tr>
+        <tr>
+          <td>Discord RPC</td>
+          <td><span class="check">✅</span></td>
+          <td><span class="cross">❌</span></td>
+          <td class="highlight"><span class="check">✅</span></td>
+        </tr>
+        <tr>
+          <td>Aylık Fiyat</td>
+          <td>₺50+</td>
+          <td>₺30+</td>
+          <td class="highlight" style="color:var(--green);font-weight:700;">₺0 🎉</td>
+        </tr>
+        <tr>
+          <td>Müslüm Baba'ya Saygı</td>
+          <td><span class="cross">❌</span></td>
+          <td><span class="cross">❌</span></td>
+          <td class="highlight"><span class="check">✅ Sonsuz</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="tech-section reveal">
+    <h2 class="section-title">Nelerle Yapıldı? 🛠️</h2>
+    <p class="section-subtitle">Meraklısına: Altındaki teknolojiler bunlar.</p>
+    <div class="tech-badges">
+      <div class="tech-badge"><span>⚡</span> Electron</div>
+      <div class="tech-badge"><span>🟢</span> Node.js</div>
+      <div class="tech-badge"><span>🔥</span> Supabase</div>
+      <div class="tech-badge"><span>🎨</span> CSS3 Animations</div>
+      <div class="tech-badge"><span>🎮</span> Discord RPC</div>
+      <div class="tech-badge"><span>🎵</span> YouTube API</div>
+      <div class="tech-badge"><span>📝</span> Lyrics API</div>
+      <div class="tech-badge"><span>💻</span> Windows Native</div>
+    </div>
+  </section>
+
+  <!-- FAQ Section (Humorous) -->
+  <section class="faq-section reveal">
+    <h2 class="section-title">Muhtemelen Aklındaki Sorular 🤷</h2>
+    <div class="faq-container">
+      <div class="faq-item">
+        <button class="faq-question">Gerçekten bedava mı, yoksa bir bit yeniği var mı?<span
+            class="faq-icon">+</span></button>
+        <div class="faq-answer">
+          <p>Valla billa bedava! Temel özellikler için cebinden beş kuruş çıkmayacak. "Ben illa çok yüksek kalite ses
+            isterim, internetsiz dağ başında dinlerim" dersen, o zaman sana Premium satarız bak yalan yok.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Telefona da indirebiliyor muyuz bunu?<span class="faq-icon">+</span></button>
+        <div class="faq-answer">
+          <p>Şimdilik sadece "Bilgisayar Başında Çürüyenler" sürümümüz var (Windows). Telefon için tarayıcıdan
+            girebilirsin ama asıl şov masaüstünde dönüyor. Yakında telefonları da fethedeceğiz, beklemede kal.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Müslüm Gürses dinlediğimi Discord'daki havalı arkadaşlarımdan nasıl gizlerim?<span
+            class="faq-icon">+</span></button>
+        <div class="faq-answer">
+          <p>Discord entegrasyonumuz sen ne dinlersen anında oraya yapıştırır. Müslüm Baba dinlemek ayıp değil ama illa
+            gizleyeceğim diyorsan Discord ayarlarından "Oyun Etkinliğini Göster"i kapatabilirsin. Biz seni yargılamayız.
+          </p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Her şarkının sözleri var mı, yoksa kendimiz mi uyduralım?<span
+            class="faq-icon">+</span></button>
+        <div class="faq-answer">
+          <p>Milyonlarca şarkının sözü hazır! Ama gidip de 1980'lerden kalma, kimsenin bilmediği bir Ankara havası
+            açarsan sözlerini bulamayabiliriz. O zaman da "la la la" diye uydurmak sana kalmış.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Verilerim güvende mi?<span class="faq-icon">+</span></button>
+        <div class="faq-answer">
+          <p>Supabase altyapısıyla çalışıyoruz, şifreler hash'leniyor, bağlantılar şifreli. Yani evet, Müslüm Baba
+            dinlediğin bilgisini kimseyle paylaşmıyoruz. Rahat ol.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -250,9 +1106,13 @@
   <section class="premium-cta reveal">
     <div class="premium-cta-inner">
       <h2>Premium'a Geç, Sınırları Kaldır ✨</h2>
-      <p>Reklamsız müzik, çevrimdışı indirme, stüdyo kalitesinde ses ve özel temalar ile müzik deneyimini zirveye taşı.</p>
+      <p>Reklamsız müzik, çevrimdışı indirme, stüdyo kalitesinde ses ve özel temalar ile müzik deneyimini zirveye taşı.
+      </p>
       <a href="premium.html" class="btn btn-primary">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
         Premium Planları Gör
       </a>
     </div>
@@ -262,8 +1122,28 @@
     <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
   </footer>
 
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      // Floating emoji particles
+      const emojis = ['🎵', '🎶', '🎧', '🎤', '🎸', '🥁', '🎹', '🎺', '💚', '✨', '🔥', '⚡'];
+      const container = document.getElementById('particles');
+      function spawnParticle() {
+        const el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = Math.random() * 100 + '%';
+        el.style.fontSize = (16 + Math.random() * 20) + 'px';
+        el.style.animationDuration = (8 + Math.random() * 12) + 's';
+        el.style.animationDelay = Math.random() * 2 + 's';
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 22000);
+      }
+      setInterval(spawnParticle, 1500);
+      for (let i = 0; i < 6; i++) setTimeout(spawnParticle, i * 400);
+
       // Scroll Reveal
       const revealAll = () => {
         document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el => {
@@ -273,13 +1153,57 @@
       window.addEventListener('scroll', revealAll);
       revealAll();
 
+      // FAQ Accordion
+      document.querySelectorAll('.faq-question').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = btn.parentElement;
+          const isActive = item.classList.contains('active');
+          document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+          if (!isActive) item.classList.add('active');
+        });
+      });
+
       // Navbar scroll shrink
       window.addEventListener('scroll', () => {
         document.querySelector('.navbar')?.classList.toggle('scrolled', window.scrollY > 40);
       });
 
       // Feature card stagger
-      document.querySelectorAll('.feature-card').forEach((c, i) => { c.style.transitionDelay = `${i*0.08}s`; });
+      document.querySelectorAll('.feature-card').forEach((c, i) => { c.style.transitionDelay = `${i * 0.08}s`; });
+
+      // Comparison table row animation
+      document.querySelectorAll('.compare-table tbody tr').forEach((row, i) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        row.style.transition = `all 0.5s ease ${i * 0.1}s`;
+      });
+      const animateTable = () => {
+        const table = document.querySelector('.compare-table');
+        if (!table || table.getBoundingClientRect().top > window.innerHeight - 100) return;
+        table.querySelectorAll('tbody tr').forEach(row => {
+          row.style.opacity = '1';
+          row.style.transform = 'translateX(0)';
+        });
+      };
+      window.addEventListener('scroll', animateTable);
+      animateTable();
+
+      // Tech badge stagger
+      document.querySelectorAll('.tech-badge').forEach((b, i) => {
+        b.style.opacity = '0';
+        b.style.transform = 'scale(0.8)';
+        b.style.transition = `all 0.4s ease ${i * 0.08}s`;
+      });
+      const animateBadges = () => {
+        const sec = document.querySelector('.tech-section');
+        if (!sec || sec.getBoundingClientRect().top > window.innerHeight - 80) return;
+        sec.querySelectorAll('.tech-badge').forEach(b => {
+          b.style.opacity = '1';
+          b.style.transform = 'scale(1)';
+        });
+      };
+      window.addEventListener('scroll', animateBadges);
+      animateBadges();
 
       // ── Fetch real stats from Supabase ──
       try {
@@ -327,8 +1251,8 @@
         });
       }
       function fmtNum(n) {
-        if (n >= 1000000) return (n/1000000).toFixed(1).replace('.0','') + 'M';
-        if (n >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'K';
+        if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'K';
         return n.toLocaleString('tr-TR');
       }
       window.addEventListener('scroll', animateCounters);
@@ -336,4 +1260,5 @@
     });
   </script>
 </body>
+
 </html>

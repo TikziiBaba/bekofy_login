@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bekofy Premium - Müziğin Ötesi</title>
+  <title>Bekofy Premium - Parayı Bize Ver</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* Premium Page Specific Styles */
@@ -57,19 +57,18 @@
       -webkit-backdrop-filter: blur(20px);
       display: flex;
       flex-direction: column;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
+      /* Fun Animated Hover */
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
     }
 
     .pricing-card.featured {
       border-color: var(--green);
-      transform: translateY(-10px);
-      box-shadow: 0 20px 60px rgba(29, 185, 84, 0.15), inset 0 0 0 1px rgba(29, 185, 84, 0.3);
     }
 
     .pricing-card.featured::before {
-      content: 'EN POPÜLER';
+      content: 'EN ÇOK KAZANDIRAN';
       position: absolute;
       top: 16px;
       right: 16px;
@@ -83,14 +82,14 @@
     }
 
     .pricing-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(29, 185, 84, 0.4);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      transform: translateY(-10px) rotate(1deg);
+      border-color: rgba(29, 185, 84, 0.6);
+      box-shadow: 0 20px 50px rgba(29, 185, 84, 0.15);
     }
 
     .pricing-card.featured:hover {
-      transform: translateY(-16px);
-      box-shadow: 0 24px 80px rgba(29, 185, 84, 0.2), inset 0 0 0 1px rgba(29, 185, 84, 0.4);
+      transform: translateY(-16px) rotate(-1deg);
+      box-shadow: 0 24px 80px rgba(29, 185, 84, 0.25), inset 0 0 0 1px rgba(29, 185, 84, 0.4);
     }
 
     .plan-name {
@@ -152,31 +151,77 @@
     }
 
     .faq-item {
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 24px;
+      margin-bottom: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .faq-item.active {
+      border-color: var(--border-green);
     }
 
     .faq-question {
+      width: 100%;
+      text-align: left;
+      padding: 24px;
+      background: none;
+      border: none;
+      color: var(--text-primary);
       font-size: 18px;
       font-weight: 600;
-      margin-bottom: 12px;
-      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-icon {
+      color: var(--green);
+      font-size: 24px;
+      font-weight: 300;
+      transition: transform 0.3s;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(45deg);
     }
 
     .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+      transition: max-height 0.4s ease-in-out;
+    }
+
+    .faq-answer p {
+      padding: 0 24px 24px;
       color: var(--text-secondary);
-      font-size: 15px;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Floating Particles */
+    .particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+    .particle { position:absolute; font-size:24px; opacity:0; animation:floatUp linear infinite; }
+    @keyframes floatUp { 0%{opacity:0;transform:translateY(100vh) rotate(0deg)} 10%{opacity:0.6} 90%{opacity:0.6} 100%{opacity:0;transform:translateY(-10vh) rotate(360deg)} }
+
   </style>
 </head>
 <body>
+
+  <!-- Floating Particles Background -->
+  <div class="particles" id="particles"></div>
 
   <!-- Navbar -->
   <nav class="navbar">
@@ -198,14 +243,13 @@
       <a href="index.html">Ana Sayfa</a>
       <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank">İndir</a>
       <a href="dashboard.html" class="btn btn-secondary" style="padding: 10px 24px; font-size: 14px;">Hesabım</a>
-      <a href="login.html" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px;">Giriş Yap</a>
     </div>
   </nav>
 
   <!-- Hero -->
   <main class="premium-hero">
-    <h1>Neden Premium?</h1>
-    <p>Reklamsız müzik, çevrimdışı dinleme, ve muhteşem ses kalitesi. Kendi müzik dünyanı tamamen özgürce yaşa.</p>
+    <h1>Niye Paralı? 💸</h1>
+    <p>Çünkü sunucu parası gökten düşmüyor, geliştiricimiz de arada bir döner yemek istiyor. Reklamsız müzik ve bazı minik lüksler için pamuk eller cebe.</p>
   </main>
 
   <!-- Pricing -->
@@ -214,48 +258,48 @@
       
       <!-- Bireysel Plan -->
       <div class="pricing-card featured" style="animation: slideUp 0.8s ease-out 0.4s both;">
-        <h3 class="plan-name">Bireysel</h3>
+        <h3 class="plan-name">Bireysel (Zenginler İçin)</h3>
         <div class="plan-price">₺39.99<span> / ay</span></div>
         <ul class="plan-features">
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Reklamsız müzik dinleme
+            Reklamsız tertemiz müzik keyfi
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Çevrimdışı dinlemek için indir
+            Dağda bayırda internetsiz dinle (İndir)
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Her yerde dinle (Mobil, Web, Masaüstü)
+            Her yerde hava atma hakkı
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Maksimum ses kalitesi
+            Tüyleri diken diken eden 320kbps ses
           </li>
         </ul>
-        <a href="checkout.html?plan=bireysel" class="btn btn-primary">Premium'u Başlat</a>
+        <a href="checkout.html?plan=bireysel" class="btn btn-primary">Parayı Ver</a>
       </div>
 
       <!-- Öğrenci Plan -->
       <div class="pricing-card" style="animation: slideUp 0.8s ease-out 0.6s both;">
-        <h3 class="plan-name">Öğrenci</h3>
+        <h3 class="plan-name">Öğrenci (Fakirler İçin)</h3>
         <div class="plan-price">₺19.99<span> / ay</span></div>
         <ul class="plan-features">
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Tüm Bireysel plan özellikleri
+            Zenginlerin aldığı her şeyin aynısı
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Doğrulanmış yükseköğretim öğrencileri için
+            Öğrenci olduğunu kanıtla yeter (e-devlet filan)
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Aylık indirimli abonelik
+            Kalan 20 TL ile yarım porsiyon makarna alırsın
           </li>
         </ul>
-        <a href="checkout.html?plan=ogrenci" class="btn btn-secondary">Öğrenci Planını Seç</a>
+        <a href="checkout.html?plan=ogrenci" class="btn btn-secondary">Yarı Fiyatına Kap</a>
       </div>
 
     </div>
@@ -263,27 +307,65 @@
 
   <!-- FAQ Section -->
   <section class="faq-section">
-    <h2 class="faq-title">Sıkça Sorulan Sorular</h2>
+    <h2 class="faq-title">Muhtemel Şüphelerin 🤔</h2>
     
-    <div class="faq-item">
-      <div class="faq-question">Bekofy Premium'u nasıl iptal edebilirim?</div>
-      <div class="faq-answer">İstediğin zaman hesap ayarlarından aboneliğini iptal edebilirsin. İptal ettikten sonra mevcut fatura döneminin sonuna kadar Premium özelliklerini kullanmaya devam edebilirsin.</div>
-    </div>
-    
-    <div class="faq-item">
-      <div class="faq-question">Çevrimdışı dinleme özelliği nasıl çalışır?</div>
-      <div class="faq-answer">Premium üyesiysen, favori çalma listelerini, albümleri veya podcast'leri "İndir" butonuna tıklayarak cihazına kaydedebilir ve internet bağlantısı olmadan dinleyebilirsin.</div>
-    </div>
-    
-    <div class="faq-item">
-      <div class="faq-question">Ses kalitesi farkı nedir?</div>
-      <div class="faq-answer">Ücretsiz sürümde standart kalitede ses sunulurken, Premium'da 320 kbps bit hızında "Çok Yüksek" kalitede, stüdyo netliğinde müzik dinleme ayrıcalığına sahip olursun.</div>
+    <div class="faq-container">
+      <div class="faq-item">
+        <button class="faq-question">Beğenmezsem paramı geri alabiliyor muyum?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><p>Bakkaldan ısırdığın gofreti geri verebiliyor musun? Şaka şaka, ilk 14 gün içinde "Bu ne biçim uygulama" deyip iptal edersen paran iade. Sorun yok.</p></div>
+      </div>
+      
+      <div class="faq-item">
+        <button class="faq-question">Çevrimdışı dinleme nasıl oluyor? Kaset mi yolluyorsunuz?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><p>Yok artık! Şarkıları direkt uygulamaya indiriyorsun. Uçakta, dağda, köyde internetin çekmediği yerlerde Müslüm Baba dinlemeye devam edebilirsin.</p></div>
+      </div>
+      
+      <div class="faq-item">
+        <button class="faq-question">Öğrenci olduğumu nasıl anlayacaksınız?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><p>Gözlerinden anlarız... Demek isterdik ama SheerID üzerinden bir doğrulama yapıyoruz. Saniyeler sürüyor, çok canını sıkmaz.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">Bedavası varken neden buna para vereyim ki?<span class="faq-icon">+</span></button>
+        <div class="faq-answer"><p>Haklı bir isyan. Bedava versiyon zaten çok iyi. Ama eğer "reklam duymak istemiyorum", "internetim bitmesin şarkı indireyim" ya da "geliştiriciye bi sakız parası atayım yazıktır" diyorsan Premium tam senlik.</p></div>
+      </div>
     </div>
   </section>
 
   <footer>
-    <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
+    <p>© 2026 Bekofy. Tüm hakları saklıdır (Yani sanırım).</p>
   </footer>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Floating emoji particles
+      const emojis = ['💸', '💎', '🚀', '🤑', '💳', '🎉', '🎵', '💚'];
+      const container = document.getElementById('particles');
+      function spawnParticle() {
+        if(!container) return;
+        const el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = Math.random() * 100 + '%';
+        el.style.fontSize = (16 + Math.random() * 20) + 'px';
+        el.style.animationDuration = (6 + Math.random() * 8) + 's';
+        el.style.animationDelay = Math.random() * 2 + 's';
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 15000);
+      }
+      setInterval(spawnParticle, 1200);
+      for (let i = 0; i < 5; i++) setTimeout(spawnParticle, i * 300);
+
+      // FAQ Accordion
+      document.querySelectorAll('.faq-question').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = btn.parentElement;
+          const isActive = item.classList.contains('active');
+          document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+          if (!isActive) item.classList.add('active');
+        });
+      });
+    });
+  </script>
 </body>
 </html>

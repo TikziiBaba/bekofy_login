@@ -609,7 +609,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overfl
 .btn-preview-song svg{margin-left:1px}
 
 /* ===== Verified Tick ===== */
-.verified-tick{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:rgba(29,185,84,0.15);color:var(--green);border-radius:50%;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle;line-height:1;flex-shrink:0}
+.verified-tick{display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;background:rgba(29,185,84,0.15);color:var(--green);border-radius:50%;font-size:7px;font-weight:700;margin-left:3px;vertical-align:middle;line-height:1;flex-shrink:0}
 
 /* ===== Sidebar Profile Click ===== */
 .sidebar-user .user-avatar:hover{border:2px solid var(--green);transition:var(--t)}
