@@ -702,7 +702,22 @@
                 <input type="text" id="admin-song-album" placeholder="Albüm">
                 <input type="number" id="admin-song-duration" placeholder="Süre (saniye)">
               </div>
-              <div class="admin-form-row">
+              <!-- Şarkı Kaynağı Seçimi -->
+              <div class="admin-form-row" style="margin-bottom:8px;">
+                <div style="display:flex; gap:8px; width:100%;">
+                  <button type="button" id="btn-source-local" class="btn-secondary"
+                    style="flex:1; padding:10px 16px; border-radius:8px; border:2px solid var(--primary); background:var(--primary); color:#fff; cursor:pointer; font-weight:600; transition:all 0.2s;">
+                    📁 Lokal MP3
+                  </button>
+                  <button type="button" id="btn-source-youtube" class="btn-secondary"
+                    style="flex:1; padding:10px 16px; border-radius:8px; border:2px solid var(--bg3); background:var(--bg3); color:var(--tm); cursor:pointer; font-weight:600; transition:all 0.2s;">
+                    ▶️ YouTube'dan İndir
+                  </button>
+                </div>
+              </div>
+
+              <!-- Lokal MP3 Seçimi -->
+              <div class="admin-form-row" id="admin-source-local">
                 <div class="file-input-group"
                   style="display:flex; gap:10px; align-items:center; margin-bottom:15px; width: 100%;">
                   <button class="btn-secondary" id="btn-admin-select-mp3" type="button"
@@ -711,6 +726,30 @@
                   <input type="text" id="admin-song-url" placeholder="Şarkı dosyası *" required readonly
                     style="margin-bottom:0; flex-grow:1; background: var(--bg2); color: var(--ts); cursor: not-allowed;">
                 </div>
+              </div>
+
+              <!-- YouTube URL Girişi -->
+              <div class="admin-form-row" id="admin-source-youtube" style="display:none;">
+                <div class="file-input-group"
+                  style="display:flex; gap:10px; align-items:center; margin-bottom:15px; width: 100%;">
+                  <span style="flex-shrink:0; font-size:20px;">🔗</span>
+                  <input type="text" id="admin-youtube-url" placeholder="YouTube URL yapıştır (örn: https://youtube.com/watch?v=...)"
+                    style="margin-bottom:0; flex-grow:1; background: var(--bg2); color: var(--tf); border:1px solid var(--bg3); border-radius:8px; padding:10px 14px;">
+                </div>
+                <!-- YouTube İndirme Progress -->
+                <div id="admin-yt-progress" style="display:none; width:100%; margin-bottom:15px;">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                    <div class="spinner" style="width:16px; height:16px; border-width:2px;"></div>
+                    <span id="admin-yt-progress-text" style="color:var(--ts); font-size:13px;">YouTube'dan indiriliyor...</span>
+                  </div>
+                  <div style="width:100%; height:4px; background:var(--bg3); border-radius:4px; overflow:hidden;">
+                    <div id="admin-yt-progress-bar" style="width:0%; height:100%; background:var(--primary); border-radius:4px; transition:width 0.3s;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kapak Dosyası -->
+              <div class="admin-form-row">
                 <div class="file-input-group"
                   style="display:flex; gap:10px; align-items:center; margin-bottom:15px; width: 100%;">
                   <button class="btn-secondary" id="btn-admin-select-cover" type="button"
@@ -2081,6 +2120,23 @@
         hideBanner();
       });
     })();
+  </script>
+  <script>
+    // Android/Capacitor: masaüstü titlebar'ı gizle ve layout'u düzelt
+    if (window.Capacitor || document.URL.startsWith('https://localhost') || document.URL.indexOf('capacitor') !== -1) {
+      var tb = document.getElementById('titlebar');
+      if (tb) tb.style.display = 'none';
+      // Titlebar yüksekliğini kaldır
+      document.documentElement.style.setProperty('--titlebar-height', '0px');
+      // Body ve sidebar'ın üst boşluğunu kaldır
+      document.body.style.paddingTop = '0';
+      var sidebar = document.querySelector('.sidebar');
+      if (sidebar) sidebar.style.top = '0';
+      var topBar = document.getElementById('top-bar');
+      if (topBar) topBar.style.top = '0';
+      var mainContent = document.querySelector('.main-content');
+      if (mainContent) mainContent.style.top = '0';
+    }
   </script>
 </body>
 

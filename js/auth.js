@@ -1,5 +1,16 @@
 // ===== Auth Page Logic =====
 
+// Platform-aware navigation helper
+function navigateToApp() {
+  if (window.electronAPI && window.electronAPI.navigateToApp) {
+    window.electronAPI.navigateToApp();
+  } else if (window.location.pathname.includes('auth.html')) {
+    window.location.href = 'app.html';
+  } else {
+    window.location.href = 'dashboard.html';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Titlebar controls (only exist in Electron version)
   const btnMin = document.getElementById('btn-minimize');
@@ -95,11 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
           showToast('Giriş başarılı! Yönlendiriliyorsunuz...', 'success');
           setTimeout(() => {
-            if (window.electronAPI && window.electronAPI.navigateToApp) {
-              window.electronAPI.navigateToApp();
-            } else {
-              window.location.href = 'dashboard.html';
-            }
+            navigateToApp();
           }, 1000);
         }
       } catch (err) {
@@ -320,11 +327,7 @@ function startSessionPolling() {
         
         showToast('Giriş başarılı! Yönlendiriliyorsunuz...', 'success');
         setTimeout(() => {
-          if (window.electronAPI && window.electronAPI.navigateToApp) {
-            window.electronAPI.navigateToApp();
-          } else {
-            window.location.href = 'dashboard.html';
-          }
+          navigateToApp();
         }, 1000);
       }
     } catch (err) {
@@ -360,15 +363,7 @@ async function checkSession() {
         await sb.auth.signOut();
         return; // Stay on auth page
       }
-      if (window.electronAPI && window.electronAPI.navigateToApp) {
-        window.electronAPI.navigateToApp();
-      } else {
-        // Web: redirect based on current page
-        const currentPage = window.location.pathname;
-        if (currentPage.includes('login') || currentPage.includes('register')) {
-          window.location.href = 'dashboard.html';
-        }
-      }
+      navigateToApp();
     }
   } catch (err) {
     // No session, stay on auth page

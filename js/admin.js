@@ -878,6 +878,12 @@ window.openAddSongModal = function() {
   document.getElementById('add-song-cover-preview').style.display = 'none';
   document.getElementById('add-song-cover-file').value = '';
   document.getElementById('add-song-cover-file-name').textContent = '';
+  // YouTube alanlarını sıfırla
+  document.getElementById('add-song-youtube-url').value = '';
+  document.getElementById('add-song-youtube-result-url').value = '';
+  document.getElementById('youtube-progress').style.display = 'none';
+  document.getElementById('youtube-progress-bar').style.width = '0%';
+  switchAudioSource('youtube'); // Varsayılan YouTube
   
   // Initialize tag input for artist selection
   if (!addSongTagInput) {
@@ -915,15 +921,141 @@ window.handleAddSongCoverFileChange = function(input) {
   reader.readAsDataURL(file);
 };
 
+// ===== YouTube Kaynak Seçimi =====
+
+const API_BASE_URL = 'http://localhost:3456';
+let currentAudioSource = 'youtube';
+
+window.switchAudioSource = function(source) {
+  currentAudioSource = source;
+  const btnYt = document.getElementById('btn-audio-source-youtube');
+  const btnUrl = document.getElementById('btn-audio-source-url');
+  const srcYt = document.getElementById('audio-source-youtube');
+  const srcUrl = document.getElementById('audio-source-url');
+
+  if (source === 'youtube') {
+    srcYt.style.display = '';
+    srcUrl.style.display = 'none';
+    btnYt.style.border = '2px solid #ff0000';
+    btnYt.style.background = '#ff0000';
+    btnYt.style.color = '#fff';
+    btnUrl.style.border = '2px solid var(--bg3)';
+    btnUrl.style.background = 'var(--bg3)';
+    btnUrl.style.color = 'var(--tm)';
+  } else {
+    srcYt.style.display = 'none';
+    srcUrl.style.display = '';
+    btnUrl.style.border = '2px solid var(--primary)';
+    btnUrl.style.background = 'var(--primary)';
+    btnUrl.style.color = '#fff';
+    btnYt.style.border = '2px solid var(--bg3)';
+    btnYt.style.background = 'var(--bg3)';
+    btnYt.style.color = 'var(--tm)';
+  }
+};
+
+window.handleYoutubeDownload = async function() {
+  const youtubeUrl = document.getElementById('add-song-youtube-url').value.trim();
+  const title = document.getElementById('add-song-title').value.trim();
+  const artist = addSongTagInput ? addSongTagInput.getSelectedString() : '';
+
+  if (!youtubeUrl) {
+    showToast('Lütfen bir YouTube URL girin.', 'error');
+    return;
+  }
+  if (!title || !artist) {
+    showToast('Önce şarkı adı ve sanatçı alanlarını doldurun.', 'error');
+    return;
+  }
+
+  const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/|music\.youtube\.com\/watch\?v=)/;
+  if (!ytRegex.test(youtubeUrl)) {
+    showToast('Geçersiz YouTube URL.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-youtube-download');
+  const progress = document.getElementById('youtube-progress');
+  const progressText = document.getElementById('youtube-progress-text');
+  const progressBar = document.getElementById('youtube-progress-bar');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ İndiriliyor...';
+  progress.style.display = '';
+  progressText.textContent = 'YouTube\'dan indiriliyor ve R2\'ye yükleniyor...';
+  progressBar.style.width = '30%';
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/youtube-to-r2`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ youtubeUrl, title, artist }),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Bilinmeyen hata');
+    }
+
+    progressBar.style.width = '100%';
+    progressText.textContent = '✅ Tamamlandı! R2\'ye yüklendi.';
+    document.getElementById('add-song-youtube-result-url').value = data.url;
+    
+    // Eğer API'den kapak fotoğrafı geldiyse, otomatik olarak Kapak URL kutusuna yaz
+    if (data.coverUrl) {
+      document.getElementById('add-song-cover-url').value = data.coverUrl;
+      const preview = document.getElementById('add-song-cover-preview');
+      preview.src = data.coverUrl;
+      preview.style.display = 'block';
+    }
+    
+    showToast('YouTube\'dan indirildi ve R2\'ye yüklendi! 🎵', 'success');
+
+    // 3sn sonra progress gizle
+    setTimeout(() => {
+      progress.style.display = 'none';
+      progressBar.style.width = '0%';
+    }, 3000);
+
+  } catch (err) {
+    console.error('YouTube download error:', err);
+    progressBar.style.width = '0%';
+    progressText.textContent = '❌ Hata: ' + err.message;
+    showToast('YouTube indirme hatası: ' + err.message, 'error');
+    setTimeout(() => { progress.style.display = 'none'; }, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⬇️ İndir & Yükle';
+  }
+};
+
 window.saveNewSong = async function() {
   const title = document.getElementById('add-song-title').value.trim();
   const artist = addSongTagInput ? addSongTagInput.getSelectedString() : '';
   const album = document.getElementById('add-song-album').value.trim();
-  const audioUrl = document.getElementById('add-song-audio-url').value.trim();
+  
+  // Audio URL: YouTube'dan indirildiyse oradan al, yoksa direkt URL'den al
+  let audioUrl = '';
+  if (currentAudioSource === 'youtube') {
+    audioUrl = document.getElementById('add-song-youtube-result-url').value.trim();
+    if (!audioUrl) {
+      showToast('Önce YouTube linkini indirip yükleyin ("İndir & Yükle" butonuna basın).', 'error');
+      return;
+    }
+  } else {
+    audioUrl = document.getElementById('add-song-audio-url').value.trim();
+  }
+  
   let coverUrl = document.getElementById('add-song-cover-url').value.trim();
   
   if (!title || !artist) {
     showToast('Şarkı adı ve en az bir sanatçı zorunludur.', 'error');
+    return;
+  }
+  
+  if (!audioUrl) {
+    showToast('Ses dosyası URL gerekli. YouTube\'dan indirin veya direkt URL girin.', 'error');
     return;
   }
   

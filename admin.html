@@ -270,8 +270,52 @@
           <input type="text" id="add-song-cover-url" placeholder="https://...">
         </div>
         <div class="form-group">
-          <label for="add-song-audio-url">Ses Dosyası URL *</label>
-          <input type="text" id="add-song-audio-url" placeholder="https://...">
+          <label>Ses Dosyası *</label>
+          <!-- Kaynak Seçim Tabları -->
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button type="button" id="btn-audio-source-youtube" class="btn-tab-active"
+              onclick="switchAudioSource('youtube')"
+              style="flex:1; padding:8px 14px; border-radius:8px; border:2px solid #ff0000; background:#ff0000; color:#fff; cursor:pointer; font-weight:600; font-size:13px; transition:all 0.2s;">
+              ▶️ YouTube'dan İndir
+            </button>
+            <button type="button" id="btn-audio-source-url" class="btn-tab-inactive"
+              onclick="switchAudioSource('url')"
+              style="flex:1; padding:8px 14px; border-radius:8px; border:2px solid var(--bg3); background:var(--bg3); color:var(--tm); cursor:pointer; font-weight:600; font-size:13px; transition:all 0.2s;">
+              🔗 Direkt URL
+            </button>
+          </div>
+
+          <!-- YouTube Girişi -->
+          <div id="audio-source-youtube">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="text" id="add-song-youtube-url" placeholder="YouTube URL yapıştır (örn: https://youtube.com/watch?v=...)"
+                style="flex:1; margin-bottom:0;">
+              <button type="button" id="btn-youtube-download" onclick="handleYoutubeDownload()"
+                style="flex-shrink:0; padding:8px 16px; border-radius:8px; border:none; background:#ff0000; color:#fff; cursor:pointer; font-weight:600; font-size:13px; white-space:nowrap;">
+                ⬇️ İndir & Yükle
+              </button>
+            </div>
+            <!-- Progress Bar -->
+            <div id="youtube-progress" style="display:none; margin-top:10px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:var(--primary); border-top-color:transparent;"></span>
+                <span id="youtube-progress-text" style="font-size:12px; color:var(--tm);">YouTube'dan indiriliyor ve R2'ye yükleniyor...</span>
+              </div>
+              <div style="width:100%; height:4px; background:var(--bg3); border-radius:4px; overflow:hidden;">
+                <div id="youtube-progress-bar" style="width:0%; height:100%; background:#ff0000; border-radius:4px; transition:width 0.5s;"></div>
+              </div>
+            </div>
+            <p class="form-hint" style="margin-top:6px;">YouTube linkini yapıştır, "İndir & Yükle" butonuna bas. Şarkı otomatik olarak MP3'e çevrilip R2'ye yüklenir.</p>
+          </div>
+
+          <!-- Direkt URL Girişi -->
+          <div id="audio-source-url" style="display:none;">
+            <input type="text" id="add-song-audio-url" placeholder="https://music.bekirr.dev/music/sanatci/sarki.mp3">
+            <p class="form-hint">Zaten R2'de bulunan veya harici bir ses dosyası URL'si girin.</p>
+          </div>
+
+          <!-- Gizli: YouTube'dan indirilen URL burada saklanır -->
+          <input type="hidden" id="add-song-youtube-result-url" value="">
         </div>
       </div>
       <div class="modal-footer">

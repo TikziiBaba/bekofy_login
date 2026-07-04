@@ -3300,9 +3300,41 @@ document.addEventListener('keydown', (e) => {
 
 // ===== Admin Panel =====
 
+let adminSongSource = 'local'; // 'local' veya 'youtube'
+
 function initAdminActions() {
   // Add song button
   document.getElementById('btn-admin-add-song').addEventListener('click', handleAddSong);
+
+  // Source toggle: Lokal MP3 / YouTube
+  const btnLocal = document.getElementById('btn-source-local');
+  const btnYoutube = document.getElementById('btn-source-youtube');
+  const sourceLocal = document.getElementById('admin-source-local');
+  const sourceYoutube = document.getElementById('admin-source-youtube');
+
+  btnLocal.addEventListener('click', () => {
+    adminSongSource = 'local';
+    sourceLocal.style.display = '';
+    sourceYoutube.style.display = 'none';
+    btnLocal.style.border = '2px solid var(--primary)';
+    btnLocal.style.background = 'var(--primary)';
+    btnLocal.style.color = '#fff';
+    btnYoutube.style.border = '2px solid var(--bg3)';
+    btnYoutube.style.background = 'var(--bg3)';
+    btnYoutube.style.color = 'var(--tm)';
+  });
+
+  btnYoutube.addEventListener('click', () => {
+    adminSongSource = 'youtube';
+    sourceLocal.style.display = 'none';
+    sourceYoutube.style.display = '';
+    btnYoutube.style.border = '2px solid #ff0000';
+    btnYoutube.style.background = '#ff0000';
+    btnYoutube.style.color = '#fff';
+    btnLocal.style.border = '2px solid var(--bg3)';
+    btnLocal.style.background = 'var(--bg3)';
+    btnLocal.style.color = 'var(--tm)';
+  });
 
   document.getElementById('btn-admin-select-mp3').addEventListener('click', async () => {
     const result = await window.electronAPI.showOpenDialog({
@@ -3533,10 +3565,35 @@ async function handleAddSong() {
   const duration = parseInt(document.getElementById('admin-song-duration').value) || null;
   let file_path = document.getElementById('admin-song-url').value.trim();
   let cover_url = document.getElementById('admin-song-cover').value.trim();
+  const youtubeUrl = document.getElementById('admin-youtube-url').value.trim();
 
-  if (!title || !artist || !file_path) {
-    showToast('Şarkı adı, sanatçı ve dosya gerekli', 'error');
+  // Sanatçı klasör adı: küçük harf, Türkçe karakterler korunuyor, boşluk ve özel karakterler siliniyor
+  const safeArtist = artist.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ0-9]/g, '').toLowerCase();
+  const safeTitle = title.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ0-9]/g, '').toLowerCase();
+
+  // Kaynak kontrolü
+  if (!title || !artist) {
+    showToast('Şarkı adı ve sanatçı gerekli', 'error');
     return;
+  }
+
+  if (adminSongSource === 'local' && !file_path) {
+    showToast('Lütfen bir MP3 dosyası seçin', 'error');
+    return;
+  }
+
+  if (adminSongSource === 'youtube' && !youtubeUrl) {
+    showToast('Lütfen bir YouTube URL girin', 'error');
+    return;
+  }
+
+  // YouTube URL doğrulama
+  if (adminSongSource === 'youtube') {
+    const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/|music\.youtube\.com\/watch\?v=)/;
+    if (!ytRegex.test(youtubeUrl)) {
+      showToast('Geçersiz YouTube URL. Lütfen geçerli bir YouTube linki girin.', 'error');
+      return;
+    }
   }
 
   const btn = document.getElementById('btn-admin-add-song');
@@ -3544,21 +3601,43 @@ async function handleAddSong() {
   btn.textContent = 'Yükleniyor... (Bu işlem biraz sürebilir)';
 
   try {
-    // R2 Upload for MP3
-    if (file_path && !file_path.startsWith('http')) {
-      const ext = file_path.split('.').pop() || 'mp3';
-      const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const r2FileName = `songs/${Date.now()}-${safeTitle}.${ext}`;
-      const uploadRes = await window.electronAPI.uploadToR2(file_path, r2FileName);
-      if (!uploadRes.success) throw new Error(uploadRes.error);
-      file_path = uploadRes.url;
+    if (adminSongSource === 'youtube') {
+      // === YouTube'dan İndir ve R2'ye Yükle ===
+      const progressDiv = document.getElementById('admin-yt-progress');
+      const progressText = document.getElementById('admin-yt-progress-text');
+      const progressBar = document.getElementById('admin-yt-progress-bar');
+      progressDiv.style.display = '';
+      progressText.textContent = 'YouTube\'dan indiriliyor ve R2\'ye yükleniyor...';
+      progressBar.style.width = '30%';
+
+      const result = await window.electronAPI.downloadConvertUploadR2(youtubeUrl, title, artist);
+      
+      if (!result.success) {
+        progressDiv.style.display = 'none';
+        throw new Error(result.error);
+      }
+
+      progressBar.style.width = '100%';
+      progressText.textContent = 'Tamamlandı! ✅';
+      file_path = result.url;
+
+      // Progress'i 1.5sn sonra gizle
+      setTimeout(() => { progressDiv.style.display = 'none'; progressBar.style.width = '0%'; }, 1500);
+    } else {
+      // === Lokal MP3'ü R2'ye Yükle (sanatçı klasörüne) ===
+      if (file_path && !file_path.startsWith('http')) {
+        const ext = file_path.split('.').pop() || 'mp3';
+        const r2FileName = `music/${safeArtist}/${safeTitle}.${ext}`;
+        const uploadRes = await window.electronAPI.uploadToR2(file_path, r2FileName);
+        if (!uploadRes.success) throw new Error(uploadRes.error);
+        file_path = uploadRes.url;
+      }
     }
 
-    // R2 Upload for Cover
+    // R2 Upload for Cover (sanatçı klasörüne)
     if (cover_url && !cover_url.startsWith('http')) {
       const ext = cover_url.split('.').pop();
-      const safeTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const r2FileName = `covers/${Date.now()}-${safeTitle}.${ext}`;
+      const r2FileName = `music/${safeArtist}/covers/${safeTitle}.${ext}`;
       const uploadRes = await window.electronAPI.uploadToR2(cover_url, r2FileName);
       if (!uploadRes.success) throw new Error(uploadRes.error);
       cover_url = uploadRes.url;
@@ -3581,6 +3660,7 @@ async function handleAddSong() {
       document.getElementById('admin-song-duration').value = '';
       document.getElementById('admin-song-url').value = '';
       document.getElementById('admin-song-cover').value = '';
+      document.getElementById('admin-youtube-url').value = '';
       // Refresh
       loadAdminSongs();
       loadDashboardStats();

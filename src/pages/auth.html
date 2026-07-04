@@ -191,6 +191,15 @@
   </div>
 
   <script src="../js/supabase.js"></script>
+  <script>
+    // Android/Capacitor: masaüstü titlebar'ı gizle
+    if (window.Capacitor || document.URL.startsWith('https://localhost') || document.URL.indexOf('capacitor') !== -1) {
+      var tb = document.getElementById('titlebar');
+      if (tb) tb.style.display = 'none';
+      var ac = document.querySelector('.auth-container');
+      if (ac) ac.style.paddingTop = '0';
+    }
+  </script>
   <script src="../js/auth.js"></script>
 </body>
 </html>

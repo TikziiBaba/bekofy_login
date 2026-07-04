@@ -737,6 +737,12 @@
 </head>
 
 <body>
+  <!-- Capacitor (Android) ise direkt uygulamaya yönlendir -->
+  <script>
+    if (window.Capacitor || document.URL.startsWith('https://localhost') || document.URL.indexOf('capacitor') !== -1) {
+      window.location.replace('src/pages/auth.html');
+    }
+  </script>
 
   <!-- Navbar -->
   <nav class="navbar">
