@@ -114,6 +114,15 @@ async function showAdminPanel() {
   document.getElementById('sidebar-avatar-letter').textContent = 
     (currentUserProfile.username || 'A')[0].toUpperCase();
   
+  if (currentUserProfile.theme === 'LOVE_MODE_ON' || localStorage.getItem('__system_love_mode') === 'true') {
+    const btn = document.getElementById('btn-toggle-love');
+    if (btn) {
+      btn.innerHTML = '❤️ Özel Animasyon: AÇIK';
+      btn.style.background = '#ff2a5f';
+      btn.style.borderColor = '#ff2a5f';
+    }
+  }
+
   await loadAllArtists();
   loadStats();
   switchSection('artists');
@@ -1401,6 +1410,42 @@ window.adminLogout = async function() {
   currentUserProfile = null;
   window.location.reload();
 };
+
+window.toggleLoveMode = async function() {
+  const btn = document.getElementById('btn-toggle-love');
+  const isCurrentlyOn = btn.innerHTML.includes('AÇIK');
+  
+  const newState = isCurrentlyOn ? 'NONE' : 'LOVE_MODE_ON';
+  const newText = isCurrentlyOn ? '❤️ Özel Animasyon: KAPALI' : '❤️ Özel Animasyon: AÇIK';
+  
+  btn.innerHTML = '...';
+  btn.disabled = true;
+  
+  try {
+    if (currentUserProfile) {
+      await sb.from('profiles').update({ theme: newState }).eq('id', currentUserProfile.id);
+      currentUserProfile.theme = newState;
+    }
+    
+    if (isCurrentlyOn) {
+      localStorage.removeItem('__system_love_mode');
+      btn.style.background = '#333';
+      btn.style.borderColor = '#555';
+    } else {
+      localStorage.setItem('__system_love_mode', 'true');
+      btn.style.background = '#ff2a5f';
+      btn.style.borderColor = '#ff2a5f';
+    }
+    
+    btn.innerHTML = newText;
+    showToast('Özel etkinlik modu güncellendi!', 'success');
+  } catch(err) {
+    console.error(err);
+    showToast('Ayarlar güncellenirken hata oluştu.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 // ===== UTILITIES =====
 

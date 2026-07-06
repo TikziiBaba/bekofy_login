@@ -53,29 +53,138 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPasswordToggle('toggle-login-pw', 'login-password');
   setupPasswordToggle('toggle-register-pw', 'register-password');
 
-  // Login handler (Electron auth page)
+  // Tab switching for Login
+  const tabEmail = document.getElementById('tab-email');
+  const tabPhone = document.getElementById('tab-phone');
+  const emailFields = document.getElementById('email-fields');
+  const phoneFields = document.getElementById('phone-fields');
   const btnLogin = document.getElementById('btn-login');
-  if (btnLogin) {
-    btnLogin.addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      const btn = document.getElementById('btn-login');
+  const btnSendOtp = document.getElementById('btn-send-otp');
+  let loginMode = 'email'; // email or phone
+  let otpSent = false;
 
-      if (!email || !password) {
-        showToast('Lütfen tüm alanları doldurun', 'error');
+  if (tabEmail && tabPhone) {
+    tabEmail.addEventListener('click', () => {
+      loginMode = 'email';
+      tabEmail.style.borderColor = 'var(--green)';
+      tabEmail.style.color = 'var(--green)';
+      tabPhone.style.borderColor = 'rgba(255,255,255,0.2)';
+      tabPhone.style.color = '#fff';
+      emailFields.style.display = 'block';
+      phoneFields.style.display = 'none';
+      btnLogin.style.display = 'block';
+      btnSendOtp.style.display = 'none';
+    });
+    tabPhone.addEventListener('click', () => {
+      loginMode = 'phone';
+      tabPhone.style.borderColor = 'var(--green)';
+      tabPhone.style.color = 'var(--green)';
+      tabEmail.style.borderColor = 'rgba(255,255,255,0.2)';
+      tabEmail.style.color = '#fff';
+      emailFields.style.display = 'none';
+      phoneFields.style.display = 'block';
+      
+      if (otpSent) {
+        btnLogin.style.display = 'block';
+        btnSendOtp.style.display = 'none';
+      } else {
+        btnLogin.style.display = 'none';
+        btnSendOtp.style.display = 'block';
+      }
+    });
+  }
+
+  if (btnSendOtp) {
+    btnSendOtp.addEventListener('click', async () => {
+      let phone = document.getElementById('login-phone').value.trim();
+      if (!phone) {
+        showToast('Lütfen telefon numaranızı girin', 'error');
         return;
       }
-
-      btn.classList.add('loading');
-      btn.querySelector('span').textContent = 'Giriş yapılıyor...';
-
+      if (!phone.startsWith('+')) {
+        phone = '+90' + phone.replace(/^0+/, ''); // Auto-prepend +90 and remove leading zero if any
+      }
+      
+      btnSendOtp.classList.add('loading');
+      btnSendOtp.querySelector('span').textContent = 'Gönderiliyor...';
+      
       try {
-        const { data, error } = await signInWithEmail(email, password);
+        const { error } = await signInWithPhone(phone);
+        if (error) {
+          console.error("Phone OTP Error:", error);
+          if (error.status === 400 && error.message.includes("sms provider")) {
+            throw new Error("Supabase SMS sağlayıcısı yapılandırılmamış (Twilio vb.).");
+          }
+          throw error;
+        }
+        
+        showToast('Doğrulama kodu gönderildi', 'success');
+        otpSent = true;
+        document.getElementById('otp-input-group').style.display = 'block';
+        document.getElementById('phone-input-group').style.display = 'none';
+        btnSendOtp.style.display = 'none';
+        btnLogin.style.display = 'block';
+        btnLogin.querySelector('span').textContent = 'Doğrula ve Giriş Yap';
+      } catch (err) {
+        showToast('Hata: ' + (err.message || 'Bilinmeyen bir hata oluştu'), 'error');
+      }
+      
+      btnSendOtp.classList.remove('loading');
+      btnSendOtp.querySelector('span').textContent = 'Kod Gönder';
+    });
+  }
+
+  // Login handler (Electron auth page)
+  if (btnLogin) {
+    btnLogin.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-login');
+      btn.classList.add('loading');
+      
+      try {
+        let authResult = null;
+        
+        if (loginMode === 'email') {
+          const email = document.getElementById('login-email').value.trim();
+          const password = document.getElementById('login-password').value;
+          
+          if (!email || !password) {
+            showToast('Lütfen tüm alanları doldurun', 'error');
+            btn.classList.remove('loading');
+            return;
+          }
+          
+          btn.querySelector('span').textContent = 'Giriş yapılıyor...';
+          authResult = await signInWithEmail(email, password);
+          
+        } else if (loginMode === 'phone' && otpSent) {
+          let phone = document.getElementById('login-phone').value.trim();
+          if (!phone.startsWith('+')) {
+            phone = '+90' + phone.replace(/^0+/, '');
+          }
+          const otp = document.getElementById('login-otp').value.trim();
+          
+          if (!phone || !otp) {
+            showToast('Lütfen doğrulama kodunu girin', 'error');
+            btn.classList.remove('loading');
+            return;
+          }
+          
+          btn.querySelector('span').textContent = 'Doğrulanıyor...';
+          authResult = await verifyPhoneOtp(phone, otp);
+        }
+        
+        if (!authResult) {
+          btn.classList.remove('loading');
+          return;
+        }
+
+        const { data, error } = authResult;
+        
         if (error) {
           console.error('Giriş Hatası Detayı:', error);
           let errorMsg = error.message;
           if (!errorMsg || errorMsg === '{}' || errorMsg === '[object Object]') {
-            errorMsg = 'Giriş başarısız: E-posta veya şifre hatalı.';
+            errorMsg = 'Giriş başarısız: Bilgiler hatalı.';
           }
           showToast(errorMsg, 'error');
         } else {
@@ -86,9 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: profile } = await sb.from('profiles').select('is_banned').eq('id', user.id).maybeSingle();
             
             if (!profile) {
-              // Profil yoksa, trigger eksikliğinden dolayı oluşmamış olabilir. Manuel oluşturalım.
               try {
-                const username = user.user_metadata?.username || user.user_metadata?.full_name || email.split('@')[0] || 'Kullanıcı';
+                const username = user.user_metadata?.username || user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Kullanıcı');
                 await sb.from('profiles').insert({ id: user.id, username: username });
               } catch (err) {
                 console.log('Profil oluşturma hatası:', err);
@@ -115,43 +223,183 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       btn.classList.remove('loading');
-      btn.querySelector('span').textContent = 'Giriş Yap';
+      btn.querySelector('span').textContent = loginMode === 'phone' ? 'Doğrula ve Giriş Yap' : 'Giriş Yap';
+    });
+  }
+
+  // Tab switching for Register
+  const tabRegEmail = document.getElementById('tab-register-email');
+  const tabRegPhone = document.getElementById('tab-register-phone');
+  const regEmailFields = document.getElementById('register-email-fields');
+  const regPhoneFields = document.getElementById('register-phone-fields');
+  const btnRegister = document.getElementById('btn-register');
+  const btnRegSendOtp = document.getElementById('btn-register-send-otp');
+  let regMode = 'email';
+  let regOtpSent = false;
+
+  if (tabRegEmail && tabRegPhone) {
+    tabRegEmail.addEventListener('click', () => {
+      regMode = 'email';
+      tabRegEmail.style.borderColor = 'var(--green)';
+      tabRegEmail.style.color = 'var(--green)';
+      tabRegPhone.style.borderColor = 'rgba(255,255,255,0.2)';
+      tabRegPhone.style.color = '#fff';
+      regEmailFields.style.display = 'block';
+      regPhoneFields.style.display = 'none';
+      btnRegister.style.display = 'block';
+      btnRegSendOtp.style.display = 'none';
+    });
+    tabRegPhone.addEventListener('click', () => {
+      regMode = 'phone';
+      tabRegPhone.style.borderColor = 'var(--green)';
+      tabRegPhone.style.color = 'var(--green)';
+      tabRegEmail.style.borderColor = 'rgba(255,255,255,0.2)';
+      tabRegEmail.style.color = '#fff';
+      regEmailFields.style.display = 'none';
+      regPhoneFields.style.display = 'block';
+      
+      if (regOtpSent) {
+        btnRegister.style.display = 'block';
+        btnRegSendOtp.style.display = 'none';
+      } else {
+        btnRegister.style.display = 'none';
+        btnRegSendOtp.style.display = 'block';
+      }
+    });
+  }
+
+  if (btnRegSendOtp) {
+    btnRegSendOtp.addEventListener('click', async () => {
+      let phone = document.getElementById('register-phone').value.trim();
+      const username = document.getElementById('register-phone-username').value.trim();
+      
+      if (!phone || !username) {
+        showToast('Lütfen kullanıcı adı ve telefon numaranızı girin', 'error');
+        return;
+      }
+      if (!phone.startsWith('+')) {
+        phone = '+90' + phone.replace(/^0+/, '');
+      }
+      
+      btnRegSendOtp.classList.add('loading');
+      btnRegSendOtp.querySelector('span').textContent = 'Gönderiliyor...';
+      
+      try {
+        const reserved = await isUsernameReserved(username);
+        if (reserved) {
+          showToast('Bu kullanıcı adı alınamaz', 'error');
+          btnRegSendOtp.classList.remove('loading');
+          btnRegSendOtp.querySelector('span').textContent = 'Kod Gönder';
+          return;
+        }
+
+        const { error } = await signInWithPhone(phone); // phone auth creates user if not exists
+        if (error) {
+          console.error("Phone OTP Error:", error);
+          if (error.status === 400 && error.message.includes("sms provider")) {
+            throw new Error("Supabase SMS sağlayıcısı yapılandırılmamış (Twilio vb.).");
+          }
+          throw error;
+        }
+        
+        showToast('Doğrulama kodu gönderildi', 'success');
+        regOtpSent = true;
+        document.getElementById('register-otp-input-group').style.display = 'block';
+        document.getElementById('register-phone-input-group').style.display = 'none';
+        btnRegSendOtp.style.display = 'none';
+        btnRegister.style.display = 'block';
+        btnRegister.querySelector('span').textContent = 'Kayıt Ol ve Doğrula';
+      } catch (err) {
+        showToast('Hata: ' + (err.message || 'Bilinmeyen bir hata'), 'error');
+      }
+      
+      btnRegSendOtp.classList.remove('loading');
+      btnRegSendOtp.querySelector('span').textContent = 'Kod Gönder';
     });
   }
 
   // Register handler (Electron auth page)
-  const btnRegister = document.getElementById('btn-register');
   if (btnRegister) {
     btnRegister.addEventListener('click', async () => {
-      const username = document.getElementById('register-username').value.trim();
-      const email = document.getElementById('register-email').value.trim();
-      const password = document.getElementById('register-password').value;
       const btn = document.getElementById('btn-register');
-
-      if (!username || !email || !password) {
-        showToast('Lütfen tüm alanları doldurun', 'error');
-        return;
-      }
-
-      if (password.length < 6) {
-        showToast('Şifre en az 6 karakter olmalıdır', 'error');
-        return;
-      }
-
       btn.classList.add('loading');
-      btn.querySelector('span').textContent = 'Kayıt olunuyor...';
-
+      
       try {
-        // Check reserved usernames
-        const reserved = await isUsernameReserved(username);
-        if (reserved) {
-          showToast('Bu kullanıcı adı alınamaz', 'error');
-          btn.classList.remove('loading');
-          btn.querySelector('span').textContent = 'Kayıt Ol';
-          return;
+        let authResult = null;
+        let registerUsername = '';
+        
+        if (regMode === 'email') {
+          registerUsername = document.getElementById('register-username').value.trim();
+          const email = document.getElementById('register-email').value.trim();
+          const password = document.getElementById('register-password').value;
+          
+          if (!registerUsername || !email || !password) {
+            showToast('Lütfen tüm alanları doldurun', 'error');
+            btn.classList.remove('loading');
+            return;
+          }
+
+          if (password.length < 6) {
+            showToast('Şifre en az 6 karakter olmalıdır', 'error');
+            btn.classList.remove('loading');
+            return;
+          }
+
+          btn.querySelector('span').textContent = 'Kayıt olunuyor...';
+          
+          const reserved = await isUsernameReserved(registerUsername);
+          if (reserved) {
+            showToast('Bu kullanıcı adı alınamaz', 'error');
+            btn.classList.remove('loading');
+            btn.querySelector('span').textContent = 'Kayıt Ol';
+            return;
+          }
+          
+          authResult = await signUpWithEmail(email, password, registerUsername);
+          
+        } else if (regMode === 'phone' && regOtpSent) {
+          registerUsername = document.getElementById('register-phone-username').value.trim();
+          let phone = document.getElementById('register-phone').value.trim();
+          if (!phone.startsWith('+')) {
+            phone = '+90' + phone.replace(/^0+/, '');
+          }
+          const otp = document.getElementById('register-otp').value.trim();
+          
+          if (!phone || !otp || !registerUsername) {
+            showToast('Lütfen bilgileri ve doğrulama kodunu girin', 'error');
+            btn.classList.remove('loading');
+            return;
+          }
+          
+          btn.querySelector('span').textContent = 'Doğrulanıyor...';
+          authResult = await verifyPhoneOtp(phone, otp);
+          
+          // Profil güncellemesi gerekebilir çünkü phone ile signup'ta username geçilmiyor
+          if (authResult && authResult.data && authResult.data.user) {
+             try {
+                const sb = getSupabase();
+                const user = authResult.data.user;
+                const { data: existingProfile } = await sb.from('profiles').select('id').eq('id', user.id).maybeSingle();
+                
+                if (existingProfile) {
+                   // existing profile means they logged in instead of registering
+                   await sb.from('profiles').update({ username: registerUsername }).eq('id', user.id);
+                } else {
+                   await sb.from('profiles').insert({ id: user.id, username: registerUsername });
+                }
+             } catch(e) {
+                console.log('Error updating profile username', e);
+             }
+          }
         }
         
-        const { data, error } = await signUpWithEmail(email, password, username);
+        if (!authResult) {
+          btn.classList.remove('loading');
+          return;
+        }
+
+        const { data, error } = authResult;
+        
         if (error) {
           console.error('Kayıt Hatası Detayı:', error);
           let errorMsg = error.message;
@@ -161,16 +409,20 @@ document.addEventListener('DOMContentLoaded', () => {
           } else if (error.status === 429) {
             errorMsg = 'Çok fazla istek gönderildi. Lütfen biraz bekleyip tekrar deneyin.';
           } else if (error.status === 422 || (errorMsg && errorMsg.toLowerCase().includes('already registered'))) {
-            errorMsg = 'Bu e-posta adresi zaten kullanımda.';
+            errorMsg = 'Bu e-posta adresi/telefon zaten kullanımda.';
           } else if (!errorMsg || errorMsg === '{}' || errorMsg === '[object Object]') {
             errorMsg = 'Kayıt başarısız. Lütfen tekrar deneyin.';
           }
           showToast(errorMsg, 'error');
         } else {
-          showToast('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
+          showToast('Kayıt başarılı! Yönlendiriliyorsunuz...', 'success');
           setTimeout(() => {
-            if (registerForm) registerForm.classList.add('hidden');
-            if (loginForm) loginForm.classList.remove('hidden');
+            if (regMode === 'email') {
+              if (registerForm) registerForm.classList.add('hidden');
+              if (loginForm) loginForm.classList.remove('hidden');
+            } else {
+              navigateToApp(); // phone auth already logs you in
+            }
           }, 1500);
         }
       } catch (err) {
@@ -179,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       btn.classList.remove('loading');
-      btn.querySelector('span').textContent = 'Kayıt Ol';
+      btn.querySelector('span').textContent = regMode === 'phone' ? 'Kayıt Ol ve Doğrula' : 'Kayıt Ol';
     });
   }
 

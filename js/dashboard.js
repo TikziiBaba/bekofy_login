@@ -207,6 +207,156 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }, 1000);
 
+  // Linked Accounts logic
+  const renderLinkedAccounts = () => {
+    const identities = user.identities || [];
+    const providers = identities.map(id => id.provider);
+    
+    // Google
+    const btnGoogle = document.getElementById('btn-link-google');
+    if (providers.includes('google')) {
+      btnGoogle.textContent = 'Bağlantıyı Kes';
+      btnGoogle.classList.replace('dash-btn-outline', 'dash-btn-danger');
+      const identity = identities.find(id => id.provider === 'google');
+      btnGoogle.onclick = async () => handleUnlink(identity);
+    } else {
+      btnGoogle.textContent = 'Bağla';
+      btnGoogle.classList.replace('dash-btn-danger', 'dash-btn-outline');
+      btnGoogle.onclick = async () => {
+        try {
+          const { data, error } = await linkIdentity('google', { skipBrowserRedirect: true });
+          if (error) throw error;
+          if (data?.url) {
+            if (window.electronAPI && window.electronAPI.openExternal) {
+              window.electronAPI.openExternal(data.url);
+              showDashToast('Tarayıcıda Google ile bağlayın, ardından uygulamaya dönün.', 'success');
+              // We could start polling here for identity update
+            } else {
+              window.location.href = data.url;
+            }
+          }
+        } catch (e) {
+          showDashToast('Bağlama başlatılamadı: ' + e.message, 'error');
+        }
+      };
+    }
+
+    // Apple
+    const btnApple = document.getElementById('btn-link-apple');
+    if (providers.includes('apple')) {
+      btnApple.textContent = 'Bağlantıyı Kes';
+      btnApple.classList.replace('dash-btn-outline', 'dash-btn-danger');
+      const identity = identities.find(id => id.provider === 'apple');
+      btnApple.onclick = async () => handleUnlink(identity);
+    } else {
+      btnApple.textContent = 'Bağla';
+      btnApple.classList.replace('dash-btn-danger', 'dash-btn-outline');
+      btnApple.onclick = async () => {
+        try {
+          const { data, error } = await linkIdentity('apple', { skipBrowserRedirect: true });
+          if (error) throw error;
+          if (data?.url) {
+            if (window.electronAPI && window.electronAPI.openExternal) {
+              window.electronAPI.openExternal(data.url);
+              showDashToast('Tarayıcıda Apple ile bağlayın, ardından uygulamaya dönün.', 'success');
+            } else {
+              window.location.href = data.url;
+            }
+          }
+        } catch (e) {
+          showDashToast('Bağlama başlatılamadı: ' + e.message, 'error');
+        }
+      };
+    }
+
+    // Phone
+    const btnPhone = document.getElementById('btn-link-phone');
+    if (user.phone) {
+      btnPhone.textContent = 'Güncelle';
+      btnPhone.classList.replace('dash-btn-outline', 'dash-btn-danger');
+      btnPhone.onclick = () => {
+         const fields = document.getElementById('phone-link-fields');
+         fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+      };
+    } else {
+      btnPhone.textContent = 'Bağla';
+      btnPhone.classList.replace('dash-btn-danger', 'dash-btn-outline');
+      btnPhone.onclick = () => {
+         const fields = document.getElementById('phone-link-fields');
+         fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+      };
+    }
+  };
+
+  const handleUnlink = async (identity) => {
+    if (confirm('Bu hesabın bağlantısını kesmek istediğinize emin misiniz? (Şifreniz yoksa hesabınıza bir daha giremeyebilirsiniz)')) {
+      try {
+        const { error } = await unlinkIdentity(identity);
+        if (error) throw error;
+        showDashToast('Bağlantı kesildi', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } catch (e) {
+        showDashToast('Hata: ' + e.message, 'error');
+      }
+    }
+  };
+
+  if(document.getElementById('btn-link-google')) renderLinkedAccounts();
+
+  // Phone linking flow
+  const btnSendLinkOtp = document.getElementById('btn-send-link-otp');
+  const btnVerifyLinkOtp = document.getElementById('btn-verify-link-otp');
+  
+  if (btnSendLinkOtp) {
+    btnSendLinkOtp.addEventListener('click', async () => {
+      let phone = document.getElementById('link-phone-input').value.trim();
+      if (!phone) return showDashToast('Numara giriniz', 'error');
+      if (!phone.startsWith('+')) {
+        phone = '+90' + phone.replace(/^0+/, '');
+      }
+      
+      btnSendLinkOtp.textContent = 'Gönderiliyor...';
+      try {
+        const { error } = await updateUserPhone(phone);
+        if (error) {
+          console.error("Phone Link Error:", error);
+          if (error.status === 400 && error.message.includes("sms provider")) {
+            throw new Error("Supabase SMS sağlayıcısı yapılandırılmamış (Twilio vb.).");
+          }
+          throw error;
+        }
+        showDashToast('Kod gönderildi', 'success');
+        document.getElementById('link-otp-group').style.display = 'block';
+        btnSendLinkOtp.style.display = 'none';
+      } catch (e) {
+        showDashToast('Hata: ' + (e.message || 'Bilinmeyen bir hata'), 'error');
+        btnSendLinkOtp.textContent = 'Kod Gönder';
+      }
+    });
+  }
+
+  if (btnVerifyLinkOtp) {
+    btnVerifyLinkOtp.addEventListener('click', async () => {
+      let phone = document.getElementById('link-phone-input').value.trim();
+      if (!phone.startsWith('+')) {
+        phone = '+90' + phone.replace(/^0+/, '');
+      }
+      const otp = document.getElementById('link-otp-input').value.trim();
+      if (!otp) return showDashToast('Kodu giriniz', 'error');
+      
+      btnVerifyLinkOtp.textContent = 'Doğrulanıyor...';
+      try {
+        const { error } = await verifyPhoneChangeOtp(phone, otp);
+        if (error) throw error;
+        showDashToast('Telefon başarıyla bağlandı', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } catch (e) {
+        showDashToast('Hata: ' + (e.message || 'Hatalı kod'), 'error');
+        btnVerifyLinkOtp.textContent = 'Doğrula ve Bağla';
+      }
+    });
+  }
+
   // Logout
   const doLogout = async () => {
     await sb.auth.signOut();

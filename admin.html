@@ -105,9 +105,16 @@
     <main class="admin-main">
       
       <!-- Page Header -->
-      <div class="admin-page-header">
-        <h2 id="page-title">Sanatçı Yönetimi</h2>
-        <p id="page-desc">Sanatçı hesaplarını yönetin, yeni sanatçı ekleyin</p>
+      <div class="admin-page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 id="page-title">Sanatçı Yönetimi</h2>
+          <p id="page-desc">Sanatçı hesaplarını yönetin, yeni sanatçı ekleyin</p>
+        </div>
+        <div>
+          <button id="btn-toggle-love" onclick="toggleLoveMode()" class="btn-admin" style="background:#333; border:1px solid #555; font-size:12px; padding:8px 12px; border-radius:8px;">
+            ❤️ Özel Animasyon: KAPALI
+          </button>
+        </div>
       </div>
 
       <!-- Stats Bar -->

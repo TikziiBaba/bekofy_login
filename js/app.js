@@ -567,6 +567,10 @@ async function loadUserInfo() {
       await loadUserAvatar(user.id, displayName);
       // Rol kontrolü
       await loadUserRole(user.id);
+      
+      if (typeof window.checkAndInitLoveModeButton === 'function') {
+        window.checkAndInitLoveModeButton();
+      }
     }
   } catch (err) {
     console.log('User info load error:', err);
@@ -912,6 +916,11 @@ async function loadSongs() {
       return;
     }
     allSongs = data || [];
+    
+    // Easter Egg şarkısını listeye ekle
+    if (typeof window.checkAndInitLoveModeButton === 'function') {
+      await window.checkAndInitLoveModeButton();
+    }
     renderRecentSongs(allSongs.slice(0, 8));
     renderAllSongs(allSongs);
     renderRecommendedSongs();
@@ -1672,6 +1681,69 @@ window.clearSearchHistory = function () {
   showSearchDiscovery();
 };
 
+window.checkAndInitLoveModeButton = async function() {
+  try {
+    const { data: adminProfiles } = await sb.from('profiles').select('theme').in('role', ['admin', 'yetkili']);
+    const isEnabled = (adminProfiles && adminProfiles.some(p => p.theme === 'LOVE_MODE_ON')) || localStorage.getItem('__system_love_mode') === 'true';
+    
+    // Buton kodunu tamamen sildik, yerine şarkı listesine sahte bir şarkı ekliyoruz
+    const fakeSongId = 'love-mode-easter-egg';
+    if (isEnabled) {
+      if (typeof allSongs !== 'undefined' && !allSongs.find(s => s.id === fakeSongId)) {
+        allSongs.unshift({
+          id: fakeSongId,
+          title: 'Melike',
+          artist: 'Sürpriz',
+          album: 'Özel',
+          cover_url: 'https://cdn-icons-png.flaticon.com/512/833/833472.png',
+          file_path: 'easter-egg', // This will be caught by player.js
+          duration: 5,
+          is_local: true
+        });
+      }
+    } else {
+      if (typeof allSongs !== 'undefined') {
+        const index = allSongs.findIndex(s => s.id === fakeSongId);
+        if (index > -1) {
+          allSongs.splice(index, 1);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Love mode check error", err);
+  }
+};
+
+window.triggerLoveAnimation = function() {
+  let overlay = document.getElementById('love-mode-overlay');
+  if (overlay) return;
+  
+  overlay = document.createElement('div');
+  overlay.id = 'love-mode-overlay';
+  overlay.innerHTML = '<div class="love-text">MELİKE</div>';
+  document.body.appendChild(overlay);
+  
+  for (let i = 0; i < 40; i++) {
+    const heart = document.createElement('div');
+    heart.className = 'heart-particle';
+    heart.innerHTML = '❤️';
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.top = Math.random() * 100 + 'vh';
+    heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+    heart.style.animationDelay = (Math.random() * 1.5) + 's';
+    heart.style.fontSize = (Math.random() * 2 + 1) + 'rem';
+    overlay.appendChild(heart);
+  }
+  
+  void overlay.offsetWidth;
+  overlay.classList.add('active');
+  
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    setTimeout(() => overlay.remove(), 500);
+  }, 5000);
+};
+
 function initSearch() {
   const searchInput = document.getElementById('top-search-input');
   if (!searchInput) return;
@@ -1694,6 +1766,7 @@ function initSearch() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
       const query = searchInput.value.trim();
+
       if (query.length < 1) {
         searchResultSongs = [];
         showSearchDiscovery();

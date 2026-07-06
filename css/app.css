@@ -3454,3 +3454,47 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overfl
   color: #f2f3f5;
   font-weight: 700;
 }
+
+/* Love Mode Easter Egg */
+#love-mode-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999999;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+#love-mode-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.love-text {
+  font-size: 8rem;
+  font-weight: 800;
+  color: #ff2a5f;
+  text-shadow: 0 0 20px #ff2a5f, 0 0 40px #ff2a5f;
+  animation: heartbeat 1s infinite alternate;
+  z-index: 2;
+  letter-spacing: 10px;
+}
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+.heart-particle {
+  position: absolute;
+  color: #ff2a5f;
+  font-size: 2rem;
+  animation: floatUp 3s ease-in-out forwards;
+  z-index: 1;
+}
+@keyframes floatUp {
+  0% { transform: translateY(100px) scale(0.5); opacity: 1; }
+  100% { transform: translateY(-100vh) scale(1.5) rotate(360deg); opacity: 0; }
+}

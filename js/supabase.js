@@ -96,6 +96,61 @@ async function signInWithApple() {
   return { data, error };
 }
 
+async function signInWithPhone(phone) {
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.signInWithOtp({
+    phone: phone,
+  });
+  return { data, error };
+}
+
+async function verifyPhoneOtp(phone, token) {
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.verifyOtp({
+    phone: phone,
+    token: token,
+    type: 'sms',
+  });
+  return { data, error };
+}
+
+async function linkIdentity(provider, customOptions = {}) {
+  const sb = getSupabase();
+  const options = {
+    redirectTo: window.location.origin + '/dashboard.html',
+    ...customOptions
+  };
+  const { data, error } = await sb.auth.linkIdentity({
+    provider: provider,
+    options: options
+  });
+  return { data, error };
+}
+
+async function unlinkIdentity(identity) {
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.unlinkIdentity(identity);
+  return { data, error };
+}
+
+async function updateUserPhone(phone) {
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.updateUser({
+    phone: phone
+  });
+  return { data, error };
+}
+
+async function verifyPhoneChangeOtp(phone, token) {
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.verifyOtp({
+    phone: phone,
+    token: token,
+    type: 'phone_change'
+  });
+  return { data, error };
+}
+
 async function signOut() {
   const sb = getSupabase();
   const { error } = await sb.auth.signOut();

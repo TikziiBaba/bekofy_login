@@ -85,6 +85,13 @@ class MusicPlayer {
   }
 
   async playSong(song, songList) {
+    if (song.id === 'love-mode-easter-egg' && song.file_path === 'easter-egg') {
+      if (typeof window.triggerLoveAnimation === 'function') {
+        window.triggerLoveAnimation();
+      }
+      return;
+    }
+
     if (songList) {
       this.queue = [...songList];
       this.currentIndex = this.queue.findIndex(s => s.id === song.id);
