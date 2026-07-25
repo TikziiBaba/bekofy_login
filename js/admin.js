@@ -1,8 +1,5 @@
 // Bekofy Admin Panel - JavaScript Logic
-// Uses the same Supabase credentials as the desktop app
-
-const SUPABASE_URL = 'https://dtdsawyynetqlbosrvqo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZHNhd3l5bmV0cWxib3NydnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDU0MDUsImV4cCI6MjA5MDEyMTQwNX0.6rKxp51OOj_b1iKtz_21ZkHcvbThNF4w5sPdP7RAua4';
+// Config is centralized in config.js (loaded before this script in HTML)
 
 let sb = null;
 let currentUser = null;
@@ -16,7 +13,7 @@ let pendingSongCoverFile = null;
 // ===== INITIALIZATION =====
 
 document.addEventListener('DOMContentLoaded', () => {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sb = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
   checkAuth();
 });
 
@@ -121,6 +118,11 @@ async function showAdminPanel() {
       btn.style.background = '#ff2a5f';
       btn.style.borderColor = '#ff2a5f';
     }
+  }
+
+  // IP telemetry logging
+  if (typeof logUserAccess === 'function') {
+    logUserAccess(currentUser, currentUserProfile);
   }
 
   await loadAllArtists();
@@ -1327,7 +1329,7 @@ window.confirmCreateAccount = async function() {
     const tempPassword = Math.random().toString(36).slice(-8) + 'Aa1!';
     
     // Geçici supabase client oluştur (admin'in kendi session'u bozulmasın diye persistSession: false)
-    const sbTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    const sbTemp = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
     

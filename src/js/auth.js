@@ -165,12 +165,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Google login
-  document.getElementById('btn-google-login').addEventListener('click', handleGoogleLogin);
-  document.getElementById('btn-google-register').addEventListener('click', handleGoogleLogin);
+  const btnGoogleLogin = document.getElementById('btn-google-login');
+  if (btnGoogleLogin) btnGoogleLogin.addEventListener('click', handleGoogleLogin);
+  
+  const btnGoogleReg = document.getElementById('btn-google-register');
+  if (btnGoogleReg) btnGoogleReg.addEventListener('click', handleGoogleLogin);
 
   // Apple login
-  document.getElementById('btn-apple-login').addEventListener('click', handleAppleLogin);
-  document.getElementById('btn-apple-register').addEventListener('click', handleAppleLogin);
+  const btnAppleLogin = document.getElementById('btn-apple-login');
+  if (btnAppleLogin) btnAppleLogin.addEventListener('click', handleAppleLogin);
+  
+  const btnAppleReg = document.getElementById('btn-apple-register');
+  if (btnAppleReg) btnAppleReg.addEventListener('click', handleAppleLogin);
 
   // Check existing session
   checkSession();
@@ -191,6 +197,8 @@ function setupPasswordToggle(toggleId, inputId) {
   const toggle = document.getElementById(toggleId);
   const input = document.getElementById(inputId);
   
+  if (!toggle || !input) return;
+
   toggle.addEventListener('click', () => {
     const isPassword = input.type === 'password';
     input.type = isPassword ? 'text' : 'password';

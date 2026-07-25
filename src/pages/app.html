@@ -6,9 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy</title>
   <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/profile.css">
+  <link rel="stylesheet" href="../css/admin-terminal.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
@@ -41,15 +43,20 @@
   <div class="top-bar" id="top-bar">
     <!-- Left: Home -->
     <div class="top-bar-left" style="display:flex;gap:8px;">
+      <!-- Ana Sayfa: Custom house icon with chimney and door -->
       <button class="top-nav-btn top-nav-home" id="btn-nav-home" title="Ana Sayfa" data-page="home">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path
-            d="M12.5 3.247a1 1 0 00-1 0L4 7.577V20h4.5v-6a1 1 0 011-1h5a1 1 0 011 1v6H20V7.577l-7.5-4.33zm-2-1.732a3 3 0 013 0l7.5 4.33a2 2 0 011 1.732V21a1 1 0 01-1 1h-6.5a1 1 0 01-1-1v-6h-3v6a1 1 0 01-1 1H3a1 1 0 01-1-1V7.577a2 2 0 011-1.732l7.5-4.33z" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <path d="M3 10.5L12 3l9 7.5"/>
+          <path d="M5 8.5V20a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1V8.5"/>
+          <rect x="9.5" y="14" width="5" height="7" rx="0.5"/>
         </svg>
       </button>
+      <!-- Keşfet: Custom compass icon -->
       <button class="top-nav-btn top-nav-new" id="btn-nav-new" title="Keşfet" data-page="new">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <circle cx="12" cy="12" r="9"/>
+          <polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88" fill="currentColor" opacity="0.8"/>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
         </svg>
       </button>
     </div>
@@ -57,9 +64,13 @@
     <!-- Center: Search Bar -->
     <div class="top-bar-center">
       <div class="top-search-wrapper">
-        <svg class="top-search-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M10.533 1.279c-5.18 0-9.407 4.14-9.407 9.279s4.226 9.279 9.407 9.279c2.234 0 4.29-.77 5.907-2.058l4.353 4.353a1 1 0 101.414-1.414l-4.344-4.344a9.157 9.157 0 002.077-5.816c0-5.14-4.226-9.28-9.407-9.28zm-7.407 9.279c0-4.006 3.302-7.28 7.407-7.28s7.407 3.274 7.407 7.28-3.302 7.279-7.407 7.279-7.407-3.273-7.407-7.28z" />
+        <!-- Search: Custom magnifier with music note inside -->
+        <svg class="top-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10.5" cy="10.5" r="7.5"/>
+          <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+          <path d="M8.5 11.5v-2.5h3v2.5" stroke-width="1.5"/>
+          <circle cx="8.5" cy="12" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="11.5" cy="12" r="1" fill="currentColor" stroke="none"/>
         </svg>
         <input type="text" id="top-search-input" placeholder="Ne dinlemek istiyorsun?" autocomplete="off">
       </div>
@@ -67,43 +78,67 @@
 
     <!-- Right: User Menu -->
     <div class="top-bar-right">
+      <!-- Yıllık Özet: Custom calendar with chart bars -->
       <button class="top-nav-btn" id="btn-top-wrapped" title="Yıllık Özet" data-page="wrapped">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path
-            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <rect x="3" y="4" width="18" height="17" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <rect x="7" y="13" width="2" height="4" rx="0.5" fill="currentColor" stroke="none"/>
+          <rect x="11" y="11" width="2" height="6" rx="0.5" fill="currentColor" stroke="none"/>
+          <rect x="15" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/>
         </svg>
       </button>
-      <button class="top-nav-btn top-nav-admin" id="btn-top-admin" title="Admin Paneli" data-page="admin"
-        style="display:none">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path
-            d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+      <!-- Admin Paneli: Custom shield with circuit pattern -->
+      <button class="top-nav-btn top-nav-admin" id="btn-top-admin" title="Admin Paneli" data-page="admin" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <path d="M12 2L4 5.5v6c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5v-6L12 2z"/>
+          <circle cx="12" cy="10" r="2.5" fill="currentColor" opacity="0.7" stroke="none"/>
+          <path d="M8 15.5c0-2.2 1.8-4 4-4s4 1.8 4 4" fill="currentColor" opacity="0.4" stroke="none"/>
         </svg>
       </button>
-      <button class="top-nav-btn top-nav-artist" id="btn-top-artist-upload" title="Şarkı Yükle"
-        data-page="artist-upload" style="display:none">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" />
+      <!-- Şarkı Yükle: Custom upload with waveform -->
+      <button class="top-nav-btn top-nav-artist" id="btn-top-artist-upload" title="Şarkı Yükle" data-page="artist-upload" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <path d="M12 3v11"/>
+          <polyline points="7.5 8 12 3 16.5 8"/>
+          <path d="M4 18h16"/>
+          <path d="M6 14v-3" stroke-width="2"/>
+          <path d="M9 14v-5" stroke-width="2"/>
+          <path d="M15 14v-5" stroke-width="2"/>
+          <path d="M18 14v-3" stroke-width="2"/>
         </svg>
       </button>
+      <!-- Premium: Custom diamond icon -->
       <button class="top-nav-btn top-nav-premium" id="btn-top-premium" title="Premium" data-page="premium">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <polygon
-            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-            fill="none" stroke="currentColor" stroke-width="2" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <polygon points="12 2 22 8 12 22 2 8" fill="none"/>
+          <polygon points="2 8 12 8 7 2" fill="currentColor" opacity="0.3" stroke="none"/>
+          <polygon points="22 8 12 8 17 2" fill="currentColor" opacity="0.5" stroke="none"/>
+          <polygon points="12 8 7 2 17 2" fill="currentColor" opacity="0.15" stroke="none"/>
+          <line x1="2" y1="8" x2="22" y2="8"/>
+          <line x1="7" y1="2" x2="12" y2="8"/>
+          <line x1="17" y1="2" x2="12" y2="8"/>
         </svg>
       </button>
+      <!-- Arkadaş Aktivitesi: Custom connected nodes social icon -->
       <button class="top-nav-btn" id="btn-top-friend-activity" title="Arkadaş Aktivitesi">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-          <path
-            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <circle cx="9" cy="7" r="3" fill="currentColor" opacity="0.2"/>
+          <circle cx="9" cy="7" r="3"/>
+          <circle cx="17" cy="9" r="2.5" fill="currentColor" opacity="0.15"/>
+          <circle cx="17" cy="9" r="2.5"/>
+          <path d="M1 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/>
+          <path d="M15.5 14.5c.8-.3 1.6-.5 2.5-.5 2.8 0 5 1.8 5 4"/>
         </svg>
       </button>
       <div class="top-user-btn" id="top-user-btn" title="Profil">
         <div class="top-user-avatar" id="top-user-avatar">
+          <!-- User avatar: Custom silhouette -->
           <svg viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            <ellipse cx="12" cy="8" rx="4.5" ry="5" opacity="0.9"/>
+            <path d="M3 21c0-4 4-7 9-7s9 3 9 7" opacity="0.85"/>
           </svg>
         </div>
       </div>
@@ -115,6 +150,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="brand">
+          <!-- Original Bekofy Logo -->
           <svg viewBox="0 0 48 48" fill="none" width="28" height="28" style="flex-shrink:0;">
             <circle cx="24" cy="24" r="22" fill="url(#sLogoGrad)" />
             <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round"
@@ -131,22 +167,13 @@
           <span class="logo-text">Kütüphane</span>
         </div>
         <button class="btn-collapse-sidebar" id="btn-collapse-sidebar" title="Daralt/Genişlet">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
+          <!-- Custom chevron-left panel icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <path d="M9 3v18" stroke-width="1.5" opacity="0.5"/>
+            <polyline points="14 8 11 12 14 16" stroke-width="2"/>
           </svg>
         </button>
-      </div>
-
-      <!-- Hidden nav items (for JS compatibility, not visible) -->
-      <div style="display:none">
-        <a href="#" class="nav-item active" data-page="home" id="nav-home"></a>
-        <a href="#" class="nav-item" data-page="new" id="nav-new"></a>
-        <a href="#" class="nav-item" data-page="search" id="nav-search"></a>
-        <a href="#" class="nav-item" data-page="library" id="nav-library"></a>
-        <a href="#" class="nav-item nav-wrapped" data-page="wrapped" id="nav-wrapped"></a>
-        <a href="#" class="nav-item nav-admin" data-page="admin" id="nav-admin"></a>
-        <a href="#" class="nav-item nav-artist-upload" data-page="artist-upload" id="nav-artist-upload"></a>
-        <a href="#" class="nav-item" data-page="premium" id="nav-premium"></a>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -155,8 +182,14 @@
         <div class="playlist-header">
           <span>Çalma Listeleri</span>
           <button class="btn-create-playlist" id="btn-create-playlist" title="Yeni Çalma Listesi">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" />
+            <!-- Custom add playlist icon: list with plus -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <line x1="3" y1="7" x2="13" y2="7"/>
+              <line x1="3" y1="12" x2="10" y2="12"/>
+              <line x1="3" y1="17" x2="8" y2="17"/>
+              <circle cx="19" cy="16" r="4"/>
+              <line x1="19" y1="13.5" x2="19" y2="18.5"/>
+              <line x1="16.5" y1="16" x2="21.5" y2="16"/>
             </svg>
           </button>
         </div>
@@ -171,9 +204,10 @@
       <!-- User Profile -->
       <div class="sidebar-user" id="sidebar-user">
         <div class="user-avatar" id="user-avatar">
+          <!-- Custom user icon: Rounded silhouette -->
           <svg viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            <ellipse cx="12" cy="8" rx="4.5" ry="5" opacity="0.9"/>
+            <path d="M3 21c0-4 4-7 9-7s9 3 9 7" opacity="0.85"/>
           </svg>
         </div>
         <div class="user-info">
@@ -191,9 +225,10 @@
       <div class="discord-popup-header">
         <div class="discord-popup-avatar-wrapper">
           <div class="discord-popup-avatar" id="discord-popup-avatar">
+            <!-- Custom: clean user silhouette -->
             <svg viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              <ellipse cx="12" cy="8" rx="4.5" ry="5" opacity="0.9"/>
+              <path d="M3 21c0-4 4-7 9-7s9 3 9 7" opacity="0.85"/>
             </svg>
           </div>
           <div class="discord-popup-status online"></div>
@@ -207,8 +242,9 @@
           <div class="discord-popup-section-title">Ne dinliyorsun?</div>
           <div class="discord-popup-activity" id="discord-popup-activity">
             <div class="discord-popup-activity-icon">
+              <!-- Custom: musical note icon -->
               <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                <path d="M9 18.5V6l12-2v3L11 9v9.5C10.4 18.2 9.7 18 9 18zM9 20c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/>
               </svg>
             </div>
             <div class="discord-popup-activity-info">
@@ -220,15 +256,21 @@
 
         <div class="discord-popup-menu">
           <button class="discord-popup-menu-item" id="btn-discord-edit-profile">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path
-                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+            <!-- Custom: pencil with sparkle -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
             <span>Profili Düzenle</span>
           </button>
           <button class="discord-popup-menu-item discord-danger" id="btn-discord-dnd">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z" />
+            <!-- Custom: bell-off icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <path d="M18.63 13A17.89 17.89 0 0 1 18 8"/>
+              <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/>
+              <path d="M18 8a6 6 0 0 0-9.33-5"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
             </svg>
             <span>Rahatsız Etmeyin</span>
           </button>
@@ -250,9 +292,12 @@
           </div>
 
           <button class="discord-popup-menu-item" id="btn-discord-copy-id">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path
-                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+            <!-- Custom: ID card / fingerprint icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+              <line x1="6" y1="15" x2="10" y2="15"/>
+              <line x1="14" y1="15" x2="18" y2="15"/>
             </svg>
             <span>Kullanıcı ID'sini Kopyala</span>
           </button>
@@ -779,122 +824,174 @@
             </div>
           </div>
         </section>
+
+        <!-- Terminal Management Section -->
+        <section class="section">
+          <h2 class="section-title">💻 Terminal Konsol & IP Günlükleri</h2>
+          <div id="app-terminal-mount"></div>
+        </section>
       </div>
 
       <!-- Profile Page -->
-      <div class="page premium-profile" id="page-profile">
-        <div class="premium-banner-wrapper" id="own-profile-banner-wrapper">
-          <img id="own-profile-banner-img" style="display:none;">
-          <div class="premium-banner-overlay"></div>
-
-          <div class="premium-profile-header">
-            <div class="premium-avatar-container">
-              <div class="premium-avatar" id="profile-avatar-large">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="64" height="64" opacity="0.3">
-                  <path
-                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+      <div class="page bekofy-profile" id="page-profile">
+        <!-- Hero Section with Banner -->
+        <div class="bekofy-profile-hero" id="own-profile-banner-wrapper">
+          <img id="own-profile-banner-img" style="display:none;" class="bekofy-profile-banner-img">
+          <div class="bekofy-profile-hero-overlay"></div>
+          
+          <div class="bekofy-profile-hero-content">
+            <div class="bekofy-avatar-wrapper">
+              <div class="bekofy-avatar" id="profile-avatar-large">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48" opacity="0.5">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 </svg>
               </div>
-              <button class="btn-premium-edit-avatar" id="btn-change-avatar" title="Fotoğraf Değiştir">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
-                </svg>
+              <div class="bekofy-avatar-actions">
+                <button class="bekofy-btn-icon" id="btn-change-avatar" title="Fotoğraf Değiştir">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                  </svg>
+                </button>
+                <button class="bekofy-btn-icon bekofy-btn-danger" id="btn-remove-avatar" style="display:none" title="Fotoğrafı Kaldır">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="bekofy-hero-info">
+              <div class="bekofy-hero-badge">PROFİLİM</div>
+              <h1 class="bekofy-hero-title" id="own-profile-title">Kullanıcı</h1>
+              
+              <div class="bekofy-hero-stats" id="own-profile-stats-container">
+                <div class="bekofy-stat">
+                  <span class="bekofy-stat-val" id="profile-stat-playlists">0</span>
+                  <span class="bekofy-stat-lbl">Çalma Listesi</span>
+                </div>
+                <div class="bekofy-stat">
+                  <span class="bekofy-stat-val" id="profile-stat-liked">0</span>
+                  <span class="bekofy-stat-lbl">Beğenilen</span>
+                </div>
+                <div class="bekofy-stat">
+                  <span class="bekofy-stat-val" id="profile-stat-followers">0</span>
+                  <span class="bekofy-stat-lbl">Takipçi</span>
+                </div>
+                <div class="bekofy-stat">
+                  <span class="bekofy-stat-val" id="profile-stat-following">0</span>
+                  <span class="bekofy-stat-lbl">Takip</span>
+                </div>
+              </div>
+
+              <div class="bekofy-banner-controls" id="profile-banner-field">
+                <button class="bekofy-btn-outline" id="btn-change-banner">Banner Değiştir</button>
+                <button class="bekofy-btn-outline danger" id="btn-remove-banner" style="display:none">Kaldır</button>
+                <div class="bekofy-banner-preview" id="banner-preview" style="display:none">
+                  <img id="banner-preview-img" alt="Banner">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bekofy-profile-body">
+          <div class="bekofy-glass-panel">
+            <div class="bekofy-panel-header">
+              <div class="bekofy-panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <h2 class="bekofy-panel-title">Profil Bilgileri</h2>
+            </div>
+            
+            <div class="bekofy-form-grid">
+              <div class="bekofy-input-group">
+                <label>Kullanıcı Adı</label>
+                <div class="bekofy-input-wrapper">
+                  <input type="text" id="profile-username" class="bekofy-input" placeholder="Kullanıcı adın">
+                  <div class="bekofy-input-glow"></div>
+                </div>
+              </div>
+              
+              <div class="bekofy-input-group">
+                <label>Email</label>
+                <div class="bekofy-input-wrapper">
+                  <input type="text" id="profile-email" class="bekofy-input" disabled>
+                </div>
+              </div>
+              
+              <div class="bekofy-input-group span-full">
+                <label>Biyografi</label>
+                <div class="bekofy-input-wrapper">
+                  <textarea id="profile-bio" class="bekofy-input" placeholder="Kendinden bahset..." rows="3"></textarea>
+                  <div class="bekofy-input-glow"></div>
+                </div>
+              </div>
+
+              <div class="bekofy-input-group">
+                <label>Rol</label>
+                <div class="bekofy-role-display" id="profile-role-display">Kullanıcı</div>
+              </div>
+              
+              <div class="bekofy-input-group">
+                <label>Hesap Tarihi</label>
+                <div class="bekofy-date-display" id="profile-date">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bekofy-glass-panel">
+            <div class="bekofy-panel-header">
+              <div class="bekofy-panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+              </div>
+              <h2 class="bekofy-panel-title">Kişiselleştirme</h2>
+            </div>
+            
+            <div class="bekofy-form-grid">
+              <div class="bekofy-input-group span-full" id="profile-frame-field">
+                <label>Avatar Çerçevesi</label>
+                <div class="bekofy-frame-selector" id="frame-selector">
+                  <div class="bekofy-frame-option active" data-frame="none" title="Yok">
+                    <span class="frame-name">Yok</span>
+                  </div>
+                  <div class="bekofy-frame-option" data-frame="gold" title="Altın">
+                    <span class="frame-icon">🥇</span>
+                    <span class="frame-name">Altın</span>
+                  </div>
+                  <div class="bekofy-frame-option" data-frame="rainbow" title="Gökkuşağı">
+                    <span class="frame-icon">🌈</span>
+                    <span class="frame-name">Gökkuşağı</span>
+                  </div>
+                  <div class="bekofy-frame-option" data-frame="pulse" title="Nabız">
+                    <span class="frame-icon">💚</span>
+                    <span class="frame-name">Nabız</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bekofy-panel-footer">
+              <button class="bekofy-btn-primary" id="btn-save-profile">
+                <span>Değişiklikleri Kaydet</span>
+                <div class="bekofy-btn-glow"></div>
               </button>
-              <button class="btn-premium-remove-avatar" id="btn-remove-avatar" style="display:none"
-                title="Fotoğrafı Kaldır">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-              </button>
             </div>
+          </div>
 
-            <div class="premium-profile-info">
-              <span class="premium-label">PROFİLİM</span>
-              <h1 class="premium-title" id="own-profile-title">Kullanıcı</h1>
-              <div class="premium-stats" id="own-profile-stats-container">
-                <div class="premium-stat-item">
-                  <span class="premium-stat-val" id="profile-stat-playlists">0</span>
-                  <span class="premium-stat-lbl">Çalma Listesi</span>
-                </div>
-                <div class="premium-stat-item">
-                  <span class="premium-stat-val" id="profile-stat-liked">0</span>
-                  <span class="premium-stat-lbl">Beğenilen</span>
-                </div>
-                <div class="premium-stat-item">
-                  <span class="premium-stat-val" id="profile-stat-followers">0</span>
-                  <span class="premium-stat-lbl">Takipçi</span>
-                </div>
-                <div class="premium-stat-item">
-                  <span class="premium-stat-val" id="profile-stat-following">0</span>
-                  <span class="premium-stat-lbl">Takip</span>
-                </div>
+          <div class="bekofy-glass-panel" id="profile-badges-section" style="display:none;">
+            <div class="bekofy-panel-header">
+              <div class="bekofy-panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
               </div>
-              <div class="premium-banner-actions" id="profile-banner-field">
-                <button class="btn-premium-outline" id="btn-change-banner">Banner Değiştir</button>
-                <button class="btn-premium-danger" id="btn-remove-banner" style="display:none">Kaldır</button>
-                <div class="banner-preview" id="banner-preview" style="display:none"><img id="banner-preview-img"
-                    alt="Banner"></div>
+              <h2 class="bekofy-panel-title">Rozetler</h2>
+            </div>
+            <div class="bekofy-badges-grid" id="profile-badges-grid">
+              <div class="loading-state">
+                <p>Yükleniyor...</p>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="premium-content-section premium-glass-card" style="margin-top: 40px;">
-          <h2 class="premium-section-title">Profil Bilgileri</h2>
-          <div class="premium-form-grid">
-            <div class="premium-form-group">
-              <label>Kullanıcı Adı</label>
-              <input type="text" id="profile-username" class="premium-input" placeholder="Kullanıcı adın">
-            </div>
-            <div class="premium-form-group">
-              <label>Email</label>
-              <input type="text" id="profile-email" class="premium-input" disabled>
-            </div>
-            <div class="premium-form-group full-width">
-              <label>Biyografi</label>
-              <textarea id="profile-bio" class="premium-input" placeholder="Kendinden bahset..." rows="3"></textarea>
-            </div>
-            <div class="premium-form-group">
-              <label>Rol</label>
-              <div class="premium-role-badge" id="profile-role-display">Kullanıcı</div>
-            </div>
-            <div class="premium-form-group">
-              <label>Hesap Tarihi</label>
-              <div class="premium-info-text" id="profile-date">-</div>
-            </div>
-          </div>
-
-          <div class="premium-divider"></div>
-
-          <h2 class="premium-section-title">Kişiselleştirme</h2>
-          <div class="premium-form-grid">
-
-            <div class="premium-form-group full-width" id="profile-frame-field">
-              <label>Avatar Çerçevesi</label>
-              <div class="frame-selector" id="frame-selector">
-                <div class="frame-option active" data-frame="none" title="Yok">Yok</div>
-                <div class="frame-option" data-frame="gold" title="Altın">🥇</div>
-                <div class="frame-option" data-frame="rainbow" title="Gökkuşağı">🌈</div>
-                <div class="frame-option" data-frame="pulse" title="Nabız">💚</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="premium-form-actions">
-            <button class="btn-premium-primary" id="btn-save-profile">Değişiklikleri Kaydet</button>
-          </div>
-        </div>
-
-        <div class="premium-content-section premium-glass-card" id="profile-badges-section"
-          style="display:none; margin-top: 24px; margin-bottom: 40px;">
-          <h2 class="premium-section-title">🏆 Rozetler</h2>
-          <div class="premium-badges-grid" id="profile-badges-grid">
-            <div class="loading-state" style="padding:12px">
-              <p style="font-size:13px;color:var(--tm)">Yükleniyor...</p>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <!-- Artist Upload Page -->
@@ -1262,8 +1359,12 @@
     <!-- Now Playing Info -->
     <div class="player-left">
       <div class="now-playing-cover" id="now-playing-cover">
+        <!-- Custom: vinyl record icon -->
         <svg viewBox="0 0 24 24" fill="currentColor" opacity="0.3" width="40" height="40">
-          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="4" fill="none" stroke="white" stroke-width="1.5" opacity="0.6"/>
+          <circle cx="12" cy="12" r="1.5" fill="white" opacity="0.8"/>
+          <path d="M12 2a10 10 0 0110 10" stroke="white" stroke-width="1.5" fill="none" opacity="0.4"/>
         </svg>
       </div>
       <div class="now-playing-info">
@@ -1271,9 +1372,11 @@
         <span class="now-playing-artist" id="now-playing-artist">—</span>
       </div>
       <button class="btn-like" id="btn-like" title="Beğen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        <!-- Custom: pulse/heart icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 8C3.5 5.5 5.5 3.5 8 3.5c1.5 0 2.8.7 3.7 1.8C12.6 4.2 14 3.5 15.5 3.5c2.5 0 4.5 2 4.5 4.5 0 4.5-7 11-8 12-1-1-8-7.5-8-12z"/>
+          <path d="M12 7v5" stroke-width="1.5" stroke="currentColor" opacity="0.4"/>
+          <path d="M9 12l3 3 3-3" stroke-width="1.5" stroke="currentColor" opacity="0.4"/>
         </svg>
       </button>
     </div>
@@ -1282,41 +1385,54 @@
     <div class="player-center">
       <div class="player-controls">
         <button class="btn-ctrl-sm" id="btn-shuffle" title="Karıştır">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path
-              d="M13.151 8.151l1.707-1.707a.5.5 0 000-.708L13.151 4.03a.5.5 0 00-.854.354v1.073a4.5 4.5 0 00-3.44-2.396L8.15 3H2.5a.5.5 0 000 1h5.297a3.5 3.5 0 013.5 3.5v.297l-.001.057v.697a.5.5 0 00.854.354l1.707-1.707a.5.5 0 000-.047zM2.5 12h5.297a3.5 3.5 0 003.5-3.5V8.203l.001-.057V7.45a.5.5 0 01.854-.354l1.707 1.707a.5.5 0 010 .708l-1.707 1.707a.5.5 0 01-.854-.354V9.79a4.5 4.5 0 01-3.44 2.148L8.15 12H2.5a.5.5 0 010-1z" />
+          <!-- Custom: two crossed arrows with dots -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"/>
+            <line x1="4" y1="20" x2="21" y2="3"/>
+            <polyline points="21 16 21 21 16 21"/>
+            <line x1="15" y1="15" x2="21" y2="21"/>
           </svg>
         </button>
         <button class="btn-ctrl-md" id="btn-prev" title="Önceki">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path
-              d="M3.3 1a.7.7 0 01.7.7v5.15l9.95-5.744a.7.7 0 011.05.606v12.575a.7.7 0 01-1.05.607L4 9.15v5.15a.7.7 0 01-1.4 0V1.7a.7.7 0 01.7-.7z" />
+          <!-- Custom: skip-back icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="19 20 9 12 19 4 19 20" fill="currentColor"/>
+            <line x1="5" y1="19" x2="5" y2="5"/>
           </svg>
         </button>
         <button class="btn-play-main" id="btn-play" title="Oynat">
-          <svg viewBox="0 0 16 16" fill="currentColor" id="icon-play">
-            <path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z" />
+          <!-- Custom: play icon with rounded corners -->
+          <svg viewBox="0 0 24 24" fill="currentColor" id="icon-play">
+            <path d="M7 4l14 8-14 8V4z" stroke="none" fill="currentColor"/>
           </svg>
-          <svg viewBox="0 0 16 16" fill="currentColor" id="icon-pause" style="display:none">
-            <path
-              d="M2.7 1a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7H2.7zm8 0a.7.7 0 00-.7.7v12.6a.7.7 0 00.7.7h2.6a.7.7 0 00.7-.7V1.7a.7.7 0 00-.7-.7h-2.6z" />
+          <!-- Custom: pause icon with gap -->
+          <svg viewBox="0 0 24 24" fill="currentColor" id="icon-pause" style="display:none">
+            <rect x="5" y="4" width="4" height="16" rx="1"/>
+            <rect x="15" y="4" width="4" height="16" rx="1"/>
           </svg>
         </button>
         <button class="btn-ctrl-md" id="btn-next" title="Sonraki">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path
-              d="M12.7 1a.7.7 0 00-.7.7v5.15L2.05 1.107A.7.7 0 001 1.713v12.575a.7.7 0 001.05.607L12 9.15v5.15a.7.7 0 001.4 0V1.7a.7.7 0 00-.7-.7z" />
+          <!-- Custom: skip-forward icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 4 15 12 5 20 5 4" fill="currentColor"/>
+            <line x1="19" y1="5" x2="19" y2="19"/>
           </svg>
         </button>
         <button class="btn-ctrl-sm" id="btn-repeat" title="Tekrarla">
-          <svg viewBox="0 0 16 16" fill="currentColor" class="icon-repeat-all">
-            <path
-              d="M0 4.75A3.75 3.75 0 013.75 1h8.5A3.75 3.75 0 0116 4.75v5a.75.75 0 01-1.5 0v-5A2.25 2.25 0 0012.25 2.5h-8.5A2.25 2.25 0 001.5 4.75v5A2.25 2.25 0 003.75 12H5v1.5H3.75A3.75 3.75 0 010 9.75v-5zm12.25 8.25H11V11.5h1.25a2.25 2.25 0 002.25-2.25.75.75 0 011.5 0A3.75 3.75 0 0112.25 13zM8 15l3-3H5l3 3z" />
+          <!-- Custom: loop arrows icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-repeat-all">
+            <polyline points="17 1 21 5 17 9"/>
+            <path d="M3 11V9a4 4 0 014-4h14"/>
+            <polyline points="7 23 3 19 7 15"/>
+            <path d="M21 13v2a4 4 0 01-4 4H3"/>
           </svg>
-          <svg viewBox="0 0 16 16" fill="currentColor" class="icon-repeat-one" style="display:none">
-            <path
-              d="M0 4.75A3.75 3.75 0 013.75 1h8.5A3.75 3.75 0 0116 4.75v5a.75.75 0 01-1.5 0v-5A2.25 2.25 0 0012.25 2.5h-8.5A2.25 2.25 0 001.5 4.75v5A2.25 2.25 0 003.75 12H5v1.5H3.75A3.75 3.75 0 010 9.75v-5zm12.25 8.25H11V11.5h1.25a2.25 2.25 0 002.25-2.25.75.75 0 011.5 0A3.75 3.75 0 0112.25 13zM8 15l3-3H5l3 3z" />
-            <path d="M7 6v5h1.5V6H7z" />
+          <!-- Repeat one: loop with 1 in middle -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-repeat-one" style="display:none">
+            <polyline points="17 1 21 5 17 9"/>
+            <path d="M3 11V9a4 4 0 014-4h14"/>
+            <polyline points="7 23 3 19 7 15"/>
+            <path d="M21 13v2a4 4 0 01-4 4H3"/>
+            <text x="12" y="13.5" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">1</text>
           </svg>
         </button>
       </div>
@@ -1333,28 +1449,35 @@
     <!-- Volume & Extra Controls -->
     <div class="player-right">
       <button class="btn-ctrl-sm btn-jam" id="btn-jam" title="Jam - Birlikte Dinle">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-          <path
-            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+        <!-- Custom Jam icon (Two overlapping silhouettes) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+          <path d="M16 21v-2a4 4 0 00-8 0v2"/>
+          <circle cx="12" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
         </svg>
       </button>
       <button class="btn-ctrl-sm" id="btn-mini-player" title="Mini Oynatıcı">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-          <path
-            d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z" />
+        <!-- Custom Mini Player icon (Picture in picture) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <rect x="13" y="12" width="6" height="6" rx="1" fill="currentColor"/>
         </svg>
       </button>
       <button class="btn-ctrl-sm" id="btn-queue" title="Sıra">
-        <svg viewBox="0 0 16 16" fill="currentColor">
-          <path
-            d="M15 15H1v-1.5h14V15zm0-4.5H1V9h14v1.5zm-14-7A2.5 2.5 0 013.5 1h9A2.5 2.5 0 0115 3.5v.005A2.5 2.5 0 0112.5 6h-9A2.5 2.5 0 011 3.505V3.5z" />
+        <!-- Custom Queue icon (Lines with play arrow) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="12" y1="18" x2="21" y2="18"/>
+          <polygon points="3,16 8,19 3,22" fill="currentColor" stroke="none"/>
         </svg>
       </button>
       <div class="sleep-timer-wrapper">
         <button class="btn-ctrl-sm" id="btn-sleep-timer" title="Uyku Zamanlayıcı">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
+          <!-- Custom Sleep Timer icon (Crescent Moon) -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
           </svg>
         </button>
         <span class="sleep-timer-badge" id="sleep-timer-badge" style="display:none"></span>
@@ -1369,9 +1492,11 @@
         </div>
       </div>
       <button class="btn-ctrl-sm" id="btn-volume-icon" title="Ses">
-        <svg viewBox="0 0 16 16" fill="currentColor" id="volume-icon">
-          <path
-            d="M9.741.85a.75.75 0 01.375.65v13a.75.75 0 01-1.125.65L4.382 12.5H2.25A1.25 1.25 0 011 11.25v-6.5A1.25 1.25 0 012.25 3.5h2.132l4.609-2.65a.75.75 0 01.75 0zm1.826 3.254a.75.75 0 011.06.007A4.48 4.48 0 0114 8a4.48 4.48 0 01-1.372 3.236.75.75 0 11-1.054-1.068A2.98 2.98 0 0012.5 8a2.98 2.98 0 00-.926-2.168.75.75 0 01.007-1.06z" />
+        <!-- Custom Volume icon (Speaker with waves) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" id="volume-icon">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 010 7.07"/>
+          <path d="M19.07 4.93a10 10 0 010 14.14"/>
         </svg>
       </button>
       <div class="volume-slider-wrapper">
@@ -2039,7 +2164,94 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== Admin User Profile Modal ===== -->
+  <div class="admin-user-modal-overlay" id="admin-user-modal" style="display:none;" onclick="if(event.target===this)closeAdminUserModal()">
+    <div class="admin-user-modal-box" id="admin-user-modal-box">
+      <button class="admin-user-modal-close" onclick="closeAdminUserModal()" title="Kapat">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+
+      <!-- Header Banner -->
+      <div class="admin-user-modal-banner" id="aum-banner"></div>
+
+      <!-- Avatar -->
+      <div class="admin-user-modal-avatar-wrap">
+        <div class="admin-user-modal-avatar" id="aum-avatar"></div>
+        <div class="admin-user-modal-role-badge" id="aum-role-badge"></div>
+      </div>
+
+      <!-- Body -->
+      <div class="admin-user-modal-body">
+        <!-- Admin badge -->
+        <div class="admin-user-modal-admin-label">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          Admin Görünümü
+        </div>
+
+        <!-- Username edit -->
+        <div class="admin-user-modal-field">
+          <label>Kullanıcı Adı</label>
+          <div class="admin-user-modal-input-row">
+            <input type="text" id="aum-username-input" class="admin-user-modal-input" maxlength="32" placeholder="Kullanıcı adı...">
+            <button class="aum-btn aum-btn-save" id="aum-save-username">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              Kaydet
+            </button>
+          </div>
+        </div>
+
+        <!-- Role selector -->
+        <div class="admin-user-modal-field">
+          <label>Rol</label>
+          <select class="admin-user-modal-select" id="aum-role-select">
+            <option value="user">👤 Kullanıcı</option>
+            <option value="premium">⭐ Premium</option>
+            <option value="artist">🎤 Sanatçı</option>
+            <option value="yetkili">🛡️ Yetkili</option>
+            <option value="admin">👑 Admin</option>
+          </select>
+        </div>
+
+        <!-- User ID (read-only info) -->
+        <div class="admin-user-modal-field">
+          <label>Kullanıcı ID</label>
+          <div class="admin-user-modal-id" id="aum-user-id">-</div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="admin-user-modal-stats" id="aum-stats">
+          <div class="aum-stat">
+            <span class="aum-stat-value" id="aum-stat-joined">-</span>
+            <span class="aum-stat-label">Katılım</span>
+          </div>
+          <div class="aum-stat">
+            <span class="aum-stat-value" id="aum-stat-ban">Normal</span>
+            <span class="aum-stat-label">Durum</span>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="admin-user-modal-actions">
+          <button class="aum-btn aum-btn-danger-outline" id="aum-remove-avatar">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Avatar Kaldır
+          </button>
+          <button class="aum-btn aum-btn-ban" id="aum-ban-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
+            <span id="aum-ban-text">Banla</span>
+          </button>
+          <button class="aum-btn aum-btn-danger" id="aum-delete-user">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Hesabı Sil
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/config.js"></script>
   <script src="../js/supabase.js"></script>
+  <script src="../js/admin-terminal.js"></script>
   <script src="../js/player.js"></script>
   <script src="../js/app.js"></script>
 

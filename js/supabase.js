@@ -1,18 +1,13 @@
 // Supabase Client Initialization
-// NOTE: In Electron, we load the Supabase JS from a CDN in HTML,
-// or we can bundle it. For simplicity, we'll use the global supabase from CDN.
-
-const SUPABASE_URL = 'https://dtdsawyynetqlbosrvqo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZHNhd3l5bmV0cWxib3NydnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDU0MDUsImV4cCI6MjA5MDEyMTQwNX0.6rKxp51OOj_b1iKtz_21ZkHcvbThNF4w5sPdP7RAua4';
-
+// Config is centralized in config.js (loaded before this script in HTML)
 let supabaseClient = null;
 
 function getSupabase() {
   if (!supabaseClient) {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseClient = supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
     } else {
-      console.error('Supabase JS library not loaded!');
+      console.error('[Bekofy] Supabase JS library not loaded!');
     }
   }
   return supabaseClient;
@@ -23,7 +18,7 @@ function getSupabase() {
 async function signUpWithEmail(email, password, username) {
   const sb = getSupabase();
   const maxRetries = 3;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const { data, error } = await sb.auth.signUp({
       email,
@@ -32,8 +27,8 @@ async function signUpWithEmail(email, password, username) {
         data: { username }
       }
     });
-    
-    // Retry on transient network/timeout errors
+
+    // Retry on transient network/timeout errorsSS
     if (error && (error.name === 'AuthRetryableFetchError' || error.status === 504 || error.status === 502 || error.status === 503)) {
       console.warn(`signUp attempt ${attempt}/${maxRetries} failed (${error.status || error.name}), retrying...`);
       if (attempt < maxRetries) {
@@ -42,7 +37,7 @@ async function signUpWithEmail(email, password, username) {
       }
       return { data: null, error };
     }
-    
+
     if (data?.user && data.user.identities && data.user.identities.length === 0) {
       // Fake success returned by Supabase when email is already registered and confirmations are enabled
       return { data: null, error: { message: 'Bu e-posta adresi zaten kullanımda.' } };
@@ -61,7 +56,7 @@ async function signUpWithEmail(email, password, username) {
 
     return { data, error };
   }
-  
+
   return { data: null, error: { message: 'Sunucu yanıt vermiyor. Lütfen daha sonra tekrar deneyin.', status: 504 } };
 }
 
@@ -171,13 +166,78 @@ async function getSession() {
 
 // ===== Songs Functions =====
 
+async function fetchApprovedSongs() {
+  const sb = getSupabase();
+  if (!sb) return { data: [], error: new Error('Supabase client not initialized') };
+  try {
+    const { data, error } = await sb
+      .from('songs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    return { data: data || [], error };
+  } catch (err) {
+    console.error('fetchApprovedSongs error:', err);
+    return { data: [], error: err };
+  }
+}
+
 async function fetchAllSongs() {
   const sb = getSupabase();
-  const { data, error } = await sb
-    .from('songs')
-    .select('*')
-    .order('created_at', { ascending: false });
-  return { data, error };
+  if (!sb) return { data: [], error: new Error('Supabase client not initialized') };
+  try {
+    const { data, error } = await sb
+      .from('songs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    return { data: data || [], error };
+  } catch (err) {
+    console.error('fetchAllSongs error:', err);
+    return { data: [], error: err };
+  }
+}
+
+async function fetchNewReleases(limit = 10) {
+  const sb = getSupabase();
+  if (!sb) return { data: [], error: null };
+  try {
+    const { data, error } = await sb
+      .from('songs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    return { data: data || [], error };
+  } catch (err) {
+    return { data: [], error: err };
+  }
+}
+
+async function fetchLikedSongs(userId) {
+  const sb = getSupabase();
+  if (!sb) return { data: [], error: null };
+  try {
+    const { data, error } = await sb
+      .from('user_likes')
+      .select('song_id')
+      .eq('user_id', userId);
+    return { data: data || [], error };
+  } catch (err) {
+    return { data: [], error: err };
+  }
+}
+
+function subscribeToSongs(callback) {
+  try {
+    const sb = getSupabase();
+    if (!sb || !sb.channel) return null;
+    return sb.channel('public:songs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'songs' }, payload => {
+        if (typeof callback === 'function') callback(payload);
+      })
+      .subscribe();
+  } catch (err) {
+    console.warn('[Supabase] Songs subscription error:', err);
+    return null;
+  }
 }
 
 async function searchSongs(query) {
@@ -207,14 +267,14 @@ async function getSongUrl(filePath) {
 
 async function fetchUserPlaylists(userId) {
   const sb = getSupabase();
-  
+
   // Fetch owned playlists
   const { data: ownedData, error: ownedError } = await sb
     .from('playlists')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
-    
+
   if (ownedError) return { data: null, error: ownedError };
 
   // Fetch collaborated playlists
@@ -222,7 +282,7 @@ async function fetchUserPlaylists(userId) {
     .from('playlist_collaborators')
     .select('playlist_id')
     .eq('user_id', userId);
-    
+
   let allPlaylists = [...(ownedData || [])];
 
   if (!collabError && collabData && collabData.length > 0) {
@@ -231,7 +291,7 @@ async function fetchUserPlaylists(userId) {
       .from('playlists')
       .select('*')
       .in('id', playlistIds);
-      
+
     if (collabPlaylists) {
       allPlaylists = [...allPlaylists, ...collabPlaylists];
     }
@@ -383,13 +443,13 @@ async function fetchAllProfiles() {
 
 async function getDashboardStats() {
   const sb = getSupabase();
-  
+
   const [profilesRes, songsRes, playlistsRes] = await Promise.all([
     sb.from('profiles').select('id', { count: 'exact', head: true }),
     sb.from('songs').select('id', { count: 'exact', head: true }),
     sb.from('playlists').select('id', { count: 'exact', head: true }),
   ]);
-  
+
   return {
     users: profilesRes.count || 0,
     songs: songsRes.count || 0,
@@ -524,7 +584,7 @@ async function searchPublicPlaylists(query) {
     .ilike('name', `%${query}%`)
     .order('created_at', { ascending: false })
     .limit(20);
-    
+
   if (data) {
     data.forEach(p => {
       if (p.profiles && p.profiles.role === 'user') {
@@ -548,7 +608,7 @@ async function searchUsers(query) {
     .neq('id', user.id)
     .ilike('username', `%${query}%`)
     .limit(20);
-  
+
   // Search artists table separately with try/catch
   let artistsData = [];
   try {
@@ -560,9 +620,9 @@ async function searchUsers(query) {
   } catch (e) {
     console.log('Artists search error:', e);
   }
-  
+
   const profileUsers = profilesRes.data || [];
-  
+
   // Add artists from artists table (that aren't already in profiles results)
   const profileNames = new Set(profileUsers.map(p => (p.username || '').toLowerCase()));
   const artistUsers = artistsData
@@ -574,7 +634,7 @@ async function searchUsers(query) {
       role: 'artist',
       is_banned: false
     }));
-  
+
   return { data: [...profileUsers, ...artistUsers], error: profilesRes.error };
 }
 
@@ -586,7 +646,7 @@ async function addFriend(friendId) {
   const { data, error } = await sb
     .from('friendships')
     .insert([{ user_id: user.id, friend_id: friendId, status: 'accepted' }]);
-    
+
   return { data, error };
 }
 
@@ -600,7 +660,7 @@ async function removeFriend(friendId) {
     .delete()
     .eq('user_id', user.id)
     .eq('friend_id', friendId);
-    
+
   return { data, error };
 }
 
@@ -608,11 +668,11 @@ async function removeFriend(friendId) {
 
 async function fetchUserPublicProfile(userId) {
   const sb = getSupabase();
-  
+
   // Check if blocked first
   const isBlocked = await checkIfBlockedInternal(userId);
   if (isBlocked) return { data: null, error: { message: 'Bu profil bulunamadı veya gizli.' } };
-  
+
   // Fetch profile
   let profile, profileError;
   const res1 = await sb
@@ -633,39 +693,39 @@ async function fetchUserPublicProfile(userId) {
     profile = res1.data;
     profileError = res1.error;
   }
-    
+
   if (profileError) return { data: null, error: profileError };
-  
+
   if (profile && profile.role === 'user') {
     profile.avatar_frame = 'none';
     profile.banner_url = null;
   }
-  
+
   // Fetch followers count
   const { count: followersCount } = await sb
     .from('friendships')
     .select('*', { count: 'exact', head: true })
     .eq('friend_id', userId)
     .eq('status', 'accepted');
-    
+
   // Fetch public playlists count
   const { count: playlistsCount } = await sb
     .from('playlists')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('is_public', true);
-    
+
   // Check friendship status
   const isFriend = await checkFriendshipInternal(userId);
-    
-  return { 
-    data: { 
-      ...profile, 
+
+  return {
+    data: {
+      ...profile,
       followers_count: followersCount || 0,
       playlists_count: playlistsCount || 0,
       is_following: isFriend
-    }, 
-    error: null 
+    },
+    error: null
   };
 }
 
@@ -681,7 +741,7 @@ async function blockUser(blockedId) {
   const { data, error } = await sb
     .from('blocked_users')
     .insert([{ user_id: user.id, blocked_id: blockedId }]);
-    
+
   return { data, error };
 }
 
@@ -695,7 +755,7 @@ async function unblockUser(blockedId) {
     .delete()
     .eq('user_id', user.id)
     .eq('blocked_id', blockedId);
-    
+
   return { data, error };
 }
 
@@ -735,20 +795,20 @@ async function checkFriendshipInternal(targetUserId) {
 async function uploadPlaylistCover(playlistId, file) {
   const sb = getSupabase();
   const ext = file.name.split('.').pop().toLowerCase();
-  
+
   // Validate file type
   const allowedTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
   if (!allowedTypes.includes(ext)) {
     return { data: null, error: { message: 'Desteklenmeyen dosya format. (jpg, png, webp, gif)' } };
   }
-  
+
   // Get current user's ID for storage policy compatibility
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return { data: null, error: { message: 'Oturum bulunamad.' } };
-  
+
   // Use user's folder in avatars bucket (same pattern as avatar upload which works)
   const fileName = user.id + '/playlist_cover_' + playlistId + '.' + ext;
-  
+
   try {
     // First, try to remove old cover files for this playlist to avoid accumulation
     try {
@@ -762,34 +822,34 @@ async function uploadPlaylistCover(playlistId, file) {
     } catch (cleanErr) {
       console.log('Old cover cleanup skipped:', cleanErr);
     }
-    
+
     const { error: uploadError } = await sb.storage
       .from('avatars')
-      .upload(fileName, file, { 
+      .upload(fileName, file, {
         upsert: true,
         contentType: file.type || 'image/' + ext,
         cacheControl: '3600'
       });
-      
+
     if (uploadError) {
       console.error('Cover upload error:', JSON.stringify(uploadError));
       return { data: null, error: uploadError };
     }
-    
+
     const { data: urlData } = sb.storage
       .from('avatars')
       .getPublicUrl(fileName);
-    
+
     // Add cache-busting timestamp
     const coverUrl = urlData.publicUrl + '?t=' + Date.now();
-    
+
     // Update the playlist record with the new cover URL
     const { error: updateError } = await sb.from('playlists').update({ cover_url: coverUrl }).eq('id', playlistId);
     if (updateError) {
       console.error('Playlist cover_url update error:', updateError);
       // Still return the URL since upload succeeded
     }
-    
+
     return { data: coverUrl, error: null };
   } catch (err) {
     console.error('Cover upload exception:', err);
@@ -811,12 +871,12 @@ async function getPlaylistCollaborators(playlistId) {
     `)
     .eq('playlist_id', playlistId)
     .order('added_at', { ascending: true });
-    
+
   if (error) {
     console.error('getPlaylistCollaborators error:', error);
     return [];
   }
-  
+
   if (data) {
     data.forEach(c => {
       if (c.profiles && c.profiles.role === 'user') {
@@ -830,18 +890,18 @@ async function getPlaylistCollaborators(playlistId) {
 async function addPlaylistCollaborator(playlistId, username) {
   const sb = getSupabase();
   if (!sb) return { error: 'Veritabanı bağlantısı yok' };
-  
+
   // 1. Find user by username
   const { data: users, error: userError } = await sb
     .from('profiles')
     .select('id')
     .eq('username', username)
     .single();
-    
+
   if (userError || !users) {
     return { error: 'Kullanıcı bulunamadı.' };
   }
-  
+
   // 2. Add to collaborators
   const { error: insertError } = await sb
     .from('playlist_collaborators')
@@ -849,27 +909,27 @@ async function addPlaylistCollaborator(playlistId, username) {
       playlist_id: playlistId,
       user_id: users.id
     }]);
-    
+
   if (insertError) {
     if (insertError.code === '23505') { // Unique violation
       return { error: 'Bu kullanıcı zaten listeye ortak.' };
     }
     return { error: 'Ortak eklenirken bir hata oluştu: ' + insertError.message };
   }
-  
+
   return { success: true };
 }
 
 async function removePlaylistCollaborator(playlistId, userId) {
   const sb = getSupabase();
   if (!sb) return { error: 'Veritabanı bağlantısı yok' };
-  
+
   const { error } = await sb
     .from('playlist_collaborators')
     .delete()
     .eq('playlist_id', playlistId)
     .eq('user_id', userId);
-    
+
   if (error) {
     return { error: 'Ortak silinirken hata oluştu: ' + error.message };
   }
@@ -890,44 +950,44 @@ async function getRecommendedSongs(userId, allSongs, likedSongIds) {
   // 1. Beğenilen şarkıların sanatçılarını bul
   // 2. Bu sanatçıların beğenilmemiş şarkılarını öner
   // 3. Yeterli değilse rastgele şarkılar ekle
-  
+
   const likedSongs = allSongs.filter(s => likedSongIds.has(s.id));
   const likedArtists = new Set(likedSongs.map(s => s.artist?.toLowerCase()));
   const likedAlbums = new Set(likedSongs.filter(s => s.album).map(s => s.album?.toLowerCase()));
-  
+
   let recommended = [];
-  
+
   // Beğenilen sanatçıların diğer şarkıları
   if (likedArtists.size > 0) {
-    const artistMatches = allSongs.filter(s => 
-      !likedSongIds.has(s.id) && 
+    const artistMatches = allSongs.filter(s =>
+      !likedSongIds.has(s.id) &&
       likedArtists.has(s.artist?.toLowerCase())
     );
     recommended.push(...artistMatches);
   }
-  
+
   // Beğenilen albümlerin diğer şarkıları
   if (likedAlbums.size > 0) {
-    const albumMatches = allSongs.filter(s => 
-      !likedSongIds.has(s.id) && 
+    const albumMatches = allSongs.filter(s =>
+      !likedSongIds.has(s.id) &&
       !recommended.find(r => r.id === s.id) &&
       s.album && likedAlbums.has(s.album.toLowerCase())
     );
     recommended.push(...albumMatches);
   }
-  
+
   // Karıştır
   recommended = recommended.sort(() => Math.random() - 0.5);
-  
+
   // Yeterli değilse, hiç beğenilmemiş rastgele şarkılar ekle
   if (recommended.length < 8) {
-    const remaining = allSongs.filter(s => 
-      !likedSongIds.has(s.id) && 
+    const remaining = allSongs.filter(s =>
+      !likedSongIds.has(s.id) &&
       !recommended.find(r => r.id === s.id)
     ).sort(() => Math.random() - 0.5);
     recommended.push(...remaining.slice(0, 8 - recommended.length));
   }
-  
+
   return recommended.slice(0, 8);
 }
 
@@ -1020,6 +1080,119 @@ async function adminDeleteUser(userId) {
   return { error: profileError };
 }
 
+// ===== User Access & IP Telemetry Logging =====
+
+async function logUserAccess(user = null, profile = null) {
+  try {
+    const sb = getSupabase();
+    if (!sb) return;
+
+    const uId = user?.id || profile?.id || window.currentUserProfile?.id || null;
+    const uName = profile?.username || window.currentUserProfile?.username || user?.email?.split('@')[0] || 'Misafir';
+
+    const uAgent = navigator.userAgent || 'Bilinmiyor';
+    const screenRes = typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : 'Bilinmiyor';
+    const lang = navigator.language || 'tr-TR';
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const platform = navigator.platform || 'Bilinmiyor';
+
+    let ipAddress = 'Bilinmiyor';
+    let city = 'Bilinmiyor';
+    let country = 'Bilinmiyor';
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const geo = await res.json();
+        ipAddress = geo.ip || ipAddress;
+        city = geo.city || city;
+        country = geo.country_name || country;
+      }
+    } catch (e) {
+      try {
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
+        const res2 = await fetch('https://api.ipify.org?format=json', { signal: controller2.signal });
+        clearTimeout(timeoutId2);
+        if (res2.ok) {
+          const ipData = await res2.json();
+          ipAddress = ipData.ip || ipAddress;
+        }
+      } catch (err) {}
+    }
+
+    await sb.from('user_access_logs').insert({
+      user_id: uId,
+      username: uName,
+      ip_address: ipAddress,
+      user_agent: uAgent,
+      device_info: platform,
+      screen_res: screenRes,
+      language: lang,
+      timezone: tz,
+      city: city,
+      country: country
+    });
+
+    if (uId) {
+      await sb.from('profiles').update({
+        last_ip: ipAddress,
+        last_login_at: new Date().toISOString()
+      }).eq('id', uId);
+    }
+  } catch (err) {
+    console.warn('[Telemetry] Log kaydedilemedi:', err.message);
+  }
+}
+
+async function getUserAccessLogs(limit = 50) {
+  const sb = getSupabase();
+  if (!sb) return { data: [], error: 'Veritabanı yok' };
+  const { data, error } = await sb
+    .from('user_access_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return { data: data || [], error };
+}
+
+async function getLogsForUser(userIdOrUsername, limit = 30) {
+  const sb = getSupabase();
+  if (!sb) return { data: [], error: 'Veritabanı yok' };
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdOrUsername);
+
+  let query = sb.from('user_access_logs').select('*').order('created_at', { ascending: false }).limit(limit);
+
+  if (isUuid) {
+    query = query.eq('user_id', userIdOrUsername);
+  } else {
+    query = query.ilike('username', userIdOrUsername);
+  }
+
+  const { data, error } = await query;
+  return { data: data || [], error };
+}
+
+async function findUserByIdOrUsername(searchTerm) {
+  const sb = getSupabase();
+  if (!sb) return { profile: null, error: 'Veritabanı yok' };
+
+  const term = searchTerm.trim();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(term);
+
+  if (isUuid) {
+    const { data: byId } = await sb.from('profiles').select('*').eq('id', term).maybeSingle();
+    if (byId) return { profile: byId, error: null };
+  }
+
+  const { data: byName, error } = await sb.from('profiles').select('*').ilike('username', term).maybeSingle();
+  return { profile: byName, error };
+}
+
 // ===== Friend System =====
 
 async function sendFriendRequest(userId, friendId) {
@@ -1059,14 +1232,14 @@ async function fetchFriends(userId) {
     .select('*, profiles!friendships_friend_id_fkey(id, username, avatar_url, avatar_frame, role)')
     .eq('user_id', userId)
     .eq('status', 'accepted');
-  
+
   // Also fetch where user is friend_id
   const { data: data2 } = await sb
     .from('friendships')
     .select('*, profiles!friendships_user_id_fkey(id, username, avatar_url, avatar_frame, role)')
     .eq('friend_id', userId)
     .eq('status', 'accepted');
-  
+
   return { data: [...(data || []), ...(data2 || [])], error };
 }
 
@@ -1087,13 +1260,13 @@ async function fetchFollowedArtists(userId) {
     .select('*, profiles!friendships_friend_id_fkey(id, username, avatar_url, avatar_frame, role)')
     .eq('user_id', userId)
     .eq('status', 'accepted');
-    
+
   if (error || !data) return { data: [], error };
-  
+
   const artists = data
     .map(f => f.profiles)
     .filter(p => p && p.role === 'artist');
-    
+
   return { data: artists, error: null };
 }
 
@@ -1115,21 +1288,21 @@ async function getArtistProfiles() {
     sb.from('profiles').select('id, username, avatar_url, avatar_frame, role').eq('role', 'artist'),
     sb.from('artists').select('id, name, avatar_url').catch(() => ({ data: [], error: null }))
   ]);
-  
+
   const profileArtists = (profilesRes.data || []).map(p => ({
     id: p.id,
     name: p.username,
     avatar_url: p.avatar_url,
     source: 'profiles'
   }));
-  
+
   const tableArtists = (artistsRes.data || []).map(a => ({
     id: a.id,
     name: a.name,
     avatar_url: a.avatar_url,
     source: 'artists'
   }));
-  
+
   // Merge: avoid duplicates by name (case-insensitive)
   const seen = new Set();
   const merged = [];
@@ -1140,7 +1313,7 @@ async function getArtistProfiles() {
       merged.push(a);
     }
   }
-  
+
   return { data: merged, error: profilesRes.error };
 }
 
@@ -1153,32 +1326,33 @@ async function getArtistByName(artistName) {
     .eq('role', 'artist')
     .ilike('username', artistName)
     .maybeSingle();
-  
+
   if (profileData) {
     return { id: profileData.id, name: profileData.username, avatar_url: profileData.avatar_url, bio: profileData.bio, source: 'profiles' };
   }
-  
+
   // Try artists table
   const { data: artistData } = await sb
     .from('artists')
     .select('id, name, avatar_url')
     .ilike('name', artistName)
     .maybeSingle();
-  
+
   if (artistData) {
     return { id: artistData.id, name: artistData.name, avatar_url: artistData.avatar_url, bio: null, source: 'artists' };
   }
-  
+
   return null;
 }
 
 async function getSongsByArtist(artistName) {
+  if (!artistName) return { data: [], error: null };
   const sb = getSupabase();
-  // Search for exact match or as part of multi-artist (comma separated)
+  const safeName = artistName.trim();
   const { data, error } = await sb
     .from('songs')
     .select('*')
-    .or(`artist.ilike.${artistName},artist.ilike.%${artistName}%`)
+    .ilike('artist', `%${safeName}%`)
     .order('created_at', { ascending: false });
   return { data: data || [], error };
 }
@@ -1510,20 +1684,20 @@ let _friendActivityChannel = null;
 
 function subscribeToFriendActivity(friendIds, onUpdate) {
   const sb = getSupabase();
-  
+
   if (_friendActivityChannel) {
     sb.removeChannel(_friendActivityChannel);
   }
-  
+
   if (!friendIds || friendIds.length === 0) return;
 
   // We construct a filter string to listen only to friends
   const filterString = `id=in.(${friendIds.join(',')})`;
 
   _friendActivityChannel = sb.channel('public:profiles_activity')
-    .on('postgres_changes', { 
-      event: 'UPDATE', 
-      schema: 'public', 
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
       table: 'profiles',
       filter: filterString
     }, (payload) => {

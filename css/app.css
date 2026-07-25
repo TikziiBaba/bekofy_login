@@ -586,7 +586,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overfl
 .cover-upload-label svg{flex-shrink:0}
 .cover-preview{position:relative;width:120px;height:120px;border-radius:var(--r);overflow:hidden;border:2px solid var(--border);cursor:pointer}
 .cover-preview img{width:100%;height:100%;object-fit:cover;transition:var(--t)}
-.cover-preview::after{content:'Değiştir';position:absolute;inset:0;background:rgba(0,0,0,0.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;opacity:0;transition:var(--t);pointer-events:none}
+.cover-preview::after{content:'De─şi┼ştir';position:absolute;inset:0;background:rgba(0,0,0,0.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;opacity:0;transition:var(--t);pointer-events:none}
 .cover-preview:hover::after{opacity:1}
 .cover-remove-btn{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);z-index:2}
 .cover-remove-btn:hover{background:rgba(255,68,68,.8)}
@@ -609,7 +609,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overfl
 .btn-preview-song svg{margin-left:1px}
 
 /* ===== Verified Tick ===== */
-.verified-tick{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:rgba(29,185,84,0.15);color:var(--green);border-radius:50%;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle;line-height:1;flex-shrink:0}
+.verified-tick{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:linear-gradient(135deg,#1DB954,#1ed760);color:#fff;border-radius:50%;font-size:10px;font-weight:800;margin-left:4px;vertical-align:middle;line-height:1;flex-shrink:0}
 
 /* ===== Sidebar Profile Click ===== */
 .sidebar-user .user-avatar:hover{border:2px solid var(--green);transition:var(--t)}
@@ -2831,7 +2831,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overfl
 }
 
 /* ============================================================
-   PREMIUM PAGE — Beautiful Animated Design
+   PREMIUM PAGE ÔÇö Beautiful Animated Design
    ============================================================ */
 
 #page-premium {
@@ -3288,213 +3288,4 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--tp);overfl
 .premium-cta-bottom {
   position: relative;
   z-index: 1;
-}
-
-/* ===== What's New Modal ===== */
-.whats-new-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(8px);
-}
-.whats-new-overlay.active {
-  opacity: 1;
-  pointer-events: all;
-}
-.whats-new-modal {
-  background: #313338;
-  width: 90%;
-  max-width: 540px;
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-  transform: translateY(30px) scale(0.95);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  overflow: hidden;
-  color: #dbdee1;
-  display: flex;
-  flex-direction: column;
-}
-.whats-new-overlay.active .whats-new-modal {
-  transform: translateY(0) scale(1);
-}
-.whats-new-header {
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #1e1f22;
-  position: relative;
-  z-index: 2;
-}
-.whats-new-header h2 {
-  margin: 0;
-  color: #f2f3f5;
-  font-size: 24px;
-  font-weight: 800;
-}
-.whats-new-date {
-  display: block;
-  font-size: 13px;
-  color: #949ba4;
-  margin-top: 4px;
-}
-.whats-new-close {
-  background: transparent;
-  border: none;
-  color: #949ba4;
-  font-size: 28px;
-  cursor: pointer;
-  transition: color 0.2s;
-  padding: 0;
-  line-height: 1;
-  position: absolute;
-  top: 16px;
-  right: 20px;
-}
-.whats-new-close:hover {
-  color: #f2f3f5;
-}
-.whats-new-content {
-  padding: 0;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-.whats-new-content::-webkit-scrollbar {
-  width: 8px;
-}
-.whats-new-content::-webkit-scrollbar-thumb {
-  background: #1e1f22;
-  border-radius: 4px;
-}
-.whats-new-banner {
-  width: 100%;
-  height: 200px;
-  background: linear-gradient(135deg, #1DB954 0%, #1a1a1a 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.whats-new-banner svg {
-  width: 80px;
-  height: 80px;
-  color: #fff;
-  opacity: 0.8;
-}
-.whats-new-body {
-  padding: 24px;
-  font-size: 15px;
-  line-height: 1.6;
-}
-.whats-new-body p {
-  margin-bottom: 20px;
-  color: #dbdee1;
-}
-.whats-new-body p a {
-  color: #00a8fc;
-  text-decoration: none;
-}
-.whats-new-body p a:hover {
-  text-decoration: underline;
-}
-.whats-new-subheading {
-  color: #8b929a;
-  font-size: 12px;
-  text-transform: uppercase;
-  margin: 32px 0 16px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-}
-.whats-new-subheading::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 14px;
-  background: #1DB954;
-  margin-right: 8px;
-  border-radius: 2px;
-}
-.whats-new-subheading::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #3f4147;
-  margin-left: 12px;
-}
-.whats-new-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.whats-new-list li {
-  margin-bottom: 16px;
-  padding-left: 24px;
-  position: relative;
-}
-.whats-new-list li::before {
-  content: '•';
-  position: absolute;
-  left: 6px;
-  color: #fff;
-  font-size: 18px;
-  line-height: 1.2;
-}
-.whats-new-list li strong {
-  color: #f2f3f5;
-  font-weight: 700;
-}
-
-/* Love Mode Easter Egg */
-#love-mode-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 999999;
-  background: rgba(0,0,0,0.85);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-#love-mode-overlay.active {
-  opacity: 1;
-  pointer-events: all;
-}
-.love-text {
-  font-size: 8rem;
-  font-weight: 800;
-  color: #ff2a5f;
-  text-shadow: 0 0 20px #ff2a5f, 0 0 40px #ff2a5f;
-  animation: heartbeat 1s infinite alternate;
-  z-index: 2;
-  letter-spacing: 10px;
-}
-@keyframes heartbeat {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.1); }
-}
-.heart-particle {
-  position: absolute;
-  color: #ff2a5f;
-  font-size: 2rem;
-  animation: floatUp 3s ease-in-out forwards;
-  z-index: 1;
-}
-@keyframes floatUp {
-  0% { transform: translateY(100px) scale(0.5); opacity: 1; }
-  100% { transform: translateY(-100vh) scale(1.5) rotate(360deg); opacity: 0; }
 }

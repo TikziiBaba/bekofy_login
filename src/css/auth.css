@@ -232,6 +232,16 @@ body {
 .auth-form-container {
   width: 100%;
   max-width: 420px;
+  perspective: 1000px;
+}
+
+.auth-form {
+  animation: formEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes formEnter {
+  from { opacity: 0; transform: translateY(20px) rotateX(5deg); }
+  to { opacity: 1; transform: translateY(0) rotateX(0deg); }
 }
 
 .auth-form h2 {
@@ -422,8 +432,11 @@ body {
 
 .btn-social {
   width: 100%;
-  padding: 12px 20px;
+  padding: 12px 24px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font);
@@ -432,7 +445,33 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-social::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-social:hover {
+  background: var(--bg-card);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-social:hover::after {
+  opacity: 1;
+}
+
+.btn-social:active {
+  transform: translateY(0);
 }
 
 .btn-google {
@@ -549,4 +588,138 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* From Uiverse.io by D3OXY - Modified for Bekofy Green Theme */
+.form {
+  --background: #111111;
+  --input-focus: #1DB954;
+  --font-color: #ffffff;
+  --font-color-sub: #b3b3b3;
+  --bg-color: #181818;
+  --main-color: #1DB954;
+  
+  padding: 30px;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  border-radius: 8px;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.form > p {
+  font-family: var(--font);
+  color: var(--font-color);
+  font-weight: 800;
+  font-size: 24px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form > p > span {
+  font-family: var(--font);
+  color: var(--font-color-sub);
+  font-weight: 500;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.separator {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.separator > div {
+  flex: 1;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.separator > span {
+  color: var(--font-color-sub);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.oauthButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--font-color);
+  cursor: pointer;
+  transition: all 250ms;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.oauthButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background-color: #1DB954;
+  z-index: -1;
+  transition: all 250ms;
+}
+
+.oauthButton:hover {
+  color: #000;
+}
+
+.oauthButton:hover::before {
+  width: 100%;
+}
+
+.form > input {
+  width: 100%;
+  height: 44px;
+  border-radius: 5px;
+  border: 2px solid rgba(255,255,255,0.1);
+  background-color: var(--bg-color);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--font-color);
+  padding: 5px 15px;
+  outline: none;
+  transition: all 250ms;
+}
+
+.form > input:focus {
+  border-color: var(--input-focus);
+  box-shadow: 4px 4px var(--input-focus);
+}
+
+.icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline !important;
 }

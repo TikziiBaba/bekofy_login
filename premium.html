@@ -1,371 +1,177 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bekofy Premium - Parayı Bize Ver</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Bekofy Premium - Sınırları Kaldır</title>
+  <link rel="stylesheet" href="css/style.css?v=max5">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
   <style>
-    /* Premium Page Specific Styles */
-    .premium-hero {
-      padding: 140px 20px 80px;
-      text-align: center;
-      position: relative;
-      z-index: 10;
-    }
-
-    .premium-hero h1 {
-      font-size: clamp(40px, 6vw, 72px);
-      margin-bottom: 24px;
-      background: var(--grad-premium);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: slideUp 0.8s ease-out both;
-    }
-
-    .premium-hero p {
-      font-size: 20px;
-      color: var(--text-secondary);
-      max-width: 600px;
-      margin: 0 auto 40px;
-      animation: slideUp 0.8s ease-out 0.2s both;
-    }
-
-    /* Pricing Plans */
-    .pricing-section {
-      padding: 40px 20px 100px;
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 10;
-    }
-
-    .pricing-grid {
+    .pricing-grid-cyber {
+      width: min(1050px, 92%);
+      margin: 60px auto 0;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 32px;
-      margin-top: 40px;
     }
 
-    .pricing-card {
+    .plan-cyber-card {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
+      border: 3px solid var(--border-neon);
       padding: 40px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-neon-lg);
+      position: relative;
       display: flex;
       flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      /* Fun Animated Hover */
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
     }
 
-    .pricing-card.featured {
-      border-color: var(--green);
+    .plan-cyber-card.featured-plan {
+      background: var(--bg-card-alt);
+      border-color: var(--neon);
+      box-shadow: var(--shadow-neon-lg), var(--shadow-glow);
     }
 
-    .pricing-card.featured::before {
-      content: 'EN ÇOK KAZANDIRAN';
+    .plan-cyber-card.featured-plan::before {
+      content: '★ EN POPÜLER';
       position: absolute;
-      top: 16px;
-      right: 16px;
-      background: var(--green);
+      top: -16px;
+      right: 24px;
+      background: var(--neon);
       color: #000;
+      font-family: var(--font-display);
       font-size: 12px;
-      font-weight: 800;
       padding: 4px 12px;
-      border-radius: 100px;
-      font-family: var(--font-heading);
+      box-shadow: 2px 2px 0 #000;
     }
 
-    .pricing-card:hover {
-      transform: translateY(-10px) rotate(1deg);
-      border-color: rgba(29, 185, 84, 0.6);
-      box-shadow: 0 20px 50px rgba(29, 185, 84, 0.15);
-    }
-
-    .pricing-card.featured:hover {
-      transform: translateY(-16px) rotate(-1deg);
-      box-shadow: 0 24px 80px rgba(29, 185, 84, 0.25), inset 0 0 0 1px rgba(29, 185, 84, 0.4);
-    }
-
-    .plan-name {
-      font-size: 24px;
-      font-family: var(--font-heading);
+    .plan-title-cyber {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--text-white);
       margin-bottom: 8px;
     }
 
-    .plan-price {
-      font-size: 48px;
-      font-weight: 800;
+    .plan-price-cyber {
+      font-family: var(--font-display);
+      font-size: 52px;
+      color: var(--neon);
       margin-bottom: 24px;
-      font-family: var(--font-heading);
+      text-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
     }
 
-    .plan-price span {
+    .plan-price-cyber span {
       font-size: 18px;
-      color: var(--text-secondary);
-      font-weight: 500;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
     }
 
-    .plan-features {
+    .plan-feature-list {
       list-style: none;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
       flex: 1;
     }
 
-    .plan-features li {
+    .plan-feature-list li {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      color: var(--text-white);
+      margin-bottom: 14px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      color: var(--text-secondary);
-      font-size: 15px;
+      gap: 10px;
     }
 
-    .plan-features svg {
-      color: var(--green);
-      flex-shrink: 0;
+    .plan-feature-list li::before {
+      content: '✔';
+      color: var(--neon);
+      font-weight: 900;
     }
 
-    .pricing-card .btn {
-      width: 100%;
+    @media (max-width: 800px) {
+      .pricing-grid-cyber { grid-template-columns: 1fr; }
     }
-
-    /* FAQ Section */
-    .faq-section {
-      max-width: 800px;
-      margin: 0 auto 100px;
-      padding: 0 20px;
-      position: relative;
-      z-index: 10;
-    }
-
-    .faq-title {
-      text-align: center;
-      font-size: 36px;
-      margin-bottom: 48px;
-    }
-
-    .faq-item {
-      margin-bottom: 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      transition: border-color 0.3s;
-    }
-
-    .faq-item.active {
-      border-color: var(--border-green);
-    }
-
-    .faq-question {
-      width: 100%;
-      text-align: left;
-      padding: 24px;
-      background: none;
-      border: none;
-      color: var(--text-primary);
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .faq-icon {
-      color: var(--green);
-      font-size: 24px;
-      font-weight: 300;
-      transition: transform 0.3s;
-    }
-
-    .faq-item.active .faq-icon {
-      transform: rotate(45deg);
-    }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
-    }
-
-    .faq-item.active .faq-answer {
-      max-height: 500px;
-      transition: max-height 0.4s ease-in-out;
-    }
-
-    .faq-answer p {
-      padding: 0 24px 24px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Floating Particles */
-    .particles { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
-    .particle { position:absolute; font-size:24px; opacity:0; animation:floatUp linear infinite; }
-    @keyframes floatUp { 0%{opacity:0;transform:translateY(100vh) rotate(0deg)} 10%{opacity:0.6} 90%{opacity:0.6} 100%{opacity:0;transform:translateY(-10vh) rotate(360deg)} }
-
   </style>
 </head>
+
 <body>
+  <!-- Cyber Background Layer -->
+  <div class="cyber-bg"></div>
+  <div class="ambient-glow ambient-glow-1"></div>
 
-  <!-- Floating Particles Background -->
-  <div class="particles" id="particles"></div>
-
-  <!-- Navbar -->
-  <nav class="navbar">
-    <a href="index.html" class="nav-logo">
-      <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
-        <circle cx="24" cy="24" r="22" fill="url(#nlg)" />
-        <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" />
-        <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" />
-        <defs>
-          <linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48">
-            <stop offset="0%" stop-color="#1DB954" />
-            <stop offset="100%" stop-color="#1ed760" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="nav-logo-text">Bekofy</span>
+  <!-- Neo-Brutalist Navigation -->
+  <nav class="cyber-nav">
+    <a href="index.html" class="nav-brand">
+      <div class="brand-icon">B</div>
+      <span class="brand-title">BEKOFY</span>
     </a>
-    <div class="nav-links">
-      <a href="index.html">Ana Sayfa</a>
-      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank">İndir</a>
-      <a href="dashboard.html" class="btn btn-secondary" style="padding: 10px 24px; font-size: 14px;">Hesabım</a>
+    <div class="nav-menu">
+      <a href="index.html" class="nav-link">// Ana Sayfa</a>
+      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="nav-link">// İndir</a>
+      <a href="dashboard.html" class="nav-link">// Hesabım</a>
+      <a href="login.html" class="btn-cyber btn-cyber-primary">Giriş Yap</a>
     </div>
   </nav>
 
-  <!-- Hero -->
-  <main class="premium-hero">
-    <h1>Niye Paralı? 💸</h1>
-    <p>Çünkü sunucu parası gökten düşmüyor, geliştiricimiz de arada bir döner yemek istiyor. Reklamsız müzik ve bazı minik lüksler için pamuk eller cebe.</p>
-  </main>
+  <!-- Premium Hero -->
+  <header class="hero-wrapper" style="min-height: auto; padding-top: 140px; padding-bottom: 20px;">
+    <div class="hero-container" style="grid-template-columns: 1fr; text-align: center;">
+      <div>
+        <div class="hero-tag" style="margin: 0 auto 20px;">
+          <span class="dot"></span> 💎 PREMIUM PLANLARI
+        </div>
+        <h1 class="kinetic-title">
+          <span class="title-line line-solid">SINIRLARI KALDIR</span>
+          <span class="title-line line-outline">KESİNTİSİZ MÜZİK</span>
+        </h1>
+        <p class="hero-subtitle" style="margin: 0 auto 30px;">
+          Reklamsız stüdyo kalitesinde ses, çevrimdışı indirme ve ayrıcalıklı temalar ile müzik deneyimini zirveye taşı.
+        </p>
+      </div>
+    </div>
+  </header>
 
-  <!-- Pricing -->
-  <section class="pricing-section">
-    <div class="pricing-grid">
-      
+  <!-- Cyber Pricing Grid -->
+  <section style="position: relative; z-index: 10; padding-bottom: 80px;">
+    <div class="pricing-grid-cyber">
       <!-- Bireysel Plan -->
-      <div class="pricing-card featured" style="animation: slideUp 0.8s ease-out 0.4s both;">
-        <h3 class="plan-name">Bireysel (Zenginler İçin)</h3>
-        <div class="plan-price">₺39.99<span> / ay</span></div>
-        <ul class="plan-features">
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Reklamsız tertemiz müzik keyfi
-          </li>
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Dağda bayırda internetsiz dinle (İndir)
-          </li>
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Her yerde hava atma hakkı
-          </li>
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Tüyleri diken diken eden 320kbps ses
-          </li>
+      <div class="plan-cyber-card featured-plan">
+        <h3 class="plan-title-cyber">BİREYSEL PLAN</h3>
+        <div class="plan-price-cyber">₺39.99 <span>/ ay</span></div>
+        <ul class="plan-feature-list">
+          <li>Reklamsız kesintisiz müzik dinleme</li>
+          <li>Çevrimdışı indirme & dinleme (MP3)</li>
+          <li>320 Kbps stüdyo kalitesinde yüksek ses</li>
+          <li>Discord Rich Presence anlık yayın</li>
+          <li>Özel tema özelleştirmeleri</li>
         </ul>
-        <a href="checkout.html?plan=bireysel" class="btn btn-primary">Parayı Ver</a>
+        <a href="checkout.html?plan=bireysel" class="btn-cyber btn-cyber-primary" style="width: 100%; text-align: center;">
+          ⚡ PLANA GEÇ
+        </a>
       </div>
 
       <!-- Öğrenci Plan -->
-      <div class="pricing-card" style="animation: slideUp 0.8s ease-out 0.6s both;">
-        <h3 class="plan-name">Öğrenci (Fakirler İçin)</h3>
-        <div class="plan-price">₺19.99<span> / ay</span></div>
-        <ul class="plan-features">
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Zenginlerin aldığı her şeyin aynısı
-          </li>
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Öğrenci olduğunu kanıtla yeter (e-devlet filan)
-          </li>
-          <li>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Kalan 20 TL ile yarım porsiyon makarna alırsın
-          </li>
+      <div class="plan-cyber-card">
+        <h3 class="plan-title-cyber">ÖĞRENCİ PLANI</h3>
+        <div class="plan-price-cyber">₺19.99 <span>/ ay</span></div>
+        <ul class="plan-feature-list">
+          <li>Öğrencilere özel %50 indirim avantajı</li>
+          <li>Bireysel plandaki tüm premium özellikler</li>
+          <li>Çevrimdışı indirme & dinleme</li>
+          <li>Reklamsız yüksek kalite yayın</li>
         </ul>
-        <a href="checkout.html?plan=ogrenci" class="btn btn-secondary">Yarı Fiyatına Kap</a>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="faq-section">
-    <h2 class="faq-title">Muhtemel Şüphelerin 🤔</h2>
-    
-    <div class="faq-container">
-      <div class="faq-item">
-        <button class="faq-question">Beğenmezsem paramı geri alabiliyor muyum?<span class="faq-icon">+</span></button>
-        <div class="faq-answer"><p>Bakkaldan ısırdığın gofreti geri verebiliyor musun? Şaka şaka, ilk 14 gün içinde "Bu ne biçim uygulama" deyip iptal edersen paran iade. Sorun yok.</p></div>
-      </div>
-      
-      <div class="faq-item">
-        <button class="faq-question">Çevrimdışı dinleme nasıl oluyor? Kaset mi yolluyorsunuz?<span class="faq-icon">+</span></button>
-        <div class="faq-answer"><p>Yok artık! Şarkıları direkt uygulamaya indiriyorsun. Uçakta, dağda, köyde internetin çekmediği yerlerde Müslüm Baba dinlemeye devam edebilirsin.</p></div>
-      </div>
-      
-      <div class="faq-item">
-        <button class="faq-question">Öğrenci olduğumu nasıl anlayacaksınız?<span class="faq-icon">+</span></button>
-        <div class="faq-answer"><p>Gözlerinden anlarız... Demek isterdik ama SheerID üzerinden bir doğrulama yapıyoruz. Saniyeler sürüyor, çok canını sıkmaz.</p></div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">Bedavası varken neden buna para vereyim ki?<span class="faq-icon">+</span></button>
-        <div class="faq-answer"><p>Haklı bir isyan. Bedava versiyon zaten çok iyi. Ama eğer "reklam duymak istemiyorum", "internetim bitmesin şarkı indireyim" ya da "geliştiriciye bi sakız parası atayım yazıktır" diyorsan Premium tam senlik.</p></div>
+        <a href="checkout.html?plan=ogrenci" class="btn-cyber btn-cyber-secondary" style="width: 100%; text-align: center;">
+          🎓 ÖĞRENCİ PLANI AL
+        </a>
       </div>
     </div>
   </section>
 
-  <footer>
-    <p>© 2026 Bekofy. Tüm hakları saklıdır (Yani sanırım).</p>
+  <footer class="cyber-footer">
+    <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
   </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Floating emoji particles
-      const emojis = ['💸', '💎', '🚀', '🤑', '💳', '🎉', '🎵', '💚'];
-      const container = document.getElementById('particles');
-      function spawnParticle() {
-        if(!container) return;
-        const el = document.createElement('span');
-        el.className = 'particle';
-        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        el.style.left = Math.random() * 100 + '%';
-        el.style.fontSize = (16 + Math.random() * 20) + 'px';
-        el.style.animationDuration = (6 + Math.random() * 8) + 's';
-        el.style.animationDelay = Math.random() * 2 + 's';
-        container.appendChild(el);
-        setTimeout(() => el.remove(), 15000);
-      }
-      setInterval(spawnParticle, 1200);
-      for (let i = 0; i < 5; i++) setTimeout(spawnParticle, i * 300);
-
-      // FAQ Accordion
-      document.querySelectorAll('.faq-question').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const item = btn.parentElement;
-          const isActive = item.classList.contains('active');
-          document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
-          if (!isActive) item.classList.add('active');
-        });
-      });
-    });
-  </script>
 </body>
+
 </html>

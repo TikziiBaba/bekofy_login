@@ -59,7 +59,7 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require('electron');
+    const api = window.electronAPI;
 
     // Elements
     const coverEl = document.getElementById('mini-cover');
@@ -70,66 +70,70 @@
     const playIcon = document.getElementById('mini-icon-play');
     const pauseIcon = document.getElementById('mini-icon-pause');
 
-    // Receive song data updates from main process
-    ipcRenderer.on('mini-player-update', (event, data) => {
-      if (!data) return;
+    if (api && api.onMiniPlayerUpdate) {
+      // Receive song data updates from main process
+      api.onMiniPlayerUpdate((data) => {
+        if (!data) return;
 
-      // Update song info
-      titleEl.textContent = data.title || 'Şarkı seçilmedi';
-      artistEl.textContent = data.artist || '—';
+        // Update song info
+        titleEl.textContent = data.title || 'Şarkı seçilmedi';
+        artistEl.textContent = data.artist || '—';
 
-      // Update cover
-      if (data.cover_url) {
-        coverEl.innerHTML = `<img src="${data.cover_url}" alt="" draggable="false">`;
-        bgEl.style.backgroundImage = `url('${data.cover_url}')`;
-      } else {
-        coverEl.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" opacity="0.3" width="28" height="28"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
-        bgEl.style.backgroundImage = '';
-      }
+        // Update cover
+        if (data.cover_url) {
+          coverEl.innerHTML = `<img src="${data.cover_url}" alt="" draggable="false">`;
+          bgEl.style.backgroundImage = `url('${data.cover_url}')`;
+        } else {
+          coverEl.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" opacity="0.3" width="28" height="28"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
+          bgEl.style.backgroundImage = '';
+        }
 
-      // Update play/pause
-      if (data.isPlaying) {
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
-      } else {
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
-      }
-    });
+        // Update play/pause
+        if (data.isPlaying) {
+          playIcon.style.display = 'none';
+          pauseIcon.style.display = 'block';
+        } else {
+          playIcon.style.display = 'block';
+          pauseIcon.style.display = 'none';
+        }
+      });
+    }
 
-    // Progress update
-    ipcRenderer.on('mini-player-progress', (event, data) => {
-      if (data && data.percent !== undefined) {
-        progressFill.style.width = data.percent + '%';
-      }
-    });
+    if (api && api.onMiniPlayerProgress) {
+      // Progress update
+      api.onMiniPlayerProgress((data) => {
+        if (data && data.percent !== undefined) {
+          progressFill.style.width = data.percent + '%';
+        }
+      });
+    }
 
     // Controls
     document.getElementById('mini-play').addEventListener('click', () => {
-      ipcRenderer.send('mini-player-command', 'toggle-play');
+      if (api && api.sendMiniCommand) api.sendMiniCommand('toggle-play');
     });
     document.getElementById('mini-next').addEventListener('click', () => {
-      ipcRenderer.send('mini-player-command', 'next');
+      if (api && api.sendMiniCommand) api.sendMiniCommand('next');
     });
     document.getElementById('mini-prev').addEventListener('click', () => {
-      ipcRenderer.send('mini-player-command', 'prev');
+      if (api && api.sendMiniCommand) api.sendMiniCommand('prev');
     });
 
     // Back to main window
     document.getElementById('mini-btn-back').addEventListener('click', () => {
-      ipcRenderer.send('mini-player-command', 'back-to-main');
+      if (api && api.sendMiniCommand) api.sendMiniCommand('back-to-main');
     });
 
     // Close mini player
     document.getElementById('mini-btn-close').addEventListener('click', () => {
-      ipcRenderer.send('mini-player-command', 'close');
+      if (api && api.sendMiniCommand) api.sendMiniCommand('close');
     });
 
     // Progress bar click
     document.getElementById('mini-progress').addEventListener('click', (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const percent = ((e.clientX - rect.left) / rect.width) * 100;
-      ipcRenderer.send('mini-player-command', 'seek', percent);
+      if (api && api.sendMiniCommand) api.sendMiniCommand('seek', percent);
     });
   </script>
 </body>

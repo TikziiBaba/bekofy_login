@@ -1,0 +1,452 @@
+/* =========================================================
+   Bekofy Premium Profile Redesign
+========================================================= */
+
+.bekofy-profile {
+  padding: 0 !important;
+  display: none;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+.bekofy-profile.active {
+  display: flex !important;
+}
+
+.bekofy-profile-hero {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background: linear-gradient(135deg, #1DB954 0%, #0d5c2a 100%);
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bekofy-profile-banner-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.bekofy-profile-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 0.6) 50%, rgba(18, 18, 18, 0.1) 100%);
+  z-index: 1;
+}
+
+.bekofy-profile-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  padding: 0 48px 32px 48px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bekofy-avatar-wrapper {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  flex-shrink: 0;
+  background: #282828;
+  border: 4px solid #181818;
+}
+
+.bekofy-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+}
+
+.bekofy-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bekofy-avatar-actions {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.bekofy-btn-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.bekofy-btn-icon:hover {
+  background: #1DB954;
+  border-color: #1ed760;
+  transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(29, 185, 84, 0.4);
+}
+
+.bekofy-btn-icon.bekofy-btn-danger:hover {
+  background: #e91e63;
+  border-color: #f06292;
+  box-shadow: 0 0 16px rgba(233, 30, 99, 0.4);
+}
+
+.bekofy-btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.bekofy-hero-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bekofy-hero-badge {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bekofy-hero-badge::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: #1DB954;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #1DB954;
+}
+
+.bekofy-hero-title {
+  font-size: 84px;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: -3px;
+  margin: 0;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.bekofy-hero-stats {
+  display: flex;
+  gap: 32px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.bekofy-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.bekofy-stat-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.bekofy-stat-lbl {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ts);
+}
+
+.bekofy-banner-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.bekofy-btn-outline {
+  padding: 10px 20px;
+  border-radius: 500px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+
+.bekofy-btn-outline:hover {
+  background: rgba(255,255,255,1);
+  color: #000;
+  border-color: #fff;
+  transform: scale(1.04);
+}
+
+.bekofy-btn-outline.danger:hover {
+  background: #e91e63;
+  color: #fff;
+  border-color: #e91e63;
+}
+
+.bekofy-profile-body {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 48px 80px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.bekofy-glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 32px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  transition: transform 0.3s, background 0.3s;
+}
+
+.bekofy-glass-panel:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+
+.bekofy-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.bekofy-panel-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(29, 185, 84, 0.1);
+  color: #1DB954;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bekofy-panel-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.bekofy-panel-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.bekofy-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.bekofy-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bekofy-input-group.span-full {
+  grid-column: 1 / -1;
+}
+
+.bekofy-input-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ts);
+  letter-spacing: 0.5px;
+}
+
+.bekofy-input-wrapper {
+  position: relative;
+}
+
+.bekofy-input {
+  width: 100%;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.bekofy-input:focus {
+  border-color: #1DB954;
+  background: rgba(0,0,0,0.4);
+}
+
+.bekofy-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bekofy-input-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.4);
+  pointer-events: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.bekofy-input:focus ~ .bekofy-input-glow {
+  box-shadow: 0 0 12px 0 rgba(29, 185, 84, 0.2);
+}
+
+.bekofy-role-display, .bekofy-date-display {
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.bekofy-role-display {
+  color: #1DB954;
+  background: rgba(29, 185, 84, 0.1);
+  border: 1px solid rgba(29, 185, 84, 0.2);
+  width: max-content;
+}
+
+.bekofy-frame-selector {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bekofy-frame-option {
+  background: rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bekofy-frame-option:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+}
+
+.bekofy-frame-option.active {
+  background: rgba(29, 185, 84, 0.15);
+  border-color: #1DB954;
+}
+
+.frame-icon {
+  font-size: 24px;
+}
+
+.frame-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.bekofy-panel-footer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bekofy-btn-primary {
+  position: relative;
+  background: #1DB954;
+  color: #000;
+  border: none;
+  padding: 16px 36px;
+  border-radius: 500px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.bekofy-btn-primary span {
+  position: relative;
+  z-index: 2;
+}
+
+.bekofy-btn-primary:hover {
+  transform: scale(1.05);
+  background: #1ed760;
+}
+
+.bekofy-btn-glow {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-25deg);
+  z-index: 1;
+  transition: all 0.5s;
+}
+
+.bekofy-btn-primary:hover .bekofy-btn-glow {
+  left: 150%;
+}
+
+.bekofy-badges-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}

@@ -1,18 +1,13 @@
 // Supabase Client Initialization
-// NOTE: In Electron, we load the Supabase JS from a CDN in HTML,
-// or we can bundle it. For simplicity, we'll use the global supabase from CDN.
-
-const SUPABASE_URL = 'https://dtdsawyynetqlbosrvqo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZHNhd3l5bmV0cWxib3NydnFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDU0MDUsImV4cCI6MjA5MDEyMTQwNX0.6rKxp51OOj_b1iKtz_21ZkHcvbThNF4w5sPdP7RAua4';
-
+// Config is centralized in config.js (loaded before this script in HTML)
 let supabaseClient = null;
 
 function getSupabase() {
   if (!supabaseClient) {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseClient = supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
     } else {
-      console.error('Supabase JS library not loaded!');
+      console.error('[Bekofy] Supabase JS library not loaded!');
     }
   }
   return supabaseClient;
@@ -554,63 +549,52 @@ async function removeFriend(friendId) {
 async function fetchUserPublicProfile(userId) {
   const sb = getSupabase();
   
-  // Check if blocked first
-  const isBlocked = await checkIfBlockedInternal(userId);
+  // Launch all independent queries concurrently to save time
+  const [session, isBlocked, profileRes, followersCountRes, playlistsCountRes] = await Promise.all([
+    sb.auth.getSession(),
+    checkIfBlockedInternal(userId),
+    sb.from('profiles').select('id, username, avatar_url, avatar_frame, role, banner_url').eq('id', userId).single(),
+    sb.from('friendships').select('*', { count: 'exact', head: true }).eq('friend_id', userId).eq('status', 'accepted'),
+    sb.from('playlists').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_public', true)
+  ]);
+
   if (isBlocked) return { data: null, error: { message: 'Bu profil bulunamadı veya gizli.' } };
   
-  // Fetch profile
-  let profile, profileError;
-  const res1 = await sb
-    .from('profiles')
-    .select('id, username, avatar_url, avatar_frame, role, banner_url')
-    .eq('id', userId)
-    .single();
-  if (res1.error && res1.error.message && res1.error.message.includes('banner_url')) {
-    // Fallback if banner_url column doesn't exist
-    const res2 = await sb
-      .from('profiles')
-      .select('id, username, avatar_url, avatar_frame, role')
-      .eq('id', userId)
-      .single();
+  let profile = profileRes.data;
+  let profileError = profileRes.error;
+
+  // Fallback for banner_url if it doesn't exist (only run if the first query failed because of it)
+  if (profileError && profileError.message && profileError.message.includes('banner_url')) {
+    const res2 = await sb.from('profiles').select('id, username, avatar_url, avatar_frame, role').eq('id', userId).single();
     profile = res2.data;
     profileError = res2.error;
-  } else {
-    profile = res1.data;
-    profileError = res1.error;
   }
-      if (profileError) return { data: null, error: profileError };
+
+  if (profileError) return { data: null, error: profileError };
   
   if (profile && profile.role === 'user') {
     profile.avatar_frame = 'none';
     profile.banner_url = null;
   }
+  profile.followers_count = followersCountRes.count || 0;
+  profile.playlists_count = playlistsCountRes.count || 0;
   
-  // Fetch followers count
-  const { count: followersCount } = await sb
-    .from('friendships')
-    .select('*', { count: 'exact', head: true })
-    .eq('friend_id', userId)
-    .eq('status', 'accepted');
-    
-  // Fetch public playlists count
-  const { count: playlistsCount } = await sb
-    .from('playlists')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('is_public', true);
-    
-  // Check friendship status
-  const isFriend = await checkFriendshipInternal(userId);
-    
-  return { 
-    data: { 
-      ...profile, 
-      followers_count: followersCount || 0,
-      playlists_count: playlistsCount || 0,
-      is_following: isFriend
-    }, 
-    error: null 
-  };
+  // Check if current user is following
+  let isFollowing = false;
+  if (session.data?.session) {
+    const currentId = session.data.session.user.id;
+    const { data: followData } = await sb
+      .from('friendships')
+      .select('id')
+      .eq('user_id', currentId)
+      .eq('friend_id', userId)
+      .eq('status', 'accepted')
+      .maybeSingle();
+    isFollowing = !!followData;
+  }
+  profile.is_following = isFollowing;
+  
+  return { data: profile, error: null };
 }
 
 async function blockUser(blockedId) {
@@ -1117,12 +1101,13 @@ async function getArtistByName(artistName) {
 }
 
 async function getSongsByArtist(artistName) {
+  if (!artistName) return { data: [], error: null };
   const sb = getSupabase();
-  // Search for exact match or as part of multi-artist (comma separated)
+  const safeName = artistName.trim();
   const { data, error } = await sb
     .from('songs')
     .select('*')
-    .or(`artist.ilike.${artistName},artist.ilike.%${artistName}%`)
+    .ilike('artist', `%${safeName}%`)
     .order('created_at', { ascending: false });
   return { data: data || [], error };
 }

@@ -6,7 +6,8 @@
   <title>Bekofy - Admin Paneli</title>
   <meta name="description" content="Bekofy müzik platformu yönetim paneli. Sanatçıları ve şarkıları yönetin.">
   <link rel="stylesheet" href="css/admin.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="css/admin-terminal.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -74,6 +75,14 @@
             <circle cx="18" cy="16" r="3"/>
           </svg>
           Şarkılar
+        </button>
+
+        <button class="sidebar-nav-item" data-section="terminal" onclick="switchSection('terminal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+          Terminal Konsol
         </button>
 
         <div class="sidebar-divider"></div>
@@ -199,6 +208,11 @@
         <div id="songs-container">
           <div class="admin-loader"><div class="spinner"></div></div>
         </div>
+      </section>
+
+      <!-- ===== TERMINAL SECTION ===== -->
+      <section id="section-terminal" class="admin-section">
+        <div id="admin-terminal-mount"></div>
       </section>
 
     </main>
@@ -391,6 +405,9 @@
     </div>
   </div>
 
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/admin-terminal.js"></script>
   <script src="js/admin.js"></script>
 </body>
 </html>

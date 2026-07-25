@@ -5,161 +5,80 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy - Giriş Yap</title>
-  <link rel="stylesheet" href="css/style.css">
-
-  <!-- Supabase CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Our Auth Logic -->
+  <link rel="stylesheet" href="css/style.css?v=max5">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
+  <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
+  <style>
+    .auth-cyber-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 20px 60px;
+      position: relative;
+      z-index: 10;
+    }
+  </style>
 </head>
 
 <body>
+  <!-- Cyber Background Layer -->
+  <div class="cyber-bg"></div>
+  <div class="ambient-glow ambient-glow-1"></div>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <a href="index.html" class="nav-logo">
-      <svg viewBox="0 0 48 48" fill="none" width="36" height="36">
-        <circle cx="24" cy="24" r="22" fill="url(#nlg)" />
-        <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round"
-          fill="none" />
-        <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round"
-          fill="none" />
-        <defs>
-          <linearGradient id="nlg" x1="0" y1="0" x2="48" y2="48">
-            <stop offset="0%" stop-color="#1DB954" />
-            <stop offset="100%" stop-color="#1ed760" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="nav-logo-text">Bekofy</span>
+  <!-- Glass Navigation -->
+  <nav class="site-nav">
+    <a href="index.html" class="nav-brand">
+      <div class="brand-logo-icon">B</div>
+      <span class="brand-text">BEKOFY</span>
     </a>
     <div class="nav-links">
-      <a href="index.html">Ana Sayfa</a>
-      <a href="premium.html">Premium</a>
-      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank">İndir</a>
+      <a href="index.html" class="nav-item-link">Ana Sayfa</a>
+      <a href="premium.html" class="nav-item-link">Premium</a>
+      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="nav-item-link">İndir</a>
     </div>
-    <button class="nav-toggle"
-      onclick="this.classList.toggle('open');document.querySelector('.nav-links').classList.toggle('open')">
-      <span></span><span></span><span></span>
-    </button>
   </nav>
 
-  <!-- Orb Background -->
-  <div class="orb-wrap">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-  </div>
+  <main class="auth-cyber-wrapper">
+    <div style="width: 100%; max-width: 420px;">
+      <div id="success-msg" class="success-msg"></div>
+      <div id="error-msg" class="error-msg"></div>
 
-  <!-- Auth Split Layout -->
-  <main class="main-content">
-    <div class="auth-split">
-      <!-- Left Panel -->
-      <div class="auth-left">
-        <div class="auth-left-logo">
-          <svg viewBox="0 0 48 48" fill="none" width="32" height="32">
-            <circle cx="24" cy="24" r="22" fill="url(#nlg2)" />
-            <path d="M16 14C16 14 32 18 32 24C32 30 16 34 16 34" stroke="white" stroke-width="3" stroke-linecap="round"
-              fill="none" />
-            <path d="M16 20C16 20 28 22 28 24C28 26 16 28 16 28" stroke="white" stroke-width="3" stroke-linecap="round"
-              fill="none" />
-            <defs>
-              <linearGradient id="nlg2" x1="0" y1="0" x2="48" y2="48">
-                <stop offset="0%" stop-color="#1DB954" />
-                <stop offset="100%" stop-color="#1ed760" />
-              </linearGradient>
-            </defs>
+      <form class="form" id="login-form">
+        <p>
+          Giriş Yap<span>Hesabına giriş yap ve müziğe başla</span>
+        </p>
+        <button type="button" class="oauthButton" id="btn-google-login">
+          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" style="width:20px;height:20px;flex-shrink:0;">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
           </svg>
-          <span>Bekofy</span>
+          Google ile devam et
+        </button>
+        <div class="separator">
+          <div></div>
+          <span>VEYA</span>
+          <div></div>
         </div>
-        <h2>Müziğin Gücünü<br>Hisset.</h2>
-        <p>Milyonlarca şarkı, canlı şarkı sözleri, Discord entegrasyonu ve çok daha fazlası seni bekliyor.</p>
-        <div class="auth-feature-list">
-          <div class="auth-feature">
-            <div class="auth-feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <path d="M9 18V5l12-2v13" />
-                <circle cx="6" cy="18" r="3" />
-                <circle cx="18" cy="16" r="3" />
-              </svg>
-            </div>
-            Sınırsız müzik dinleme
-          </div>
-          <div class="auth-feature">
-            <div class="auth-feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            </div>
-            Tamamen ücretsiz
-          </div>
-          <div class="auth-feature">
-            <div class="auth-feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                <line x1="9" y1="9" x2="9.01" y2="9" />
-                <line x1="15" y1="9" x2="15.01" y2="9" />
-              </svg>
-            </div>
-            Discord Rich Presence
-          </div>
-          <div class="auth-feature">
-            <div class="auth-feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                <line x1="8" y1="21" x2="16" y2="21" />
-                <line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-            </div>
-            Mini Player modu
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Panel - Form -->
-      <div class="auth-right">
-        <div class="auth-card">
-          <div id="success-msg" class="success-msg"></div>
-
-          <form id="login-form" onsubmit="event.preventDefault(); document.getElementById('btn-login').click();">
-            <h1>Tekrar Hoş Geldin</h1>
-            <p>Müziğine kaldığın yerden devam et</p>
-
-            <div id="error-msg" class="error-msg"></div>
-
-            <div class="input-group">
-              <label for="login-email">E-posta Adresi</label>
-              <input type="email" id="login-email" placeholder="E-posta adresin">
-            </div>
-
-            <div class="input-group">
-              <label for="login-password">Şifre</label>
-              <input type="password" id="login-password" placeholder="Şifren">
-            </div>
-
-            <button type="button" id="btn-login" class="btn btn-primary submit-btn">
-              <span id="btn-text">Giriş Yap</span>
-              <div id="loader" class="loader"></div>
-            </button>
-
-            <div class="social-login" style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-              <div style="text-align:center; color:var(--text-muted); font-size:12px; margin: 5px 0;">VEYA</div>
-              <button type="button" id="btn-google-login" class="btn dash-btn-outline" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; width:100%; border-radius:12px; cursor:pointer;">
-                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                Google ile Giriş
-              </button>
-            </div>
-
-            <div class="auth-footer" style="margin-top:20px;">
-              Hesabın yok mu? <a href="register.html">Hemen Kayıt Ol</a>
-            </div>
-          </form>
-        </div>
-      </div>
+        <input type="email" placeholder="E-posta" name="email" id="login-email">
+        <input type="password" placeholder="Şifre" name="password" id="login-password">
+        <button type="button" class="oauthButton" id="btn-login" style="background: var(--neon); color: #000; font-weight: 800;">
+          <span>Giriş Yap ➔</span>
+        </button>
+        <p class="auth-switch" style="font-size: 14px; color: var(--text-muted); margin-top: 10px;">
+          Hesabın yok mu? <a href="register.html" style="color: var(--neon); font-weight: 700; text-decoration: none;">Kayıt Ol</a>
+        </p>
+      </form>
     </div>
   </main>
 
+  <footer class="cyber-footer">
+    <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
+  </footer>
 </body>
 
 </html>
