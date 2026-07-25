@@ -5,53 +5,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy - Kayıt Ol</title>
-  <link rel="stylesheet" href="css/style.css?v=max5">
+  <meta name="description" content="Bekofy hesabı oluşturun. Milyonlarca ücretsiz şarkı, canlı şarkı sözleri ve Mini Player sizi bekliyor.">
+  <link rel="stylesheet" href="css/style.css?v=unified1.0">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
-  <style>
-    .auth-cyber-wrapper {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 120px 20px 60px;
-      position: relative;
-      z-index: 10;
-    }
-  </style>
 </head>
 
 <body>
-  <!-- Cyber Background Layer -->
-  <div class="cyber-bg"></div>
-  <div class="ambient-glow ambient-glow-1"></div>
-
-  <!-- Glass Navigation -->
-  <nav class="site-nav">
-    <a href="index.html" class="nav-brand">
-      <div class="brand-logo-icon">B</div>
-      <span class="brand-text">BEKOFY</span>
-    </a>
-    <div class="nav-links">
-      <a href="index.html" class="nav-item-link">Ana Sayfa</a>
-      <a href="premium.html" class="nav-item-link">Premium</a>
-      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="nav-item-link">İndir</a>
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="logo-brand">
+        <div class="logo-badge">B</div>
+        <span class="logo-name">Bekofy</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Keşfet</a>
+        <a href="premium.html" class="nav-link">Premium</a>
+        <a href="dashboard.html" class="nav-link">Hesabım</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="login.html" class="btn-minimal btn-secondary">Giriş Yap</a>
+        <a href="register.html" class="btn-minimal btn-primary active">Kayıt Ol</a>
+      </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="auth-cyber-wrapper">
-    <div style="width: 100%; max-width: 420px;">
+  <!-- Auth Content Stage -->
+  <main class="auth-page-wrapper">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h1 class="auth-card-title">KAYIT OL 🚀</h1>
+        <p class="auth-card-sub">Ücretsiz hesabını oluştur ve müziğe başla</p>
+      </div>
+
       <div id="success-msg" class="success-msg"></div>
       <div id="error-msg" class="error-msg"></div>
 
-      <form class="form" id="register-form">
-        <p>
-          Kayıt Ol<span>Ücretsiz hesabını oluştur ve müziğe başla</span>
-        </p>
-        <button type="button" class="oauthButton" id="btn-google-register">
-          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" style="width:20px;height:20px;flex-shrink:0;">
+      <form id="register-form">
+        <button type="button" class="btn-oauth-google" id="btn-google-register">
+          <svg viewBox="0 0 24 24" width="20" height="20" style="width:20px;height:20px;flex-shrink:0;">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
@@ -59,25 +54,33 @@
           </svg>
           Google ile Kayıt Ol
         </button>
-        <div class="separator">
-          <div></div>
-          <span>VEYA</span>
-          <div></div>
+
+        <div class="auth-divider">VEYA</div>
+
+        <div class="auth-field">
+          <input type="text" class="auth-input" placeholder="Kullanıcı Adı" name="username" id="register-username" required>
         </div>
-        <input type="text" placeholder="Kullanıcı Adı" name="username" id="register-username">
-        <input type="email" placeholder="E-posta" name="email" id="register-email">
-        <input type="password" placeholder="Şifre" name="password" id="register-password">
-        <button type="button" class="oauthButton" id="btn-register" style="background: var(--neon); color: #000; font-weight: 800;">
-          <span>Kayıt Ol ➔</span>
+
+        <div class="auth-field">
+          <input type="email" class="auth-input" placeholder="E-posta Adresi" name="email" id="register-email" required>
+        </div>
+
+        <div class="auth-field">
+          <input type="password" class="auth-input" placeholder="Şifre (En az 6 karakter)" name="password" id="register-password" required>
+        </div>
+
+        <button type="button" class="btn-auth-submit" id="btn-register">
+          Hesabımı Oluştur ➔
         </button>
-        <p class="auth-switch" style="font-size: 14px; color: var(--text-muted); margin-top: 10px;">
-          Zaten hesabın var mı? <a href="login.html" style="color: var(--neon); font-weight: 700; text-decoration: none;">Giriş Yap</a>
+
+        <p class="auth-footer-text">
+          Zaten hesabınız var mı? <a href="login.html">Giriş Yap</a>
         </p>
       </form>
     </div>
   </main>
 
-  <footer class="cyber-footer">
+  <footer class="site-footer">
     <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
   </footer>
 </body>

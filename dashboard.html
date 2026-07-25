@@ -1,254 +1,124 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy - Kumanda Merkezi</title>
-  <link rel="stylesheet" href="css/style.css?v=max5">
+  <meta name="description" content="Bekofy kullanıcı hesabı ve profil yönetim paneli.">
+  <link rel="stylesheet" href="css/style.css?v=unified1.0">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
-  <style>
-    /* Cyber Dashboard Styles */
-    .dash-wrapper {
-      padding: 120px 20px 80px;
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 10;
-    }
-
-    .dash-bento-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 24px;
-      margin-top: 40px;
-    }
-
-    .cyber-profile-card {
-      grid-column: span 8;
-      background: var(--bg-card);
-      border: 3px solid var(--border-neon);
-      padding: 36px;
-      box-shadow: var(--shadow-neon-lg);
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      position: relative;
-    }
-
-    .dash-avatar-box {
-      width: 130px;
-      height: 130px;
-      background: #000;
-      border: 3px solid var(--neon);
-      box-shadow: var(--shadow-neon-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-display);
-      font-size: 48px;
-      color: var(--neon);
-      flex-shrink: 0;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .dash-avatar-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .dash-user-name {
-      font-family: var(--font-display);
-      font-size: 40px;
-      color: var(--text-white);
-      margin-bottom: 4px;
-    }
-
-    .dash-user-email {
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 15px;
-      margin-bottom: 16px;
-    }
-
-    .cyber-role-pill {
-      display: inline-block;
-      padding: 4px 14px;
-      background: var(--neon);
-      color: #000;
-      font-family: var(--font-mono);
-      font-weight: 900;
-      font-size: 12px;
-      box-shadow: 2px 2px 0 #000;
-      text-transform: uppercase;
-    }
-
-    .cyber-panel-card {
-      background: var(--bg-card);
-      border: 2px solid var(--border-neon);
-      padding: 28px;
-      box-shadow: var(--shadow-neon-sm);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.2s;
-    }
-
-    .cyber-panel-card:hover {
-      transform: translate(-3px, -3px);
-      box-shadow: var(--shadow-neon-lg);
-      border-color: #00FF66;
-    }
-
-    .col-span-4 { grid-column: span 4; }
-    .col-span-6 { grid-column: span 6; }
-    .col-span-12 { grid-column: span 12; }
-
-    .cyber-field {
-      margin-bottom: 16px;
-    }
-
-    .cyber-field label {
-      display: block;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .cyber-input {
-      width: 100%;
-      padding: 12px 16px;
-      background: #000000;
-      border: 2px solid var(--border-neon);
-      color: var(--neon);
-      font-family: var(--font-mono);
-      font-size: 14px;
-      outline: none;
-    }
-
-    .cyber-input:focus {
-      border-color: var(--neon);
-      box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
-    }
-
-    @media (max-width: 900px) {
-      .cyber-profile-card, .col-span-4, .col-span-6 { grid-column: span 12; }
-      .cyber-profile-card { flex-direction: column; text-align: center; }
-    }
-  </style>
 </head>
 
 <body>
-  <!-- Cyber Scanline Layer & Ambient Glow -->
-  <div class="cyber-bg"></div>
-  <div class="ambient-glow ambient-glow-1"></div>
-
-  <!-- Neo-Brutalist Nav -->
-  <nav class="cyber-nav">
-    <a href="index.html" class="nav-brand">
-      <div class="brand-icon">B</div>
-      <span class="brand-title">BEKOFY</span>
-    </a>
-    <div class="nav-menu">
-      <a href="index.html" class="nav-link">// Ana Sayfa</a>
-      <a href="premium.html" class="nav-link">// Premium</a>
-      <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="nav-link">// İndir</a>
-      <a href="artist.html" id="nav-artist-link" class="nav-link" style="display:none; color: var(--neon);">// Sanatçı Kulisi</a>
-      <button id="btn-logout" class="btn-cyber btn-cyber-secondary" style="padding: 6px 16px; font-size: 12px;">ÇIKIŞ YAP</button>
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="logo-brand">
+        <div class="logo-badge">B</div>
+        <span class="logo-name">Bekofy</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Keşfet</a>
+        <a href="premium.html" class="nav-link">Premium</a>
+        <a href="dashboard.html" class="nav-link active">Hesabım</a>
+        <a href="artist.html" id="nav-artist-link" class="nav-link" style="display:none; color: var(--emerald);">Sanatçı Kulisi</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="btn-logout" class="btn-minimal btn-secondary">Çıkış Yap</button>
+      </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="dash-wrapper">
-    <div class="section-head" style="text-align: left;">
-      <h1 class="section-main-title">KUMANDA MERKEZİ</h1>
+  <!-- Dashboard Main Stage -->
+  <main class="dash-page-wrapper">
+    <div class="section-head" style="text-align: left; margin-bottom: 32px;">
+      <span class="section-label">HESAP YÖNETİMİ</span>
+      <h1 class="section-title">KUMANDA MERKEZİ 🎛️</h1>
     </div>
 
     <div class="dash-bento-grid">
-      <!-- Profile Main Card -->
-      <div class="cyber-profile-card">
-        <div class="dash-avatar-box" id="dash-avatar" title="Avatar Yükle">
+      <!-- Profile Card -->
+      <div class="dash-profile-card">
+        <div class="dash-avatar-box" id="dash-avatar" title="Avatar Değiştir">
           <span id="dash-avatar-initials">?</span>
         </div>
         <div>
-          <h2 class="dash-user-name" id="dash-username">Yükleniyor...</h2>
-          <div class="dash-user-email" id="dash-email">Sorgulanıyor...</div>
-          <span class="cyber-role-pill" id="dash-role-badge">Kullanıcı</span>
+          <h2 style="font-family: var(--font-display); font-size: 32px; font-weight: 800; margin-bottom: 4px;" id="dash-username">Yükleniyor...</h2>
+          <div style="font-family: var(--font-code); color: var(--text-gray); font-size: 14px; margin-bottom: 12px;" id="dash-email">Sorgulanıyor...</div>
+          <span style="display: inline-block; padding: 4px 14px; background: rgba(30, 215, 96, 0.15); color: var(--emerald); border: 1px solid var(--emerald); border-radius: var(--radius-pill); font-size: 12px; font-weight: 700;" id="dash-role-badge">Kullanıcı</span>
         </div>
       </div>
 
       <!-- Subscription Card -->
-      <div class="cyber-panel-card col-span-4">
+      <div class="dash-panel-card col-span-4">
         <div>
-          <h3 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 16px;">CÜZDAN & PAKET</h3>
-          <div class="cyber-field">
-            <label>SİSTEM STATÜSÜ</label>
-            <div id="dash-plan" style="font-family: var(--font-mono); font-size: 16px; color: var(--neon); font-weight: 700;">
+          <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 16px;">PAKET STATÜSÜ</h3>
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Mevcut Plan</label>
+            <div id="dash-plan" style="font-family: var(--font-code); font-size: 16px; color: var(--emerald); font-weight: 700; margin-top: 4px;">
               ÜCRETSİZ PLAN
             </div>
           </div>
         </div>
-        <a href="premium.html" class="btn-cyber btn-cyber-primary" style="text-decoration:none; text-align:center; width:100%; margin-top:16px;">
-          ⚡ PREMIUM YÜKSEL
+        <a href="premium.html" class="btn-minimal btn-primary" style="text-decoration:none; text-align:center; width:100%; margin-top:16px;">
+          Premium'a Yükselt ⚡
         </a>
       </div>
 
-      <!-- Identity Settings -->
-      <div class="cyber-panel-card col-span-4">
+      <!-- Identity Card -->
+      <div class="dash-panel-card col-span-4">
         <div>
-          <h3 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 16px;">MAHLAS DEĞİŞTİR</h3>
-          <div class="cyber-field">
-            <label>YENİ KULLANICI ADI</label>
-            <input type="text" id="edit-username" class="cyber-input" placeholder="Kullanıcı adı...">
+          <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 16px;">KULLANICI ADI</h3>
+          <div class="auth-field">
+            <input type="text" id="edit-username" class="auth-input" placeholder="Yeni kullanıcı adı...">
           </div>
         </div>
-        <button class="btn-cyber btn-cyber-secondary" id="btn-save-username" style="width:100%; margin-top:16px;">
-          KİMLİĞİ GÜNCELLE
+        <button class="btn-minimal btn-secondary" id="btn-save-username" style="width:100%; margin-top:16px;">
+          Kaydet
         </button>
       </div>
 
-      <!-- Security Settings -->
-      <div class="cyber-panel-card col-span-4">
+      <!-- Security Card -->
+      <div class="dash-panel-card col-span-4">
         <div>
-          <h3 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 16px;">ŞİFRE YENİLE</h3>
-          <div class="cyber-field">
-            <label>YENİ ŞİFRE</label>
-            <input type="password" id="edit-password" class="cyber-input" placeholder="En az 6 karakter...">
+          <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 16px;">ŞİFRE DEĞİŞTİR</h3>
+          <div class="auth-field">
+            <input type="password" id="edit-password" class="auth-input" placeholder="Yeni şifreniz...">
           </div>
         </div>
-        <button class="btn-cyber btn-cyber-secondary" id="btn-change-password" style="width:100%; margin-top:16px;">
-          ŞİFREYİ KAYDET
+        <button class="btn-minimal btn-secondary" id="btn-change-password" style="width:100%; margin-top:16px;">
+          Şifreyi Güncelle
         </button>
       </div>
 
-      <!-- System Stats / Uid -->
-      <div class="cyber-panel-card col-span-4">
+      <!-- Account Info Card -->
+      <div class="dash-panel-card col-span-4">
         <div>
-          <h3 style="font-family: var(--font-display); font-size: 22px; margin: 0 0 16px;">HESAP DETAYLARI</h3>
-          <div class="cyber-field">
-            <label>KULLANICI ID</label>
-            <div id="dash-uid" style="font-family: var(--font-mono); font-size: 11px; color: var(--neon); word-break: break-all;">—</div>
+          <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 16px;">HESAP DETAYLARI</h3>
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Kullanıcı ID</label>
+            <div id="dash-uid" style="font-family: var(--font-code); font-size: 11px; color: var(--emerald); word-break: break-all; margin-top: 4px;">—</div>
           </div>
-          <div class="cyber-field">
-            <label>KAYIT TARİHİ</label>
-            <div id="dash-created" style="font-family: var(--font-mono); font-size: 13px; color: var(--text-white);">—</div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Kayıt Tarihi</label>
+            <div id="dash-created" style="font-size: 13px; color: var(--text-white); margin-top: 4px;">—</div>
           </div>
         </div>
-        <button class="btn-cyber btn-cyber-secondary" id="btn-logout-bottom" style="width:100%; margin-top:16px; border-color: #FF3333; color: #FF3333;">
-          ÇIKIŞ YAP
+        <button class="btn-minimal btn-secondary" id="btn-logout-bottom" style="width:100%; margin-top:16px; border-color: rgba(255, 77, 77, 0.4); color: #ff4d4d;">
+          Hesaptan Çıkış Yap
         </button>
       </div>
     </div>
   </main>
 
-  <footer class="cyber-footer">
+  <footer class="site-footer">
     <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
   </footer>
 
   <script src="js/dashboard.js"></script>
 </body>
+
 </html>
