@@ -39,15 +39,21 @@ html {
   background-color: var(--bg-black);
   color: var(--text-white);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100%;
 }
 
 body {
   min-height: 100vh;
+  height: auto !important;
   background-color: var(--bg-black);
   color: var(--text-white);
   line-height: 1.5;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  position: relative;
 }
 
 /* GSAP Top Scroll Bar */
@@ -176,74 +182,20 @@ body {
 }
 
 /* ═════════════════════════════════════════════════════════════════════════
-   MASTER SCROLL VIEWPORT & STAGES (HOME SHOWCASE)
+   LANDING PAGE FLOWING SECTIONS & SCROLLABLE LAYOUT
    ═════════════════════════════════════════════════════════════════════════ */
-.master-scroll-viewport {
+.landing-main-wrapper {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 20%, #0d111d 0%, #050507 80%);
-}
-
-/* Ambient Background Mesh Blobs */
-.ambient-mesh-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.ambient-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(140px);
-  opacity: 0.18;
-  will-change: transform;
-}
-
-.blob-1 {
-  width: 600px;
-  height: 600px;
-  background: #1ED760;
-  top: -150px;
-  left: 25%;
-}
-
-.blob-2 {
-  width: 500px;
-  height: 500px;
-  background: #4338CA;
-  bottom: -100px;
-  right: 15%;
-}
-
-.blob-3 {
-  width: 450px;
-  height: 450px;
-  background: #128a3c;
-  top: 35%;
-  left: -100px;
-}
-
-.master-stage-container {
-  position: absolute;
-  width: min(1200px, 92%);
-  height: 85vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  padding-top: 100px;
+  padding-bottom: 80px;
   z-index: 5;
 }
 
-/* Hero Stage */
 .hero-stage-layout {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: min(1200px, 92%);
+  margin: 0 auto 120px;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 60px;
@@ -507,43 +459,58 @@ body {
 
 /* Elegant Vector Music Note Stage */
 .spinning-note-stage {
-  position: absolute;
+  position: relative;
+  width: 100%;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  pointer-events: none;
+  margin: 0 auto 80px;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .spinning-music-note-svg {
-  width: 240px;
-  height: 240px;
+  width: 200px;
+  height: 200px;
   color: var(--emerald);
   filter: drop-shadow(0 0 30px rgba(30, 215, 96, 0.4));
   will-change: transform;
 }
 
-/* Story Feature Cards */
+/* Landing Features Grid & Story Feature Cards */
+.landing-features-grid {
+  position: relative;
+  width: min(1200px, 92%);
+  margin: 0 auto 140px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  z-index: 10;
+}
+
 .story-feature-card {
-  position: absolute;
-  width: 360px;
+  position: relative;
+  inset: auto;
+  width: 100%;
   padding: 34px;
   background: rgba(14, 16, 24, 0.92);
   border: 1px solid rgba(30, 215, 96, 0.4);
   border-radius: var(--radius-card);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85), 0 0 30px rgba(30, 215, 96, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
+  z-index: 10;
+  opacity: 1;
+  pointer-events: auto;
+  transition: all 0.3s ease;
 }
 
-#story-feature-1 { left: 2%; top: 25%; }
-#story-feature-2 { right: 2%; top: 25%; }
-#story-feature-3 { left: 2%; bottom: 20%; }
-#story-feature-4 { right: 2%; bottom: 20%; }
+.story-feature-card:hover {
+  border-color: var(--emerald);
+  transform: translateY(-6px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(30, 215, 96, 0.2);
+}
 
 .story-card-icon-wrapper {
   width: 52px;
@@ -575,16 +542,17 @@ body {
 
 /* Master Stats Stage */
 .master-stats-stage {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: min(1200px, 92%);
+  margin: 0 auto 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 40px;
   z-index: 15;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .stats-grid-master {
@@ -628,14 +596,15 @@ body {
 
 /* Master Bento Stage */
 .master-bento-stage {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: min(1200px, 92%);
+  margin: 0 auto 140px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   z-index: 15;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .section-head-center {
@@ -715,16 +684,17 @@ body {
 
 /* Master Finale Stage */
 .master-finale-stage {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: min(1200px, 92%);
+  margin: 0 auto 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 40px;
+  gap: 50px;
   z-index: 15;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .compare-table-master {

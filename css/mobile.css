@@ -17,18 +17,22 @@
   display: none !important;
 }
 
-@media screen and (max-width: 768px), body.android-env {
+body.android-env, body.app-shell-env {
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+@media screen and (max-width: 768px) {
   html, body {
-    background: #1A1D1C !important;
+    background: #050507 !important;
     color: #ffffff !important;
-    width: 100vw !important;
-    height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
+    min-height: 100vh !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
     -webkit-tap-highlight-color: transparent;
   }
 
