@@ -13,11 +13,11 @@
   --bg4: #1a1a1a;
   --card: #161616;
   --card-hover: #1e1e1e;
-  --green: #1DB954;
-  --green2: #1ed760;
-  --green-dim: rgba(29, 185, 84, 0.15);
-  --glow: rgba(29, 185, 84, 0.25);
-  --glow-strong: rgba(29, 185, 84, 0.4);
+  --green: #7C9A72;
+  --green2: #9AB88F;
+  --green-dim: rgba(124, 154, 114, 0.15);
+  --glow: rgba(124, 154, 114, 0.25);
+  --glow-strong: rgba(124, 154, 114, 0.4);
   --tp: #ffffff;
   --ts: #b3b3b3;
   --tm: #666666;
@@ -157,7 +157,7 @@ body {
 .admin-login-card .input-group input:focus {
   border-color: var(--green);
   background: var(--bg3);
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+  box-shadow: 0 0 0 3px rgba(124, 154, 114, 0.1);
 }
 
 .admin-login-card .error-msg {
@@ -501,7 +501,7 @@ body {
 
 .search-input:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+  box-shadow: 0 0 0 3px rgba(124, 154, 114, 0.1);
 }
 
 .search-input::placeholder {
@@ -890,7 +890,7 @@ body {
 .modal-body .form-group input:focus,
 .modal-body .form-group select:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+  box-shadow: 0 0 0 3px rgba(124, 154, 114, 0.1);
 }
 
 .modal-body .form-group .cover-preview {
@@ -1382,7 +1382,7 @@ body {
 
 .tag-input-wrapper:focus-within {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+  box-shadow: 0 0 0 3px rgba(124, 154, 114, 0.1);
 }
 
 .tag-item {

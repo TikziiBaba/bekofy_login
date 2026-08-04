@@ -6,7 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy - Kumanda Merkezi</title>
   <meta name="description" content="Bekofy kullanıcı hesabı ve profil yönetim paneli.">
-  <link rel="stylesheet" href="css/style.css?v=unified1.0">
+  
+  <link rel="stylesheet" href="css/style.css?v=unified2.0">
+  <link rel="stylesheet" href="css/profile.css?v=unified2.0">
+  <link rel="stylesheet" href="css/mobile.css?v=unified2.0">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
@@ -32,8 +36,14 @@
     </div>
   </header>
 
+  <!-- Ambient Background Mesh Blobs -->
+  <div class="ambient-mesh-bg">
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+  </div>
+
   <!-- Dashboard Main Stage -->
-  <main class="dash-page-wrapper">
+  <main class="dash-page-wrapper scroll-reveal is-visible">
     <div class="section-head" style="text-align: left; margin-bottom: 32px;">
       <span class="section-label">HESAP YÖNETİMİ</span>
       <h1 class="section-title">KUMANDA MERKEZİ 🎛️</h1>

@@ -1,56 +1,75 @@
 // ===== Main App Logic =====
 
-let allSongs = [];
-let searchResultSongs = [];
-let currentPage = 'home';
-let currentUserId = null;
-let currentUserRole = 'user';
-let userLikedSongIds = new Set();
-let userPlaylists = [];
-let currentPlaylistId = null;
-let currentPlaylistSongs = [];
-let artistUsernames = new Set(); // For verified ticks
+var allSongs = [];
+var searchResultSongs = [];
+var currentPage = 'home';
+var currentUserId = null;
+var currentUserRole = 'user';
+var userLikedSongIds = new Set();
+var userPlaylists = [];
+var currentPlaylistId = null;
+var currentPlaylistSongs = [];
+var artistUsernames = new Set(); // For verified ticks
+var allSongsCurrentPage = 1;
+var ALL_SONGS_PER_PAGE = 20;
 
 document.addEventListener('DOMContentLoaded', () => {
-  initTitlebar();
-  initNavigation();
-  initSidebarCollapse();
-  initPlayerControls();
+  const safeRun = (fn, name) => {
+    try {
+      if (typeof fn === 'function') fn();
+    } catch (err) {
+      console.warn(`[Bekofy Init Warning] ${name || fn.name}:`, err);
+    }
+  };
 
-  // Wait briefly for elements
+  safeRun(initTitlebar, 'initTitlebar');
+  safeRun(initNavigation, 'initNavigation');
+  safeRun(initSidebarCollapse, 'initSidebarCollapse');
+  safeRun(initPlayerControls, 'initPlayerControls');
+  safeRun(initMiniPlayerButton, 'initMiniPlayerButton');
+
   setTimeout(() => {
-    initLyricsToggle();
-    initLyricShare();
-    initLyricsSyncControls();
+    safeRun(initLyricsToggle, 'initLyricsToggle');
+    safeRun(initLyricShare, 'initLyricShare');
+    safeRun(initLyricsSyncControls, 'initLyricsSyncControls');
   }, 500);
-  initSearch();
-  initPlaylistModal();
-  initContextMenu();
-  initPlaylistContextMenu();
-  initPlaylistDetailActions();
-  initAdminActions();
-  initAdminModalListeners();
-  initProfilePage();
-  initArtistPage();
-  initLogout();
-  initVolumeToggle();
-  initProfilePopupClick();
-  initFriendActivity();
-  loadUserInfo();
-  loadArtistUsernames();
-  loadSongs();
-  loadPlaylists();
-  setGreeting();
 
-  // Load saved player state (last song & volume)
-  setTimeout(() => player.loadState(), 500);
+  safeRun(initSearch, 'initSearch');
+  safeRun(initPlaylistModal, 'initPlaylistModal');
+  safeRun(initContextMenu, 'initContextMenu');
+  safeRun(initPlaylistContextMenu, 'initPlaylistContextMenu');
+  safeRun(initPlaylistDetailActions, 'initPlaylistDetailActions');
+  safeRun(initAdminActions, 'initAdminActions');
+  safeRun(initAdminModalListeners, 'initAdminModalListeners');
+  safeRun(initProfilePage, 'initProfilePage');
+  safeRun(initArtistPage, 'initArtistPage');
+  safeRun(initPremiumPage, 'initPremiumPage');
+  safeRun(initLogout, 'initLogout');
+  safeRun(initVolumeToggle, 'initVolumeToggle');
+  safeRun(initProfilePopupClick, 'initProfilePopupClick');
+  safeRun(initFriendActivity, 'initFriendActivity');
+
+  safeRun(loadUserInfo, 'loadUserInfo');
+  safeRun(loadArtistUsernames, 'loadArtistUsernames');
+  safeRun(loadSongs, 'loadSongs');
+  safeRun(loadPlaylists, 'loadPlaylists');
+  safeRun(setGreeting, 'setGreeting');
+
+  setTimeout(() => {
+    if (typeof player !== 'undefined' && player.loadState) {
+      try { player.loadState(); } catch (e) {}
+    }
+  }, 500);
 });
 
 // ===== Titlebar =====
 function initTitlebar() {
-  document.getElementById('btn-minimize').addEventListener('click', () => window.electronAPI.minimize());
-  document.getElementById('btn-maximize').addEventListener('click', () => window.electronAPI.maximize());
-  document.getElementById('btn-close').addEventListener('click', () => window.electronAPI.close());
+  const btnMin = document.getElementById('btn-minimize');
+  const btnMax = document.getElementById('btn-maximize');
+  const btnClose = document.getElementById('btn-close');
+  if (btnMin && window.electronAPI?.minimize) btnMin.addEventListener('click', () => window.electronAPI.minimize());
+  if (btnMax && window.electronAPI?.maximize) btnMax.addEventListener('click', () => window.electronAPI.maximize());
+  if (btnClose && window.electronAPI?.close) btnClose.addEventListener('click', () => window.electronAPI.close());
 }
 
 // ===== Sidebar Collapse =====
@@ -58,131 +77,21 @@ function initSidebarCollapse() {
   const btn = document.getElementById('btn-collapse-sidebar');
   const sidebar = document.getElementById('sidebar');
   if (btn && sidebar) {
-    // Restore state from localStorage
     const isCollapsed = localStorage.getItem('bekofy-sidebar-collapsed') === 'true';
-    if (isCollapsed) sidebar.classList.add('collapsed');
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+      document.body.classList.add('sidebar-collapsed-active');
+    }
 
     btn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-      localStorage.setItem('bekofy-sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      const collapsed = sidebar.classList.toggle('collapsed');
+      document.body.classList.toggle('sidebar-collapsed-active', collapsed);
+      localStorage.setItem('bekofy-sidebar-collapsed', collapsed);
     });
   }
 }
 
-// ===== Navigation =====
-function initNavigation() {
-  document.querySelectorAll('.nav-item, .top-nav-btn[data-page], .top-nav-home, [data-page]').forEach(item => {
-    item.addEventListener('click', (e) => {
-      const page = item.dataset.page;
-      if (page) {
-        e.preventDefault();
-        navigateTo(page);
-      }
-    });
-  });
-}
 
-let pageHistory = [];
-let isNavigatingBack = false;
-
-// Sayfalandırma değişkenleri
-let allSongsCurrentPage = 1;
-const ALL_SONGS_PER_PAGE = 20;
-
-function navigateTo(page, replaceHistory = false) {
-  if (!page) return;
-
-  const pageEl = document.getElementById(`page-${page}`);
-  if (!pageEl) {
-    console.warn(`Sayfa bulunamadı: page-${page}`);
-    return;
-  }
-
-  if (currentPage === page && pageEl.classList.contains('active')) return;
-
-  if (!replaceHistory && !isNavigatingBack && currentPage) {
-    pageHistory.push(currentPage);
-  }
-
-  const prevPage = currentPage;
-  const direction = isNavigatingBack ? 'back' : 'forward';
-  isNavigatingBack = false;
-
-  currentPage = page;
-  document.querySelectorAll('.nav-item, .top-nav-btn').forEach(el => el.classList.remove('active'));
-  const navEl = document.querySelector(`[data-page="${page}"]`);
-  if (navEl) navEl.classList.add('active');
-
-  document.querySelectorAll('.page').forEach(el => {
-    if (el !== pageEl) {
-      el.classList.remove('active', 'page-enter-left', 'page-enter-right', 'page-exit-left', 'page-exit-right');
-    }
-  });
-
-  pageEl.scrollTop = 0;
-  pageEl.classList.add('active');
-  pageEl.classList.remove('page-enter-left', 'page-enter-right');
-  void pageEl.offsetHeight; // reflow
-  pageEl.classList.add(direction === 'back' ? 'page-enter-right' : 'page-enter-left');
-  setTimeout(() => {
-    pageEl.classList.remove('page-enter-left', 'page-enter-right');
-  }, 350);
-
-  const main = document.getElementById('main-content');
-  if (main) main.scrollTop = 0;
-
-  if (page === 'search') {
-    setTimeout(() => {
-      const input = document.getElementById('top-search-input');
-      if (input) input.focus();
-    }, 100);
-  }
-  if (page === 'library') {
-    if (typeof loadLibraryPage === 'function') loadLibraryPage();
-  }
-  if (page === 'new') {
-    if (typeof loadNewContent === 'function') loadNewContent();
-  }
-  if (page === 'admin') {
-    if (currentUserRole !== 'admin' && currentUserRole !== 'yetkili') {
-      showToast('Bu sayfaya erişim yetkiniz yok', 'error');
-      navigateTo('home');
-      return;
-    }
-    if (typeof loadAdminPage === 'function') loadAdminPage();
-  }
-  if (page === 'profile') {
-    if (typeof loadProfilePage === 'function') loadProfilePage();
-  }
-  if (page === 'premium') {
-    if (typeof initPremiumPage === 'function') initPremiumPage();
-  }
-  if (page === 'artist-upload') {
-    if (typeof initArtistPage === 'function') initArtistPage();
-    if (typeof loadArtistPage === 'function') loadArtistPage();
-  }
-}
-
-function goBack() {
-  if (pageHistory.length > 0) {
-    const prevPage = pageHistory.pop();
-    isNavigatingBack = true;
-    navigateTo(prevPage);
-  }
-}
-
-// Mouse geri tuşu için (fallback)
-window.addEventListener('mouseup', (e) => {
-  if (e.button === 3) {
-    goBack();
-  }
-});
-
-if (window.electronAPI && window.electronAPI.onAppGoBack) {
-  window.electronAPI.onAppGoBack(() => {
-    goBack();
-  });
-}
 
 // ===== Profile Popup (Discord Style) =====
 function initProfilePopupClick() {
@@ -221,10 +130,22 @@ function initProfilePopupClick() {
       }
     });
 
-    // Bind buttons
     document.getElementById('btn-discord-edit-profile')?.addEventListener('click', () => {
       popup.classList.remove('active');
       navigateTo('profile');
+      if (typeof toggleInlineEditPanel === 'function') {
+        setTimeout(() => toggleInlineEditPanel(true), 200);
+      }
+    });
+
+    document.getElementById('btn-discord-premium')?.addEventListener('click', () => {
+      popup.classList.remove('active');
+      navigateTo('premium');
+    });
+
+    document.getElementById('btn-discord-artist-upload')?.addEventListener('click', () => {
+      popup.classList.remove('active');
+      navigateTo('artist-upload');
     });
 
     document.getElementById('btn-discord-copy-id')?.addEventListener('click', () => {
@@ -465,7 +386,7 @@ async function loadArtistUsernames() {
 
 function getVerifiedTick(artistName, forceOnProfile = false) {
   if (!forceOnProfile) return '';
-  return '<span class="verified-tick" title="Onaylı Sanatçı">✓</span>';
+  return '<span class="verified-tick" title="Onaylı Sanatçı">Ô£ô</span>';
 }
 
 function formatArtistLinks(artistStr) {
@@ -574,8 +495,15 @@ async function loadUserInfo() {
       const displayName = user.user_metadata?.username || user.email?.split('@')[0] || 'Kullanıcı';
 
       const nameEl = document.getElementById('user-name');
-      nameEl.childNodes[0].textContent = displayName + ' ';
-      document.getElementById('user-email').textContent = user.email || '';
+      if (nameEl) {
+        if (nameEl.childNodes && nameEl.childNodes[0]) {
+          nameEl.childNodes[0].textContent = displayName + ' ';
+        } else {
+          nameEl.textContent = displayName;
+        }
+      }
+      const emailEl = document.getElementById('user-email');
+      if (emailEl) emailEl.textContent = user.email || '';
 
       // Profil yoksa oluştur
       await ensureProfile(user.id, displayName);
@@ -641,17 +569,12 @@ async function loadUserAvatar(userId, displayName) {
     const avatarEl = document.getElementById('user-avatar');
     const topAvatarEl = document.getElementById('top-user-avatar');
 
-    if (profile && profile.avatar_url) {
-      avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-      if (topAvatarEl) topAvatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-    } else {
-      // Varsayılan avatar (baş harfler ile)
-      const initials = getInitials(displayName);
-      const color = getAvatarColor(displayName);
-      const avatarHtml = `<div class="avatar-initials" style="width:100%;height:100%;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${initials}</div>`;
-      avatarEl.innerHTML = avatarHtml;
-      if (topAvatarEl) topAvatarEl.innerHTML = avatarHtml;
-    }
+    const avatarHtml = (profile && profile.avatar_url)
+      ? `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
+      : `<div class="avatar-initials" style="width:100%;height:100%;border-radius:50%;background:${getAvatarColor(displayName)};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">${getInitials(displayName)}</div>`;
+
+    if (avatarEl) avatarEl.innerHTML = avatarHtml;
+    if (topAvatarEl) topAvatarEl.innerHTML = avatarHtml;
   } catch (err) {
     console.log('Avatar load error:', err);
   }
@@ -665,7 +588,7 @@ function getInitials(name) {
 }
 
 function getAvatarColor(name) {
-  const colors = ['#1DB954', '#E91E63', '#9C27B0', '#3F51B5', '#009688', '#FF5722', '#795548', '#607D8B', '#F44336', '#2196F3', '#4CAF50', '#FF9800'];
+  const colors = ['#7C9A72', '#E91E63', '#9C27B0', '#3F51B5', '#009688', '#FF5722', '#795548', '#607D8B', '#F44336', '#2196F3', '#4CAF50', '#FF9800'];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -734,7 +657,7 @@ window.toggleFriendActivity = function() {
   const sidebar = document.getElementById('friend-activity-sidebar');
   const btnOpen = document.getElementById('btn-top-friend-activity');
   if (!sidebar) {
-    console.warn('Arkadaş aktivitesi paneli bulunamadı');
+    console.warn('Arkada┼ş aktivitesi paneli bulunamadı');
     return;
   }
 
@@ -742,11 +665,12 @@ window.toggleFriendActivity = function() {
   if (isCollapsed) {
     sidebar.classList.remove('collapsed');
     sidebar.style.display = 'flex';
-    sidebar.style.width = '250px';
+    sidebar.style.width = '280px';
     if (btnOpen) btnOpen.classList.add('active');
     if (typeof loadFriendActivity === 'function') loadFriendActivity();
   } else {
     sidebar.classList.add('collapsed');
+    sidebar.style.display = 'none';
     sidebar.style.width = '0';
     if (btnOpen) btnOpen.classList.remove('active');
   }
@@ -757,70 +681,76 @@ function initFriendActivity() {
   const btnClose = document.getElementById('btn-close-friend-activity');
 
   if (btnOpen) {
-    btnOpen.onclick = function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+    btnOpen.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       window.toggleFriendActivity();
-    };
+    });
   }
 
   if (btnClose) {
-    btnClose.onclick = function(e) {
-      if (e) e.preventDefault();
+    btnClose.addEventListener('click', (e) => {
+      e.preventDefault();
       const sidebar = document.getElementById('friend-activity-sidebar');
       if (sidebar) {
         sidebar.classList.add('collapsed');
+        sidebar.style.display = 'none';
         sidebar.style.width = '0';
       }
       if (btnOpen) btnOpen.classList.remove('active');
-    };
+    });
   }
 }
 
-let _currentFriends = [];
+var _currentFriends = [];
 
 async function loadFriendActivity() {
-  if (!currentUserId) return;
   const list = document.getElementById('friend-activity-list');
+  if (!list) return;
+
+  list.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Yükleniyor...</p></div>`;
 
   try {
     const sb = getSupabase();
-    // Fetch accepted friends
-    const { data: friendships, error } = await sb.from('friendships')
+    let friendIds = [];
+
+    // 1. Try friendships table
+    const { data: friendships } = await sb.from('friendships')
       .select('friend_id, user_id')
-      .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
+      .or(`user_id.eq.${currentUserId || '00000000-0000-0000-0000-000000000000'},friend_id.eq.${currentUserId || '00000000-0000-0000-0000-000000000000'}`)
       .eq('status', 'accepted');
 
-    if (error) throw error;
-
-    if (!friendships || friendships.length === 0) {
-      list.innerHTML = `<div class="no-activity-text">Henüz hiç arkadaşın yok. Başkalarını takip etmeye başla!</div>`;
-      return;
+    if (friendships?.length) {
+      friendIds = friendships.map(f => f.user_id === currentUserId ? f.friend_id : f.user_id);
+    } else {
+      // 2. Fallback to follows table
+      const { data: follows } = await sb.from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUserId || '00000000-0000-0000-0000-000000000000')
+        .eq('status', 'accepted');
+      if (follows?.length) {
+        friendIds = follows.map(f => f.following_id);
+      }
     }
 
-    const friendIds = friendships.map(f => f.user_id === currentUserId ? f.friend_id : f.user_id);
-    _currentFriends = friendIds;
+    let profiles = [];
 
-    // Subscribe to realtime updates
-    if (typeof subscribeToFriendActivity === 'function') {
-      subscribeToFriendActivity(friendIds, (newProfile) => {
-        updateFriendActivityUI(newProfile);
-      });
+    if (friendIds.length) {
+      _currentFriends = friendIds;
+      const { data: friendProfiles } = await sb.from('profiles')
+        .select('id, username, avatar_url, avatar_frame, role, is_playing, last_activity')
+        .in('id', friendIds);
+      profiles = friendProfiles || [];
+    } else {
+      // Fallback: Fetch community profiles so panel is never empty
+      const { data: communityProfiles } = await sb.from('profiles')
+        .select('id, username, avatar_url, avatar_frame, role, is_playing, last_activity')
+        .neq('id', currentUserId || '00000000-0000-0000-0000-000000000000')
+        .limit(10);
+      profiles = communityProfiles || [];
     }
 
-    // Fetch profiles of friends including song info
-    const { data: profiles, error: profileErr } = await sb.from('profiles')
-      .select(`
-        id, username, avatar_url, avatar_frame, role, is_playing, last_activity,
-        songs:current_song_id (id, title, artist, cover_url)
-      `)
-      .in('id', friendIds);
-
-    if (profileErr) throw profileErr;
-    
-    if (profiles) {
+    if (profiles.length) {
       profiles.forEach(p => {
         if (p.role === 'user') p.avatar_frame = 'none';
       });
@@ -830,7 +760,7 @@ async function loadFriendActivity() {
 
   } catch (err) {
     console.error('Arkadaş aktivitesi yüklenirken hata:', err);
-    list.innerHTML = `<div class="no-activity-text">Aktiviteler yüklenemedi.</div>`;
+    list.innerHTML = `<div class="no-activity-text" style="padding:20px;text-align:center;color:var(--ts);font-size:13px">Aktivite bulunamadı.</div>`;
   }
 }
 
@@ -944,44 +874,53 @@ function updateFriendActivityUI(newProfile) {
 
 
 // ===== Load Songs =====
-let _songsSubscribed = false;
+var _songsSubscribed = false;
 
 async function loadSongs() {
   try {
     let { data, error } = await fetchApprovedSongs();
-    if (error) {
-      console.warn('Songs fetch error, falling back to fetchAllSongs:', error);
+    if (error || !data || data.length === 0) {
+      console.warn('[Bekofy] fetchApprovedSongs empty or error, falling back to fetchAllSongs:', error);
       const fallback = await fetchAllSongs();
-      data = fallback.data;
-      error = fallback.error;
-    }
-
-    if (error) {
-      showEmptyState('recent-songs', 'Şarkılar yüklenemedi');
-      showEmptyState('all-songs', 'Şarkılar yüklenemedi');
-      return;
+      if (fallback.data && fallback.data.length > 0) {
+        data = fallback.data;
+      }
     }
     allSongs = data || [];
-    renderRecentSongs(allSongs.slice(0, 8));
-    renderAllSongs(allSongs);
-    renderRecommendedSongs();
-    renderQuickPicks(allSongs);
-    renderHomePopularArtists(allSongs);
-    renderTopLikedSongs(allSongs);
-    initMoodCards();
+    console.log('[Bekofy] Loaded songs from Supabase/R2 count:', allSongs.length);
+    
+    if (allSongs.length > 0) {
+      renderRecentSongs(allSongs.slice(0, 8));
+      renderAllSongs(allSongs);
+      renderRecommendedSongs();
+      renderQuickPicks(allSongs);
+      renderHomePopularArtists(allSongs);
+      renderTopLikedSongs(allSongs);
+      if (typeof initMoodCards === 'function') initMoodCards();
+    } else {
+      showEmptyState('recent-songs', 'Henüz şarkı yüklenmemiş');
+      showEmptyState('all-songs', 'Henüz şarkı yüklenmemiş');
+      showEmptyState('recommended-songs', 'Henüz öneri yok');
+      showEmptyState('quick-picks', '');
+      showEmptyState('home-popular-artists', 'Henüz sanatçı yok');
+      showEmptyState('top-liked-songs', 'Henüz şarkı yok');
+    }
 
-    // Subscribe to realtime updates only once
     if (!_songsSubscribed) {
       subscribeToSongs((payload) => {
-        console.log('Realtime update:', payload);
+        console.log('[Bekofy] Realtime update:', payload);
         loadSongs();
       });
       _songsSubscribed = true;
     }
   } catch (err) {
-    console.error('Songs load error:', err);
+    console.error('[Bekofy] Songs load error:', err);
     showEmptyState('recent-songs', 'Şarkılar yüklenemedi');
     showEmptyState('all-songs', 'Şarkılar yüklenemedi');
+    showEmptyState('recommended-songs', 'Öneriler yüklenemedi');
+    showEmptyState('quick-picks', '');
+    showEmptyState('home-popular-artists', 'Sanatçılar yüklenemedi');
+    showEmptyState('top-liked-songs', 'Şarkılar yüklenemedi');
   }
 }
 
@@ -1040,7 +979,7 @@ function renderRecentSongs(songs) {
 }
 
 // ===== Discover Weekly Logic =====
-let discoverWeeklyCache = null;
+var discoverWeeklyCache = null;
 async function playDiscoverWeekly() {
   if (allSongs.length === 0) return;
 
@@ -1204,7 +1143,7 @@ function renderAllSongsPage(songs, page) {
 
 function renderPaginationControls(currentPage, totalPages, songs) {
   let pages = [];
-  // Always show first, last, current ±2
+  // Always show first, last, current ┬▒2
   const delta = 2;
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
@@ -1224,7 +1163,7 @@ function renderPaginationControls(currentPage, totalPages, songs) {
   }
 
   const btnHtml = withEllipsis.map(p => {
-    if (p === '...') return `<span class="pagination-ellipsis">…</span>`;
+    if (p === '...') return `<span class="pagination-ellipsis">ÔÇĞ</span>`;
     return `<button class="pagination-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
   }).join('');
 
@@ -1237,7 +1176,7 @@ function renderPaginationControls(currentPage, totalPages, songs) {
       <button class="pagination-btn pagination-arrow" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
       </button>
-      <span class="pagination-info">${(currentPage - 1) * ALL_SONGS_PER_PAGE + 1}–${Math.min(currentPage * ALL_SONGS_PER_PAGE, songs.length)} / ${songs.length} şarkı</span>
+      <span class="pagination-info">${(currentPage - 1) * ALL_SONGS_PER_PAGE + 1}ÔÇô${Math.min(currentPage * ALL_SONGS_PER_PAGE, songs.length)} / ${songs.length} şarkı</span>
     </div>
   `;
 }
@@ -1573,9 +1512,9 @@ function initVolumeToggle() {
 }
 
 // ===== Search =====
-let searchHistoryItems = [];
-const SEARCH_HISTORY_KEY = 'bekofy_search_history';
-const MAX_SEARCH_HISTORY = 8;
+var searchHistoryItems = [];
+var SEARCH_HISTORY_KEY = 'bekofy_search_history';
+var MAX_SEARCH_HISTORY = 8;
 
 function loadSearchHistory() {
   try {
@@ -1721,7 +1660,7 @@ async function showSearchDiscovery() {
 
     // Browse by genre/mood categories
     const categories = [
-      { emoji: '🎵', label: 'Tüm Şarkılar', color: '#1DB954' },
+      { emoji: '🎵', label: 'Tüm Şarkılar', color: '#7C9A72' },
       { emoji: '❤️', label: 'Beğenilenler', color: '#e74c3c' },
       { emoji: '🆕', label: 'Yeni Eklenenler', color: '#9b59b6' },
       { emoji: '🎲', label: 'Rastgele Keşfet', color: '#e67e22' },
@@ -2603,7 +2542,7 @@ function initPlaylistDetailActions() {
 }
 
 // ===== Edit Playlist Modal =====
-let editPlaylistCoverFile = null;
+var editPlaylistCoverFile = null;
 
 function initEditPlaylistModal() {
   const overlay = document.getElementById('edit-playlist-overlay');
@@ -2712,7 +2651,7 @@ function initEditPlaylistModal() {
 }
 
 // ===== Collaborative Playlists Modal =====
-let collabSearchTimer = null;
+var collabSearchTimer = null;
 
 function initCollabModal() {
   const overlay = document.getElementById('overlay-collab');
@@ -2739,8 +2678,8 @@ function initCollabModal() {
 
   // Focus style for input
   usernameInput.addEventListener('focus', () => {
-    usernameInput.style.borderColor = '#1DB954';
-    usernameInput.style.boxShadow = '0 0 0 3px rgba(29, 185, 84, 0.15)';
+    usernameInput.style.borderColor = '#7C9A72';
+    usernameInput.style.boxShadow = '0 0 0 3px rgba(124, 154, 114, 0.15)';
   });
   usernameInput.addEventListener('blur', () => {
     // Delay to allow click on dropdown
@@ -2803,7 +2742,7 @@ function initCollabModal() {
             ? `<div class="collab-avatar-wrap${frameClass}" style="width:36px; height:36px; flex-shrink:0; position:relative;">
                 <img src="${profile.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; position:relative; z-index:2;" alt="">
                </div>`
-            : `<div class="collab-avatar-wrap${frameClass}" style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, rgba(29,185,84,0.2), rgba(29,185,84,0.05)); display:flex; align-items:center; justify-content:center; color:var(--green, #1DB954); font-size:15px; font-weight:700; flex-shrink:0; position:relative;">
+            : `<div class="collab-avatar-wrap${frameClass}" style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, rgba(124,154,114,0.2), rgba(124,154,114,0.05)); display:flex; align-items:center; justify-content:center; color:var(--green, #7C9A72); font-size:15px; font-weight:700; flex-shrink:0; position:relative;">
                 <span style="position:relative; z-index:2;">${(profile.username || '?')[0].toUpperCase()}</span>
                </div>`;
 
@@ -2817,7 +2756,7 @@ function initCollabModal() {
                 </div>
               </div>
               <div style="flex-shrink:0;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#1DB954" stroke-width="2" width="18" height="18">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#7C9A72" stroke-width="2" width="18" height="18">
                   <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                   <circle cx="8.5" cy="7" r="4"/>
                   <line x1="20" y1="8" x2="20" y2="14"/>
@@ -3120,15 +3059,15 @@ function updateLikeButtonState() {
 }
 
 // Update like button when song changes
-const origUpdateUI = player.updateUI.bind(player);
+var origUpdateUI = player.updateUI.bind(player);
 player.updateUI = function (song) {
   origUpdateUI(song);
   updateLikeButtonState();
 };
 
 // ===== Context Menu =====
-let contextMenuSongId = null;
-let contextMenuPlaylistId = null;
+var contextMenuSongId = null;
+var contextMenuPlaylistId = null;
 
 function initContextMenu() {
   const menu = document.getElementById('context-menu');
@@ -3450,7 +3389,7 @@ document.addEventListener('keydown', (e) => {
 
 // ===== Admin Panel =====
 
-let adminSongSource = 'local'; // 'local' veya 'youtube'
+var adminSongSource = 'local'; // 'local' veya 'youtube'
 
 function initAdminActions() {
   // Add song button
@@ -3525,9 +3464,6 @@ async function loadAdminPage() {
   loadAdminUsers();
   // Load songs
   loadAdminSongs();
-  if (window.BekofyAdminTerminal) {
-    window.BekofyAdminTerminal.init('app-terminal-mount');
-  }
 }
 
 async function loadDashboardStats() {
@@ -3541,7 +3477,7 @@ async function loadDashboardStats() {
   }
 }
 
-let allProfiles = [];
+var allProfiles = [];
 
 async function loadAdminUsers() {
   const container = document.getElementById('admin-users-table');
@@ -3617,7 +3553,7 @@ function renderAdminUsers(profiles) {
               <td>
                 <div class="admin-clickable-user" data-user-id="${p.id}" style="display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
                   ${avatar}
-                  <span class="user-row-name" style="${bannedStyle}">${escapeHtml(p.username || 'Adsız')}</span>
+                  <span class="user-row-name" style="${bannedStyle}">${escapeHtml(p.username || 'Ads─▒z')}</span>
                   ${isCurrentUser ? '<span style="color:var(--green);font-size:11px;margin-left:6px">(Sen)</span>' : ''}
                   ${p.is_banned ? '<span style="color:#ff4444;font-size:11px;margin-left:6px;font-weight:700">[BANLI]</span>' : ''}
                 </div>
@@ -3663,7 +3599,7 @@ function renderAdminUsers(profiles) {
 }
 
 // ===== Admin User Modal Functions =====
-let currentAdminModalUser = null;
+var currentAdminModalUser = null;
 
 function openAdminUserModalById(id) {
   const profile = allProfiles.find(p => p.id === id);
@@ -3701,8 +3637,8 @@ function openAdminUserModal(profile) {
   // Role badge
   const roleBadge = document.getElementById('aum-role-badge');
   if (roleBadge) {
-    const icons = { admin: '👑', yetkili: '🛡️', artist: '🎤', premium: '⭐', user: '👤' };
-    roleBadge.textContent = icons[profile.role] || '👤';
+    const icons = { admin: '­şææ', yetkili: '­şøí´©Å', artist: '­şÄñ', premium: 'Ô¡É', user: '­şæñ' };
+    roleBadge.textContent = icons[profile.role] || '­şæñ';
   }
 
   // Username input
@@ -3733,14 +3669,14 @@ function openAdminUserModal(profile) {
 
   if (statBan) {
     if (profile.is_banned) {
-      statBan.textContent = 'Banlı';
+      statBan.textContent = 'Banl─▒';
       statBan.style.color = '#ff4444';
     } else {
       statBan.textContent = 'Aktif';
-      statBan.style.color = 'var(--green, #1db954)';
+      statBan.style.color = 'var(--green, #7C9A72)';
     }
   }
-  if (banText) banText.textContent = profile.is_banned ? 'Engeli Kaldır' : 'Engelle';
+  if (banText) banText.textContent = profile.is_banned ? 'Engeli Kald─▒r' : 'Engelle';
   if (banBtn) {
     if (profile.is_banned) {
       banBtn.style.background = 'rgba(76,175,80,0.15)';
@@ -3789,12 +3725,12 @@ function initAdminModalListeners() {
       if (!profile) return;
       const input = document.getElementById('aum-username-input');
       const newName = input ? input.value.trim() : '';
-      if (!newName) { showToast('Kullanıcı adı boş olamaz', 'error'); return; }
+      if (!newName) { showToast('Kullan─▒c─▒ adı bo┼ş olamaz', 'error'); return; }
       try {
         const sb = getSupabase();
         const { error } = await sb.from('profiles').update({ username: newName }).eq('id', profile.id);
         if (error) throw error;
-        showToast('Kullanıcı adı güncellendi ✅', 'success');
+        showToast('Kullanıcı adı güncellendi Ô£à', 'success');
         currentAdminModalUser.username = newName;
         loadAdminUsers();
       } catch (err) {
@@ -3813,12 +3749,12 @@ function initAdminModalListeners() {
       const { error } = await updateUserRole(profile.id, newRole);
       if (!error) {
         currentAdminModalUser.role = newRole;
-        showToast('Rol güncellendi ✅', 'success');
+        showToast('Rol güncellendi Ô£à', 'success');
         loadAdminUsers();
         // Update role badge
-        const icons = { admin: '👑', yetkili: '🛡️', artist: '🎤', premium: '⭐', user: '👤' };
+        const icons = { admin: '­şææ', yetkili: '­şøí´©Å', artist: '­şÄñ', premium: 'Ô¡É', user: '­şæñ' };
         const badge = document.getElementById('aum-role-badge');
-        if (badge) badge.textContent = icons[newRole] || '👤';
+        if (badge) badge.textContent = icons[newRole] || '­şæñ';
       } else {
         showToast('Rol güncellenemedi', 'error');
         roleSelect.value = profile.role || 'user'; // revert
@@ -3832,16 +3768,16 @@ function initAdminModalListeners() {
     removeAvatarBtn.addEventListener('click', async () => {
       const profile = currentAdminModalUser;
       if (!profile) return;
-      if (!confirm('Avatarı kaldırmak istiyor musunuz?')) return;
+      if (!confirm('Avatar─▒ kald─▒rmak istiyor musunuz?')) return;
       const sb = getSupabase();
       const { error } = await sb.from('profiles').update({ avatar_url: null }).eq('id', profile.id);
       if (!error) {
-        showToast('Avatar kaldırıldı ✅', 'success');
+        showToast('Avatar kald─▒r─▒ld─▒ Ô£à', 'success');
         currentAdminModalUser.avatar_url = null;
         openAdminUserModal(currentAdminModalUser);
         loadAdminUsers();
       } else {
-        showToast('Avatar kaldırılamadı', 'error');
+        showToast('Avatar kald─▒r─▒lamadı', 'error');
       }
     });
   }
@@ -3853,20 +3789,20 @@ function initAdminModalListeners() {
       const profile = currentAdminModalUser;
       if (!profile || profile.id === currentUserId) return;
       if (profile.is_banned) {
-        if (!confirm('Engeli kaldırmak istediğinize emin misiniz?')) return;
+        if (!confirm('Engeli kald─▒rmak istedi─şinize emin misiniz?')) return;
         const { error } = await adminUnbanUser(profile.id);
         if (!error) {
           currentAdminModalUser.is_banned = false;
-          showToast('Engel kaldırıldı ✅', 'success');
+          showToast('Engel kald─▒r─▒ld─▒ Ô£à', 'success');
           openAdminUserModal(currentAdminModalUser);
           loadAdminUsers();
         }
       } else {
-        if (!confirm('Kullanıcıyı engellemek istediğinize emin misiniz?')) return;
+        if (!confirm('Kullan─▒c─▒y─▒ engellemek istedi─şinize emin misiniz?')) return;
         const { error } = await adminBanUser(profile.id);
         if (!error) {
           currentAdminModalUser.is_banned = true;
-          showToast('Kullanıcı engellendi ✅', 'success');
+          showToast('Kullan─▒c─▒ engellendi Ô£à', 'success');
           openAdminUserModal(currentAdminModalUser);
           loadAdminUsers();
         }
@@ -3880,7 +3816,7 @@ function initAdminModalListeners() {
     deleteBtn.addEventListener('click', async () => {
       const profile = currentAdminModalUser;
       if (!profile || profile.id === currentUserId) return;
-      if (!confirm(`"${profile.username}" isimli hesabı kalıcı olarak silmek istediğinize emin misiniz?`)) return;
+      if (!confirm(`"${profile.username}" isimli hesab─▒ kal─▒c─▒ olarak silmek istedi─şinize emin misiniz?`)) return;
       if (!confirm('Bu işlem geri alınamaz! Tüm veriler silinecek. DEVAM EDİLSİN Mİ?')) return;
       const { error } = await adminDeleteUser(profile.id);
       if (!error) {
@@ -3967,8 +3903,8 @@ async function handleAddSong() {
   const youtubeUrl = document.getElementById('admin-youtube-url').value.trim();
 
   // Sanatçı klasör adı: küçük harf, Türkçe karakterler korunuyor, boşluk ve özel karakterler siliniyor
-  const safeArtist = artist.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ0-9]/g, '').toLowerCase();
-  const safeTitle = title.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ0-9]/g, '').toLowerCase();
+  const safeArtist = artist.replace(/[^a-zA-Z├ğ├ç─ş─Ş─▒─░├Â├û┼ş┼Ş├╝├£0-9]/g, '').toLowerCase();
+  const safeTitle = title.replace(/[^a-zA-Z├ğ├ç─ş─Ş─▒─░├Â├û┼ş┼Ş├╝├£0-9]/g, '').toLowerCase();
 
   // Kaynak kontrolü
   if (!title || !artist) {
@@ -3977,7 +3913,7 @@ async function handleAddSong() {
   }
 
   if (adminSongSource === 'local' && !file_path) {
-    showToast('Lütfen bir MP3 dosyası seçin', 'error');
+    showToast('Lütfen bir MP3 dosyas─▒ seçin', 'error');
     return;
   }
 
@@ -3986,7 +3922,7 @@ async function handleAddSong() {
     return;
   }
 
-  // YouTube URL doğrulama
+  // YouTube URL do─şrulama
   if (adminSongSource === 'youtube') {
     const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/)|youtu\.be\/|music\.youtube\.com\/watch\?v=)/;
     if (!ytRegex.test(youtubeUrl)) {
@@ -4017,13 +3953,13 @@ async function handleAddSong() {
       }
 
       progressBar.style.width = '100%';
-      progressText.textContent = 'Tamamlandı! ✅';
+      progressText.textContent = 'Tamamland─▒! Ô£à';
       file_path = result.url;
 
       // Progress'i 1.5sn sonra gizle
       setTimeout(() => { progressDiv.style.display = 'none'; progressBar.style.width = '0%'; }, 1500);
     } else {
-      // === Lokal MP3'ü R2'ye Yükle (sanatçı klasörüne) ===
+      // === Lokal MP3'├╝ R2'ye Yükle (sanatçı klasörüne) ===
       if (file_path && !file_path.startsWith('http')) {
         const ext = file_path.split('.').pop() || 'mp3';
         const r2FileName = `music/${safeArtist}/${safeTitle}.${ext}`;
@@ -4077,49 +4013,7 @@ async function handleAddSong() {
 
 function initProfilePage() {
   const saveBtn = document.getElementById('btn-save-profile');
-  const changeAvatarBtn = document.getElementById('btn-change-avatar');
   if (saveBtn) saveBtn.addEventListener('click', handleSaveProfile);
-  if (changeAvatarBtn) {
-    changeAvatarBtn.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/png, image/jpeg, image/jpg, image/webp';
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-          showToast('Dosya boyutu 5MB\'dan küçük olmalıdır', 'error');
-          return;
-        }
-
-        try {
-          const sb = getSupabase();
-          const ext = file.name.split('.').pop();
-          const fileName = `${currentUserId}/avatar-${Date.now()}.${ext}`;
-
-          const { error: uploadError } = await sb.storage
-            .from('avatars')
-            .upload(fileName, file, { upsert: true });
-
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = sb.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
-
-          const { error: updateError } = await updateProfile(currentUserId, { avatar_url: publicUrl });
-          if (updateError) throw updateError;
-
-          showToast('Profil fotoğrafı güncellendi! 📸', 'success');
-          loadProfilePage();
-          loadUserInfo();
-        } catch (err) {
-          showToast('Yükleme sırasında hata oluştu', 'error');
-        }
-      };
-      input.click();
-    });
-  }
 
   // Remove avatar button
   const removeAvatarBtn = document.getElementById('btn-remove-avatar');
@@ -4140,6 +4034,9 @@ function initProfilePage() {
 }
 
 async function loadProfilePage() {
+  if (window.profileModule && typeof window.profileModule.loadProfilePage === 'function') {
+    return window.profileModule.loadProfilePage();
+  }
   const user = await getCurrentUser();
   if (!user) return;
 
@@ -4238,9 +4135,12 @@ async function handleSaveProfile() {
 }
 
 // ===== Public User Profile =====
-let currentPublicUserId = null;
+var currentPublicUserId = null;
 
 async function loadPublicUserProfile(userId) {
+  if (window.profileModule && typeof window.profileModule.loadPublicUserProfile === 'function') {
+    return window.profileModule.loadPublicUserProfile(userId);
+  }
   if (currentUserRole === 'admin' || currentUserRole === 'yetkili') {
     if (userId !== currentUserId) {
       const sb = getSupabase();
@@ -4365,30 +4265,61 @@ async function loadPublicUserProfile(userId) {
 
 function initArtistPage() {
   const btn = document.getElementById('btn-artist-submit-song');
-  if (btn) btn.addEventListener('click', handleArtistSubmitSong);
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = 'true';
+    btn.addEventListener('click', handleArtistSubmitSong);
+  }
 
   const btnMp3 = document.getElementById('btn-artist-select-mp3');
-  if (btnMp3) {
+  if (btnMp3 && !btnMp3.dataset.bound) {
+    btnMp3.dataset.bound = 'true';
     btnMp3.addEventListener('click', async () => {
-      const result = await window.electronAPI.showOpenDialog({
-        properties: ['openFile'],
-        filters: [{ name: 'Audio', extensions: ['mp3', 'wav', 'ogg', 'aac'] }]
-      });
-      if (result && !result.canceled && result.filePaths.length > 0) {
-        document.getElementById('artist-song-url').value = result.filePaths[0];
+      if (window.electronAPI && window.electronAPI.showOpenDialog) {
+        const result = await window.electronAPI.showOpenDialog({
+          properties: ['openFile'],
+          filters: [{ name: 'Audio', extensions: ['mp3', 'wav', 'ogg', 'aac'] }]
+        });
+        if (result && !result.canceled && result.filePaths.length > 0) {
+          document.getElementById('artist-song-url').value = result.filePaths[0];
+        }
+      } else {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/*';
+        input.onchange = (e) => {
+          if (e.target.files.length > 0) {
+            document.getElementById('artist-song-url').value = e.target.files[0].name;
+            window.selectedArtistMp3File = e.target.files[0];
+          }
+        };
+        input.click();
       }
     });
   }
 
   const btnCover = document.getElementById('btn-artist-select-cover');
-  if (btnCover) {
+  if (btnCover && !btnCover.dataset.bound) {
+    btnCover.dataset.bound = 'true';
     btnCover.addEventListener('click', async () => {
-      const result = await window.electronAPI.showOpenDialog({
-        properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'] }]
-      });
-      if (result && !result.canceled && result.filePaths.length > 0) {
-        document.getElementById('artist-song-cover').value = result.filePaths[0];
+      if (window.electronAPI && window.electronAPI.showOpenDialog) {
+        const result = await window.electronAPI.showOpenDialog({
+          properties: ['openFile'],
+          filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'] }]
+        });
+        if (result && !result.canceled && result.filePaths.length > 0) {
+          document.getElementById('artist-song-cover').value = result.filePaths[0];
+        }
+      } else {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+          if (e.target.files.length > 0) {
+            document.getElementById('artist-song-cover').value = e.target.files[0].name;
+            window.selectedArtistCoverFile = e.target.files[0];
+          }
+        };
+        input.click();
       }
     });
   }
@@ -4396,7 +4327,8 @@ function initArtistPage() {
 
 async function loadArtistPage() {
   const container = document.getElementById('artist-submitted-songs');
-  container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Y\u00fckleniyor...</p></div>';
+  if (!container) return;
+  container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Yükleniyor...</p></div>';
 
   try {
     const sb = getSupabase();
@@ -4489,7 +4421,7 @@ async function handleArtistSubmitSong() {
 }
 
 // ===== Admin Pending Songs =====
-const originalLoadAdminPage = loadAdminPage;
+var originalLoadAdminPage = loadAdminPage;
 loadAdminPage = async function () {
   await originalLoadAdminPage();
   loadAdminPendingSongs();
@@ -4748,16 +4680,19 @@ async function addAdminUserActions() {
 }
 
 // Override loadAdminPage again to include new sections
-const _prevLoadAdminPage = loadAdminPage;
+var _prevLoadAdminPage = loadAdminPage;
 loadAdminPage = async function () {
   await _prevLoadAdminPage();
   loadAdminReservedNames();
+  if (window.BekofyAdminTerminal) {
+    window.BekofyAdminTerminal.init('app-terminal-mount');
+  }
   // Delay to let user table render first
   setTimeout(() => addAdminUserActions(), 500);
 }
 
 // ===== Sidebar: Show verified tick for current user =====
-const _origLoadUserInfo = loadUserInfo;
+var _origLoadUserInfo = loadUserInfo;
 loadUserInfo = async function () {
   await _origLoadUserInfo();
   // Add verified tick if current user is artist
@@ -4779,7 +4714,7 @@ loadUserInfo = async function () {
 }
 
 // ===== Now Playing Detail Overlay =====
-let npOverlayOpen = false;
+var npOverlayOpen = false;
 
 function initNowPlayingOverlay() {
   const overlay = document.getElementById('now-playing-overlay');
@@ -4914,6 +4849,7 @@ function initNowPlayingOverlay() {
 }
 
 function openNowPlayingOverlay() {
+  if (typeof toggleSidebarSlide === "function") toggleSidebarSlide(true);
   const overlay = document.getElementById('now-playing-overlay');
   if (!overlay) return;
   npOverlayOpen = true;
@@ -4926,6 +4862,7 @@ function openNowPlayingOverlay() {
 }
 
 function closeNowPlayingOverlay() {
+  if (typeof toggleSidebarSlide === "function") toggleSidebarSlide(false);
   const overlay = document.getElementById('now-playing-overlay');
   if (!overlay) return;
   npOverlayOpen = false;
@@ -4978,7 +4915,7 @@ function updateNowPlayingOverlay() {
 }
 
 // ===== Spotify Canvas Background Color Extraction =====
-let _lastCanvasCoverUrl = null;
+var _lastCanvasCoverUrl = null;
 
 function updateCanvasBackground(coverUrl) {
   const bgEl = document.getElementById('np-canvas-bg');
@@ -4990,7 +4927,7 @@ function updateCanvasBackground(coverUrl) {
 
   if (!coverUrl) {
     // Reset to defaults
-    bgEl.style.setProperty('--canvas-color-1', 'rgba(29, 185, 84, 0.4)');
+    bgEl.style.setProperty('--canvas-color-1', 'rgba(124, 154, 114, 0.4)');
     bgEl.style.setProperty('--canvas-color-2', 'rgba(30, 60, 120, 0.4)');
     bgEl.style.setProperty('--canvas-color-3', 'rgba(120, 40, 140, 0.35)');
     bgEl.style.setProperty('--canvas-color-4', 'rgba(200, 100, 50, 0.3)');
@@ -5118,14 +5055,14 @@ function extractDominantColors(imageData, width, height, numColors) {
 }
 
 // ===== Lyrics System =====
-let currentLyricsData = null;
-let parsedSyncedLyrics = [];
-let currentActiveLyricIndex = -1;
-let lyricsCollapsed = false;
-let isLyricShareMode = false;
-let selectedLyricIndexes = [];
-let lastLyricsSongId = null;
-let currentLyricOffset = 0; // seconds
+var currentLyricsData = null;
+var parsedSyncedLyrics = [];
+var currentActiveLyricIndex = -1;
+var lyricsCollapsed = false;
+var isLyricShareMode = false;
+var selectedLyricIndexes = [];
+var lastLyricsSongId = null;
+var currentLyricOffset = 0; // seconds
 
 function parseLRC(lrcText) {
   if (!lrcText) return [];
@@ -5667,7 +5604,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== Artist Profile Page =====
-let currentArtistProfileSongs = [];
+var currentArtistProfileSongs = [];
 
 async function openArtistProfile(artistName) {
   if (!artistName) return;
@@ -5711,7 +5648,7 @@ async function openArtistProfile(artistName) {
         avatarEl.innerHTML = `<img src="${artist.avatar_url}" alt="${escapeHtml(artistName)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
       } else {
         const initials = typeof getInitials === 'function' ? getInitials(artistName) : artistName.slice(0, 2).toUpperCase();
-        const color = typeof getAvatarColor === 'function' ? getAvatarColor(artistName) : '#1DB954';
+        const color = typeof getAvatarColor === 'function' ? getAvatarColor(artistName) : '#7C9A72';
         avatarEl.innerHTML = `<span style="font-size:60px;font-weight:700;color:#fff;background:${color};width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center">${initials}</span>`;
       }
     }
@@ -5758,7 +5695,7 @@ async function openArtistProfile(artistName) {
                     <div class="song-list-subtitle">${formatArtistLinks(song.artist)}</div>
                   </div>
                 </div>
-                <div class="song-list-album">${escapeHtml(song.album || '—')}</div>
+                <div class="song-list-album">${escapeHtml(song.album || 'ÔÇö')}</div>
                 <div class="song-list-duration">${formatDuration(song.duration)}</div>
               </div>
             `;
@@ -5832,9 +5769,9 @@ async function openArtistProfile(artistName) {
 }
 
 // ===== SLEEP TIMER =====
-let sleepTimerId = null;
-let sleepTimeRemaining = 0;
-let sleepTimerInterval = null;
+var sleepTimerId = null;
+var sleepTimeRemaining = 0;
+var sleepTimerInterval = null;
 
 function initSleepTimer() {
   const btn = document.getElementById('btn-sleep-timer');
@@ -5932,7 +5869,7 @@ function cancelSleepTimer() {
 
 
 // ===== QUEUE PANEL =====
-let queuePanelOpen = false;
+var queuePanelOpen = false;
 
 function initQueuePanel() {
   const btn = document.getElementById('btn-queue');
@@ -6020,7 +5957,7 @@ function renderQueuePanel() {
 }
 
 // Keep queue panel in sync
-const _origOnTimeUpdate2 = player.onTimeUpdate.bind(player);
+var _origOnTimeUpdate2 = player.onTimeUpdate.bind(player);
 player.onTimeUpdate = function () {
   _origOnTimeUpdate2();
   if (queuePanelOpen) {
@@ -6029,9 +5966,9 @@ player.onTimeUpdate = function () {
 };
 
 // ===== PREMIUM BADGE =====
-let currentUserIsPremium = false;
-let currentUserAvatarFrame = 'none';
-let currentUserBannerUrl = null;
+var currentUserIsPremium = false;
+var currentUserAvatarFrame = 'none';
+var currentUserBannerUrl = null;
 
 function hasPremiumAccess() {
   return currentUserIsPremium || currentUserRole === 'admin' || currentUserRole === 'yetkili' || currentUserRole === 'premium';
@@ -6073,37 +6010,12 @@ function initFrameSelector() {
 function initBannerUpload() {
   const changeBtn = document.getElementById('btn-change-banner');
   const removeBtn = document.getElementById('btn-remove-banner');
-  if (!changeBtn) return;
-
-  changeBtn.addEventListener('click', () => {
-    if (!hasPremiumAccess()) {
-      showToast('Profil banneri Premium üyelere özel 💎', 'error');
-      return;
-    }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const sb = getSupabase();
-        const ext = file.name.split('.').pop();
-        const fileName = `${currentUserId}/banner-${Date.now()}.${ext}`;
-        const { error: uploadError } = await sb.storage.from('avatars').upload(fileName, file, { upsert: true, contentType: file.type });
-        if (uploadError) { showToast('Yükleme hatası', 'error'); return; }
-        const { data: urlData } = sb.storage.from('avatars').getPublicUrl(fileName);
-        const bannerUrl = urlData.publicUrl + '?t=' + Date.now();
-        await updateProfile(currentUserId, { banner_url: bannerUrl });
-        currentUserBannerUrl = bannerUrl;
-        showBannerPreview(bannerUrl);
-        showToast('Banner güncellendi ✨', 'success');
-      } catch (err) {
-        showToast('Banner yüklenemedi', 'error');
-      }
-    };
-    input.click();
-  });
+  if (changeBtn) {
+    changeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.mediaEditor) window.mediaEditor.open('banner');
+    });
+  }
 
   if (removeBtn) {
     removeBtn.addEventListener('click', async () => {
@@ -6272,7 +6184,7 @@ async function loadWrappedPage() {
 }
 
 // ===== LOAD PREMIUM DATA ON USER INFO =====
-const _origLoadUserInfoFinal = loadUserInfo;
+var _origLoadUserInfoFinal = loadUserInfo;
 loadUserInfo = async function () {
   await _origLoadUserInfoFinal();
 
@@ -6338,9 +6250,9 @@ loadUserInfo = async function () {
 };
 
 // ===== SAVE PROFILE WITH NEW FIELDS =====
-const _origSaveProfile = document.getElementById('btn-save-profile');
+var _origSaveProfile = document.getElementById('btn-save-profile');
 // Override is handled in initProfilePage, we hook into it differently
-const _origInitProfilePage = initProfilePage;
+var _origInitProfilePage = initProfilePage;
 initProfilePage = function () {
   _origInitProfilePage();
 
@@ -6365,7 +6277,7 @@ initProfilePage = function () {
 };
 
 // ===== NAVIGATION HOOK FOR WRAPPED =====
-const _origNavigateTo = navigateTo;
+var _origNavigateTo = navigateTo;
 navigateTo = function (page) {
   _origNavigateTo(page);
   if (page === 'wrapped') {
@@ -6505,7 +6417,7 @@ function initLyricShare() {
           if (match) return `rgb(${match[1]}, ${match[2]}, ${match[3]})`;
           return null;
         };
-        const c1 = toRgb(c1Raw) || '#1DB954';
+        const c1 = toRgb(c1Raw) || '#7C9A72';
         const c2 = toRgb(c2Raw) || '#450af5';
         template.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
       }
@@ -6536,26 +6448,26 @@ function initLyricShare() {
 // ===== Mini Player Button =====
 function initMiniPlayerButton() {
   const btn = document.getElementById('btn-mini-player');
-  if (!btn) return;
-
-  // Only show in Electron
-  if (!window.electronAPI || !window.electronAPI.toggleMiniPlayer) {
-    btn.style.display = 'none';
-    return;
-  }
+  if (!btn || btn.dataset.miniPlayerInitialized === 'true') return;
+  btn.dataset.miniPlayerInitialized = 'true';
 
   btn.addEventListener('click', () => {
-    const song = player.getCurrentSong();
-    if (song) {
-      // Send current song data before toggling
-      window.electronAPI.updateMiniPlayer({
-        title: song.title,
-        artist: song.artist,
-        cover_url: song.cover_url || '',
-        isPlaying: player.isPlaying
-      });
+    if (window.electronAPI && window.electronAPI.toggleMiniPlayer) {
+      const song = (typeof player !== 'undefined' && player.getCurrentSong) ? player.getCurrentSong() : null;
+      if (song) {
+        window.electronAPI.updateMiniPlayer({
+          title: song.title || 'Şarkı',
+          artist: song.artist || 'Sanatçı',
+          cover_url: song.cover_url || '',
+          isPlaying: player.isPlaying || false
+        });
+      }
+      window.electronAPI.toggleMiniPlayer();
+    } else {
+      if (typeof showToast === 'function') {
+        showToast('Mini oynatıcı masaüstü uygulamasında kullanılabilir', 'info');
+      }
     }
-    window.electronAPI.toggleMiniPlayer();
   });
 }
 // ===== Premium Page Logic =====
@@ -6895,7 +6807,7 @@ async function renderProfileEnhancedStats(userId) {
 }
 
 // Hook into existing profile load
-const originalLoadProfile = window.loadProfile;
+var originalLoadProfile = window.loadProfile;
 window.loadProfile = async () => {
   if (typeof originalLoadProfile === 'function') await originalLoadProfile();
   if (currentUserId) {
@@ -6993,3 +6905,68 @@ function injectWhatsNewModal(data) {
 
 // Call the check function when the DOM is fully loaded or app initialized
 setTimeout(checkAndShowWhatsNew, 1500);
+
+
+// ===== Global Profile Opener & Sidebar Slide Animation =====
+function toggleSidebarSlide(shouldHide) {
+  const playerBar = document.getElementById('player-bar') || document.querySelector('.player-bar');
+  if (shouldHide) {
+    if (playerBar) playerBar.classList.add('player-bar-slide-down');
+    document.body.classList.add('full-player-active');
+  } else {
+    if (playerBar) playerBar.classList.remove('player-bar-slide-down');
+    document.body.classList.remove('full-player-active');
+  }
+}
+
+async function openUserProfile(userId) {
+  if (!userId) return;
+  try {
+    const currentUser = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
+    if (currentUser && currentUser.id === userId) {
+      if (typeof navigateTo === 'function') navigateTo('profile');
+      return;
+    }
+
+    const pageEl = document.getElementById('page-user-profile') || document.getElementById('page-profile');
+    if (!pageEl) return;
+
+    if (typeof currentPage !== 'undefined') currentPage = 'user-profile';
+    document.querySelectorAll('.nav-item, .top-nav-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+
+    pageEl.classList.add('active');
+    const main = document.getElementById('main-content');
+    if (main) main.scrollTop = 0;
+
+    const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+    let profile = null;
+    if (sb) {
+      const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
+      profile = data;
+    }
+
+    const username = profile?.username || 'Kullanıcı';
+    const avatarUrl = profile?.avatar_url || '';
+
+    const nameEl = document.getElementById('public-profile-username') || document.getElementById('own-profile-title');
+    if (nameEl) nameEl.textContent = username;
+
+    const avatarEl = document.getElementById('public-profile-avatar') || document.getElementById('profile-avatar-large');
+    if (avatarEl) {
+      if (avatarUrl) {
+        avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+      } else {
+        const initials = username.slice(0, 2).toUpperCase();
+        avatarEl.innerHTML = `<span style="font-size:48px;font-weight:700;color:#fff;background:#7C9A72;width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center">${initials}</span>`;
+      }
+    }
+  } catch (err) {
+    console.error('Error opening user profile:', err);
+  }
+}
+
+window.openArtistProfile = typeof openArtistProfile !== 'undefined' ? openArtistProfile : function(){};
+window.openUserProfile = openUserProfile;
+window.openPublicProfile = openUserProfile;
+window.toggleSidebarSlide = toggleSidebarSlide;

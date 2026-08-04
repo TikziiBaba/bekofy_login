@@ -127,7 +127,7 @@ function showSuccess() {
 
 // Confetti animation
 function launchConfetti() {
-  const colors = ['#1DB954', '#1ed760', '#ff6b6b', '#ffd700', '#a855f7', '#3b82f6', '#f97316'];
+  const colors = ['#7C9A72', '#9AB88F', '#ff6b6b', '#ffd700', '#a855f7', '#3b82f6', '#f97316'];
   const container = document.body;
 
   for (let i = 0; i < 80; i++) {

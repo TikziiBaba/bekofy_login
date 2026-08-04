@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy Premium - Sınırları Kaldır</title>
   <meta name="description" content="Bekofy Premium ile stüdyo kalitesinde ses, çevrimdışı indirme ve reklamsız kesintisiz müziğin tadını çıkarın.">
-  <link rel="stylesheet" href="css/style.css?v=unified1.0">
+  
+  <link rel="stylesheet" href="css/style.css?v=unified2.0">
+  <link rel="stylesheet" href="css/mobile.css?v=unified2.0">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
@@ -32,8 +35,14 @@
     </div>
   </header>
 
+  <!-- Ambient Background Mesh Blobs -->
+  <div class="ambient-mesh-bg">
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+  </div>
+
   <!-- Premium Main Stage -->
-  <main class="premium-page-wrapper">
+  <main class="premium-page-wrapper scroll-reveal is-visible">
     <div class="premium-head">
       <span class="section-label">PREMIUM PLANLARI</span>
       <h1 class="section-title">MÜZİĞİNİ ZİRVEYE TAŞI 💎</h1>
@@ -44,7 +53,7 @@
 
     <div class="premium-pricing-grid">
       <!-- Bireysel Plan -->
-      <div class="premium-card featured">
+      <div class="premium-card featured scroll-reveal is-visible">
         <span class="premium-card-badge">★ EN POPÜLER</span>
         <h2 class="premium-plan-title">BİREYSEL PLAN</h2>
         <div class="premium-plan-price">₺39.99 <span>/ ay</span></div>
@@ -57,13 +66,13 @@
           <li>Özel tema ve renk özelleştirmeleri</li>
         </ul>
 
-        <a href="checkout.html?plan=bireysel" class="btn-minimal btn-primary" style="padding: 14px; text-align: center;">
+        <a href="checkout.html?plan=bireysel" class="btn-minimal btn-primary btn-glow" style="padding: 14px; text-align: center;">
           Planı Seç ve Başla ➔
         </a>
       </div>
 
       <!-- Öğrenci Planı -->
-      <div class="premium-card">
+      <div class="premium-card scroll-reveal is-visible">
         <h2 class="premium-plan-title">ÖĞRENCİ PLANI</h2>
         <div class="premium-plan-price">₺19.99 <span>/ ay</span></div>
 

@@ -189,20 +189,20 @@ body {
   height: 36px;
   border: none;
   border-radius: 50%;
-  background: #1DB954;
+  background: #7C9A72;
   color: #000;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
+  box-shadow: 0 2px 8px rgba(124, 154, 114, 0.3);
 }
 
 .mini-play-btn:hover {
-  background: #1ed760;
+  background: #9AB88F;
   transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.4);
+  box-shadow: 0 4px 16px rgba(124, 154, 114, 0.4);
 }
 
 .mini-play-btn svg {
@@ -229,7 +229,7 @@ body {
 
 .mini-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #1DB954, #1ed760);
+  background: linear-gradient(90deg, #7C9A72, #9AB88F);
   width: 0%;
   transition: width 0.3s linear;
   border-radius: 0 2px 2px 0;
@@ -237,7 +237,7 @@ body {
 }
 
 .mini-progress:hover .mini-progress-fill {
-  box-shadow: 0 0 8px rgba(29, 185, 84, 0.5);
+  box-shadow: 0 0 8px rgba(124, 154, 114, 0.5);
 }
 
 /* Smooth entrance animation */

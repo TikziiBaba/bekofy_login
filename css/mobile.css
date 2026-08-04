@@ -1,0 +1,389 @@
+/* ==========================================
+   Bekofy Mobile & Android Responsive Overrides
+   ========================================== */
+
+/* Hide mobile bottom nav on desktop */
+@media screen and (min-width: 769px) and (not body.android-env) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* Hide desktop titlebar on mobile/Android */
+.android-env .window-controls,
+.android-env .titlebar,
+.android-env #titlebar,
+.android-env #window-titlebar {
+  display: none !important;
+}
+
+@media screen and (max-width: 768px), body.android-env {
+  html, body {
+    background: #1A1D1C !important;
+    color: #ffffff !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .titlebar, #titlebar {
+    display: none !important;
+  }
+
+  .top-bar, #top-bar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 56px !important;
+    z-index: 1000 !important;
+    background: #0a0a0c !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  #btn-history-back, #btn-history-forward {
+    display: none !important;
+  }
+
+  .top-bar-left {
+    gap: 4px !important;
+  }
+
+  .top-bar-center {
+    flex: 1 !important;
+    max-width: 220px !important;
+    margin: 0 8px !important;
+  }
+
+  #top-search-input {
+    padding: 8px 12px 8px 34px !important;
+    font-size: 13px !important;
+    height: 36px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .top-search-icon {
+    left: 10px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .app-layout, #app-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    margin-top: 56px !important;
+    height: calc(100vh - 56px) !important;
+    width: 100% !important;
+    background: #1A1D1C !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar, #sidebar {
+    display: none !important;
+  }
+
+  .main-content, #main-content {
+    flex: 1 !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: #1A1D1C !important;
+    padding: 12px 12px 145px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .page {
+    background: #1A1D1C !important;
+    color: #ffffff !important;
+    padding: 8px 4px 100px 4px !important;
+    min-height: 100% !important;
+  }
+
+  .page.active {
+    display: block !important;
+  }
+
+  .page-header h1 {
+    font-size: 24px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .jam-active-banner, #jam-active-banner {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    margin: 8px 0 16px 0 !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    border-radius: 10px !important;
+    z-index: 10 !important;
+  }
+
+  .jam-banner-text {
+    font-size: 13px !important;
+    white-space: nowrap !important;
+  }
+
+  .jam-banner-code {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  .jam-banner-leave {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    border-radius: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .modal-overlay, .profile-settings-overlay, .playlist-dialog-overlay, #jam-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 10000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    background: rgba(0, 0, 0, 0.82) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+
+  .jam-modal-box, .modal-box, .profile-settings-modal, .playlist-dialog {
+    width: min(100%, 380px) !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    border-radius: 16px !important;
+    padding: 20px 16px !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+  }
+
+  .toast-container {
+    position: fixed !important;
+    top: 64px !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: auto !important;
+    width: auto !important;
+    z-index: 10001 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    pointer-events: none !important;
+  }
+
+  .toast {
+    pointer-events: auto !important;
+    font-size: 13px !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .songs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .song-card {
+    padding: 10px !important;
+  }
+
+  .now-playing-bar, .player-bar, #player-bar {
+    position: fixed !important;
+    bottom: 58px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: calc(100% - 16px) !important;
+    height: 56px !important;
+    z-index: 9998 !important;
+    background: rgba(22, 22, 28, 0.96) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    padding: 6px 12px !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .player-bar .volume-bar-wrapper,
+  .player-bar .player-right-controls,
+  .player-bar .btn-repeat,
+  .player-bar .btn-shuffle,
+  .player-bar .time-display {
+    display: none !important;
+  }
+
+  .now-playing-info {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .now-playing-title {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  .now-playing-artist {
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .now-playing-cover img, .now-playing-cover {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 6px !important;
+  }
+
+  .player-controls-center {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .mobile-bottom-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 56px !important;
+    z-index: 9999 !important;
+    background: transparent !important;
+    border: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-nav-item {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    padding: 4px 0 !important;
+    cursor: pointer !important;
+    gap: 2px !important;
+    transition: color 0.2s ease !important;
+  }
+
+  .mobile-nav-item svg {
+    color: currentColor !important;
+  }
+
+  .mobile-nav-item.active {
+    color: #7C9A72 !important;
+    font-weight: 700 !important;
+  }
+
+  button, .btn, .play-btn, .action-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+.top-nav-home,
+#btn-nav-home,
+.top-nav-btn {
+  background: rgba(47, 52, 50, 0.4) !important;
+  color: var(--ts) !important;
+  border: 1px solid rgba(124, 154, 114, 0.15) !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.top-nav-home:hover,
+#btn-nav-home:hover,
+.top-nav-btn:hover {
+  background: rgba(124, 154, 114, 0.15) !important;
+  color: var(--tp) !important;
+  border-color: var(--sage) !important;
+  box-shadow: none !important;
+}
+
+.top-nav-home.active,
+#btn-nav-home.active {
+  background: rgba(124, 154, 114, 0.2) !important;
+  color: var(--sage) !important;
+  border-color: var(--sage) !important;
+}
+
+@media screen and (min-width: 769px) {
+  .mobile-bottom-nav,
+  #mobile-bottom-nav {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+.mobile-bottom-nav {
+  background: transparent !important;
+  border: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.mobile-nav-item,
+#m-nav-home,
+#m-nav-new,
+#m-nav-search,
+#m-nav-library,
+#m-nav-profile {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  outline: none !important;
+}
+
+.mobile-nav-item svg {
+  color: currentColor !important;
+}
+
+.mobile-nav-item.active {
+  color: var(--sage) !important;
+}

@@ -6,7 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy Premium — Güvenli Ödeme</title>
   <meta name="description" content="Bekofy Premium abonelik ödeme sayfası. 256-bit SSL korumalı güvenli ödeme.">
-  <link rel="stylesheet" href="css/style.css?v=unified1.0">
+  
+  <link rel="stylesheet" href="css/style.css?v=unified2.0">
+  <link rel="stylesheet" href="css/auth.css?v=unified2.0">
+  <link rel="stylesheet" href="css/mobile.css?v=unified2.0">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/dist/umd/supabase.js" integrity="sha256-Jpf1G7PvpfELWwvKKjmzdysbj4EOaIXju41pwyQtXgc=" crossorigin="anonymous"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
@@ -31,8 +35,14 @@
     </div>
   </header>
 
+  <!-- Ambient Background Mesh Blobs -->
+  <div class="ambient-mesh-bg">
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+  </div>
+
   <!-- Checkout Main Stage -->
-  <main class="checkout-page-wrapper">
+  <main class="checkout-page-wrapper scroll-reveal is-visible">
     <a href="premium.html" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-gray); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 24px;">
       ← Planlara Dön
     </a>
@@ -55,7 +65,7 @@
 
       <!-- Live Interactive Card Preview -->
       <div class="card-visual-preview" id="card-visual">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start">
+        <div style="display:flex; justify-space-between; align-items:flex-start">
           <div class="card-chip-box"></div>
           <div style="font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--emerald);">BEKOFY</div>
         </div>

@@ -199,7 +199,7 @@ function initCharts(totalUsers, premiumUsers) {
         labels: ['Ücretsiz', 'Premium/Diğer'],
         datasets: [{
           data: [freeUsers, premiumUsers],
-          backgroundColor: ['#3b82f6', '#1DB954'],
+          backgroundColor: ['#3b82f6', '#7C9A72'],
           borderWidth: 0,
           hoverOffset: 4
         }]
@@ -226,8 +226,8 @@ function initCharts(totalUsers, premiumUsers) {
         datasets: [{
           label: 'Kayıtlı Kullanıcı',
           data: [Math.floor(totalUsers*0.4), Math.floor(totalUsers*0.5), Math.floor(totalUsers*0.7), Math.floor(totalUsers*0.8), Math.floor(totalUsers*0.9), totalUsers],
-          borderColor: '#1DB954',
-          backgroundColor: 'rgba(29, 185, 84, 0.1)',
+          borderColor: '#7C9A72',
+          backgroundColor: 'rgba(124, 154, 114, 0.1)',
           fill: true,
           tension: 0.4
         }]

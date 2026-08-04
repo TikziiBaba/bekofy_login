@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bekofy - Sınırsız Müzik Platformu</title>
   <meta name="description" content="Bekofy ile milyonlarca şarkıyı ücretsiz ve kesintisiz dinle. Canlı şarkı sözleri, Mini Player ve Discord entegrasyonu.">
-  <link rel="stylesheet" href="css/style.css?v=lucidenote1.0">
+  
+  <link rel="stylesheet" href="css/style.css?v=lucidenote2.0">
+  <link rel="stylesheet" href="css/home-redesign.css?v=lucidenote2.0">
+  <link rel="stylesheet" href="css/mobile.css?v=lucidenote2.0">
   
   <!-- GSAP & ScrollTrigger Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -37,7 +40,7 @@
         <span class="logo-name">Bekofy</span>
       </a>
       <nav class="nav-links">
-        <a href="index.html" class="nav-link">Keşfet</a>
+        <a href="index.html" class="nav-link active">Keşfet</a>
         <a href="premium.html" class="nav-link">Premium</a>
         <a href="dashboard.html" class="nav-link">Hesabım</a>
       </nav>
@@ -48,206 +51,251 @@
     </div>
   </header>
 
-  <!-- 🌀 MASTER SCROLL PRESENTATION VIEWPORT (FULL PAGE PINNED SCROLL STORY) -->
-  <main class="master-scroll-viewport">
-    <div class="master-stage-container">
+  <!-- Background Ambient Mesh Blobs & Floating Notes -->
+  <div class="ambient-mesh-bg">
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+    <div class="floating-notes">
+      <span class="note">♪</span>
+      <span class="note">♫</span>
+      <span class="note">♩</span>
+      <span class="note">♬</span>
+    </div>
+  </div>
 
-      <!-- STAGE 1: HERO STAGE -->
-      <div class="hero-stage-layout">
-        <div class="hero-text-area">
-          <div class="hero-badge">
-            <span>● SINIRSIZ VE REKLAMSIZ MÜZİK PLATFORMU</span>
-          </div>
-          <h1 class="hero-title">
-            MÜZİĞİN EN KESİNTİSİZ <span class="text-emerald">HALİNİ KEŞFET</span>
-          </h1>
-          <p class="hero-description">
-            Bekofy ile milyonlarca şarkı tek tıkla elinin altında. Canlı senkronize şarkı sözleri, Mini Player ve Discord RPC entegrasyonu ile özgürce dinle.
-          </p>
-          <div class="hero-cta">
-            <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="btn-minimal btn-primary" style="padding: 12px 28px; font-size: 15px;">
-              Masaüstü Uygulamasını İndir (.EXE)
-            </a>
-            <a href="login.html" class="btn-minimal btn-secondary" style="padding: 12px 28px; font-size: 15px;">
-              Web Player'ı Başlat
-            </a>
-          </div>
+  <!-- Main Website Container -->
+  <main class="landing-main-wrapper">
+    
+    <!-- HERO SECTION -->
+    <section class="hero-stage-layout scroll-reveal">
+      <div class="hero-text-area">
+        <div class="hero-badge">
+          <span class="badge-pulse-dot"></span>
+          <span>SINIRSIZ VE REKLAMSIZ MÜZİK PLATFORMU</span>
         </div>
-
-        <div class="hero-player-area">
-          <div class="minimal-player-card">
-            <div class="player-header">
-              <span class="player-status">● ŞU AN ÇALIYOR</span>
-              <span class="player-bitrate">320 KBPS HI-FI</span>
-            </div>
-
-            <div class="player-track">
-              <div class="track-cover">🎵</div>
-              <div class="track-meta">
-                <div class="track-title" id="demo-track-title">Seni Yazdım Kalbime</div>
-                <div class="track-artist" id="demo-track-artist">Müslüm Gürses</div>
-              </div>
-            </div>
-
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill"></div>
-            </div>
-
-            <div class="player-controls">
-              <button class="ctrl-btn" onclick="prevDemoTrack()">⏮ Önceki</button>
-              <button class="ctrl-btn" id="demo-play-btn" onclick="toggleDemoPlay()">⏸ Duraklat</button>
-              <button class="ctrl-btn" onclick="nextDemoTrack()">Sonraki ⏭</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STAGE 2: ULTRA-CLEAN ELEGANT LUCIDE MUSIC NOTE VECTOR SVG -->
-      <div class="spinning-note-stage">
-        <svg class="spinning-music-note-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 18V5l12-2v13"></path>
-          <circle cx="6" cy="18" r="3" fill="currentColor"></circle>
-          <circle cx="18" cy="16" r="3" fill="currentColor"></circle>
-        </svg>
-      </div>
-
-      <!-- FEATURE CARDS REVEALED AS USER SCRUBS SCROLL -->
-      <div class="story-feature-card" id="story-feature-1">
-        <div class="story-card-icon">💸</div>
-        <h3 class="story-card-title">%100 ÜCRETSİZ MÜZİK</h3>
-        <p class="story-card-desc">Abonelik ücreti ödemeden milyonlarca şarkı, albüm ve çalma listesine kesintisiz erişin.</p>
-      </div>
-
-      <div class="story-feature-card" id="story-feature-2">
-        <div class="story-card-icon">🎤</div>
-        <h3 class="story-card-title">CANLI ŞARKI SÖZLERİ</h3>
-        <p class="story-card-desc">Şarkının ritmiyle senkronize akan canlı karaoke sözleri ile müziğin her kelimesini eşzamanlı yaşayın.</p>
-      </div>
-
-      <div class="story-feature-card" id="story-feature-3">
-        <div class="story-card-icon">🖥️</div>
-        <h3 class="story-card-title">MINI PLAYER MODU</h3>
-        <p class="story-card-desc">Oyun oynarken veya çalışırken ekranınızda yer kaplamayan kompakt ve şık masaüstü penceresi.</p>
-      </div>
-
-      <div class="story-feature-card" id="story-feature-4">
-        <div class="story-card-icon">🎮</div>
-        <h3 class="story-card-title">DISCORD RPC DURUMU</h3>
-        <p class="story-card-desc">Dinlediğiniz parça ve albüm kapağı Discord profilinizde anlık olarak arkadaşlarınıza gösterilsin.</p>
-      </div>
-
-      <!-- STAGE 3: LIVE STATS STAGE -->
-      <div class="master-stats-stage">
-        <div class="section-head-center">
-          <span class="section-label">CANLI İSTATİSTİKLER</span>
-          <h2 class="section-title">BEKOFY TOPLULUĞU BÜYÜYOR 🚀</h2>
-        </div>
-
-        <div class="stats-grid-master">
-          <div class="stat-card-master">
-            <div class="stat-num-master" id="stat-users">1.2K+</div>
-            <div class="stat-label-master">Aktif Dinleyici</div>
-          </div>
-          <div class="stat-card-master">
-            <div class="stat-num-master" id="stat-songs">85K+</div>
-            <div class="stat-label-master">Şarkı Kataloğu</div>
-          </div>
-          <div class="stat-card-master">
-            <div class="stat-num-master" id="stat-playlists">3.4K+</div>
-            <div class="stat-label-master">Çalma Listesi</div>
-          </div>
-          <div class="stat-card-master">
-            <div class="stat-num-master" id="stat-likes">19K+</div>
-            <div class="stat-label-master">Beğenilen Şarkı</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STAGE 4: BENTO GRID STAGE -->
-      <div class="master-bento-stage">
-        <div class="section-head-center">
-          <span class="section-label">ÖZELLİKLER</span>
-          <h2 class="section-title">BEKOFY SANA NELER SUNUYOR?</h2>
-        </div>
-
-        <div class="bento-grid-master">
-          <div class="bento-card-master bento-card-wide">
-            <span class="card-num-chip">01 // REKLAMSIZ & ÜCRETSİZ</span>
-            <h3 class="card-title-bento">Paran Cebinde Kalsın 💸</h3>
-            <p class="card-text-bento">
-              Aylık yüksek abonellik ücretleri ödeme devri bitti. Bekofy ile tüm şarkılara 0 TL ödeyerek erişin.
-            </p>
-          </div>
-
-          <div class="bento-card-master">
-            <span class="card-num-chip">02 // LYRICS</span>
-            <h3 class="card-title-bento">Canlı Şarkı Sözleri 🎤</h3>
-            <p class="card-text-bento">
-              Müziğin ritmiyle eşzamanlı akan şarkı sözleriyle karaoke keyfini çıkarın.
-            </p>
-          </div>
-
-          <div class="bento-card-master">
-            <span class="card-num-chip">03 // MINI PLAYER</span>
-            <h3 class="card-title-bento">Mini Player Modu 🖥️</h3>
-            <p class="card-text-bento">
-              Oyun oynarken veya çalışırken ekranınızı kaplamayan hafif mini oynatıcı penceresi.
-            </p>
-          </div>
-
-          <div class="bento-card-master bento-card-wide">
-            <span class="card-num-chip">04 // DISCORD RPC</span>
-            <h3 class="card-title-bento">Discord Entegrasyonu 🎮</h3>
-            <p class="card-text-bento">
-              Dinlediğiniz şarkı, albüm kapağı ve kalan süre Discord profilinizde otomatik olarak yayınlanır.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- STAGE 5: FINALE STAGE (COMPARISON & CTA) -->
-      <div class="master-finale-stage">
-        <table class="compare-table-master">
-          <thead>
-            <tr>
-              <th class="feature-col">Özellik</th>
-              <th>Spotify</th>
-              <th>YouTube Music</th>
-              <th class="bekofy-col">Bekofy 💚</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="feature-col">Sınırsız Reklamsız Dinleme</td>
-              <td>⚠️ Ücretli / Reklamlı</td>
-              <td>⚠️ Ücretli / Reklamlı</td>
-              <td class="bekofy-col">✅ %100 ÜCRETSİZ</td>
-            </tr>
-            <tr>
-              <td class="feature-col">Canlı Senkronize Şarkı Sözleri</td>
-              <td>✅ Var</td>
-              <td>❌ Yok</td>
-              <td class="bekofy-col">✅ Var</td>
-            </tr>
-            <tr>
-              <td class="feature-col">Aylık Abonellik Ücreti</td>
-              <td>₺50+ / ay</td>
-              <td>₺30+ / ay</td>
-              <td class="bekofy-col" style="font-size: 18px;">₺0 💚</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="cta-card-master">
-          <h2 class="cta-title-master">MÜZİĞİNİ ÖZGÜRLEŞTİRMEYE HAZIR MISIN?</h2>
-          <p class="cta-subtext-master">Hemen Bekofy hesabını oluştur ve sınırsız müziğin tadını çıkar.</p>
-          <a href="register.html" class="btn-minimal btn-primary" style="padding: 14px 36px; font-size: 16px;">
-            Ücretsiz Hesabını Oluştur ➔
+        <h1 class="hero-title">
+          MÜZİĞİN EN KESİNTİSİZ <span class="text-emerald-gradient">HALİNİ KEŞFET</span>
+        </h1>
+        <p class="hero-description">
+          Bekofy ile milyonlarca şarkı tek tıkla elinin altında. Canlı senkronize şarkı sözleri, Mini Player ve Discord RPC entegrasyonu ile özgürce dinle.
+        </p>
+        <div class="hero-cta">
+          <a href="https://github.com/TikziiBaba/bekofy_login/releases" target="_blank" class="btn-minimal btn-primary btn-glow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Masaüstü Uygulamasını İndir (.EXE)
+          </a>
+          <a href="login.html" class="btn-minimal btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Web Player'ı Başlat
           </a>
         </div>
       </div>
 
+      <div class="hero-player-area">
+        <div class="minimal-player-card">
+          <div class="player-header">
+            <span class="player-status"><span class="status-live-dot"></span> ŞU AN ÇALIYOR</span>
+            <span class="player-bitrate">320 KBPS HI-FI</span>
+          </div>
+
+          <div class="player-track">
+            <div class="track-cover">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1ED760" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <div class="track-meta">
+              <div class="track-title" id="demo-track-title">Seni Yazdım Kalbime</div>
+              <div class="track-artist" id="demo-track-artist">Müslüm Gürses</div>
+            </div>
+            <!-- Equalizer animation -->
+            <div class="eq-visualizer">
+              <span class="eq-bar bar-1"></span>
+              <span class="eq-bar bar-2"></span>
+              <span class="eq-bar bar-3"></span>
+              <span class="eq-bar bar-4"></span>
+            </div>
+          </div>
+
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="demo-progress-fill"></div>
+          </div>
+
+          <div class="player-controls">
+            <button class="ctrl-btn" onclick="prevDemoTrack()" title="Önceki">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>
+            </button>
+            <button class="ctrl-btn ctrl-play-btn" id="demo-play-btn" onclick="toggleDemoPlay()" title="Oynat / Duraklat">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            </button>
+            <button class="ctrl-btn" onclick="nextDemoTrack()" title="Sonraki">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROTATING VECTOR MUSIC NOTE INTERACTIVE SHOWCASE -->
+    <div class="spinning-note-stage scroll-reveal">
+      <svg class="spinning-music-note-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3" fill="currentColor"></circle>
+        <circle cx="18" cy="16" r="3" fill="currentColor"></circle>
+      </svg>
     </div>
+
+    <!-- FEATURE HIGHLIGHT CARDS GRID -->
+    <section class="landing-features-grid">
+      <div class="story-feature-card scroll-reveal" id="story-feature-1">
+        <div class="story-card-icon-wrapper">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1ED760" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3 class="story-card-title">%100 ÜCRETSİZ MÜZİK</h3>
+        <p class="story-card-desc">Abonelik ücreti ödemeden milyonlarca şarkı, albüm ve çalma listesine kesintisiz erişin.</p>
+      </div>
+
+      <div class="story-feature-card scroll-reveal" id="story-feature-2">
+        <div class="story-card-icon-wrapper">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1ED760" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        </div>
+        <h3 class="story-card-title">CANLI ŞARKI SÖZLERİ</h3>
+        <p class="story-card-desc">Şarkının ritmiyle senkronize akan canlı karaoke sözleri ile müziğin her kelimesini eşzamanlı yaşayın.</p>
+      </div>
+
+      <div class="story-feature-card scroll-reveal" id="story-feature-3">
+        <div class="story-card-icon-wrapper">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1ED760" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3 class="story-card-title">MINI PLAYER MODU</h3>
+        <p class="story-card-desc">Oyun oynarken veya çalışırken ekranınızda yer kaplamayan kompakt ve şık masaüstü penceresi.</p>
+      </div>
+
+      <div class="story-feature-card scroll-reveal" id="story-feature-4">
+        <div class="story-card-icon-wrapper">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1ED760" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="13" r="1"/><circle cx="18" cy="11" r="1"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.83 7.64 4.1 11.41 9.298 11.41s10.128-3.77 9.298-11.41A4 4 0 0 0 17.32 5z"/></svg>
+        </div>
+        <h3 class="story-card-title">DISCORD RPC DURUMU</h3>
+        <p class="story-card-desc">Dinlediğiniz parça ve albüm kapağı Discord profilinizde anlık olarak arkadaşlarınıza gösterilsin.</p>
+      </div>
+    </section>
+
+    <!-- LIVE COMMUNITY STATS STAGE -->
+    <section class="master-stats-stage scroll-reveal">
+      <div class="section-head-center">
+        <span class="section-label">CANLI İSTATİSTİKLER</span>
+        <h2 class="section-title">BEKOFY TOPLULUĞU BÜYÜYOR</h2>
+      </div>
+
+      <div class="stats-grid-master">
+        <div class="stat-card-master scroll-reveal">
+          <div class="stat-num-master" id="stat-users">1.2K+</div>
+          <div class="stat-label-master">Aktif Dinleyici</div>
+        </div>
+        <div class="stat-card-master scroll-reveal">
+          <div class="stat-num-master" id="stat-songs">85K+</div>
+          <div class="stat-label-master">Şarkı Kataloğu</div>
+        </div>
+        <div class="stat-card-master scroll-reveal">
+          <div class="stat-num-master" id="stat-playlists">3.4K+</div>
+          <div class="stat-label-master">Çalma Listesi</div>
+        </div>
+        <div class="stat-card-master scroll-reveal">
+          <div class="stat-num-master" id="stat-likes">19K+</div>
+          <div class="stat-label-master">Beğenilen Şarkı</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENTO GRID STAGE -->
+    <section class="master-bento-stage scroll-reveal">
+      <div class="section-head-center">
+        <span class="section-label">ÖZELLİKLER</span>
+        <h2 class="section-title">BEKOFY SANA NELER SUNUYOR?</h2>
+      </div>
+
+      <div class="bento-grid-master">
+        <div class="bento-card-master bento-card-wide scroll-reveal">
+          <span class="card-num-chip">01 // REKLAMSIZ & ÜCRETSİZ</span>
+          <h3 class="card-title-bento">Paran Cebinde Kalsın</h3>
+          <p class="card-text-bento">
+            Aylık yüksek abonellik ücretleri ödeme devri bitti. Bekofy ile tüm şarkılara 0 TL ödeyerek kesintisiz erişin.
+          </p>
+        </div>
+
+        <div class="bento-card-master scroll-reveal">
+          <span class="card-num-chip">02 // LYRICS</span>
+          <h3 class="card-title-bento">Canlı Şarkı Sözleri</h3>
+          <p class="card-text-bento">
+            Müziğin ritmiyle eşzamanlı akan şarkı sözleriyle karaoke keyfini çıkarın.
+          </p>
+        </div>
+
+        <div class="bento-card-master scroll-reveal">
+          <span class="card-num-chip">03 // MINI PLAYER</span>
+          <h3 class="card-title-bento">Mini Player Modu</h3>
+          <p class="card-text-bento">
+            Oyun oynarken veya çalışırken ekranınızı kaplamayan hafif mini oynatıcı penceresi.
+          </p>
+        </div>
+
+        <div class="bento-card-master bento-card-wide scroll-reveal">
+          <span class="card-num-chip">04 // DISCORD RPC</span>
+          <h3 class="card-title-bento">Discord Entegrasyonu</h3>
+          <p class="card-text-bento">
+            Dinlediğiniz şarkı, albüm kapağı ve kalan süre Discord profilinizde otomatik olarak yayınlanır.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINALE STAGE (COMPARISON & CTA) -->
+    <section class="master-finale-stage scroll-reveal">
+      <div class="section-head-center">
+        <span class="section-label">KARŞILAŞTIRMA</span>
+        <h2 class="section-title">NEDEN BEKOFY?</h2>
+      </div>
+
+      <table class="compare-table-master scroll-reveal">
+        <thead>
+          <tr>
+            <th class="feature-col">Özellik</th>
+            <th>Spotify</th>
+            <th>YouTube Music</th>
+            <th class="bekofy-col">Bekofy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feature-col">Sınırsız Reklamsız Dinleme</td>
+            <td><span class="badge-status status-warn">Ücretli / Reklamlı</span></td>
+            <td><span class="badge-status status-warn">Ücretli / Reklamlı</span></td>
+            <td class="bekofy-col"><span class="badge-status status-success">%100 ÜCRETSİZ</span></td>
+          </tr>
+          <tr>
+            <td class="feature-col">Canlı Senkronize Şarkı Sözleri</td>
+            <td><span class="badge-status status-check">Var</span></td>
+            <td><span class="badge-status status-cross">Yok</span></td>
+            <td class="bekofy-col"><span class="badge-status status-success">Var</span></td>
+          </tr>
+          <tr>
+            <td class="feature-col">Aylık Abonellik Ücreti</td>
+            <td>₺50+ / ay</td>
+            <td>₺30+ / ay</td>
+            <td class="bekofy-col free-price-tag">₺0 / ÖMÜR BOYU</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="cta-card-master scroll-reveal">
+        <div class="cta-glow-bg"></div>
+        <h2 class="cta-title-master">MÜZİĞİNİ ÖZGÜRLEŞTİRMEYE HAZIR MISIN?</h2>
+        <p class="cta-subtext-master">Hemen Bekofy hesabını oluştur ve sınırsız müziğin tadını çıkar.</p>
+        <a href="register.html" class="btn-minimal btn-primary btn-glow" style="padding: 16px 40px; font-size: 16px;">
+          Ücretsiz Hesabını Oluştur ➔
+        </a>
+      </div>
+    </section>
+
   </main>
 
   <!-- Footer -->
@@ -255,13 +303,13 @@
     <p>© 2026 Bekofy. Tüm hakları saklıdır.</p>
   </footer>
 
-  <!-- GSAP FULL-PAGE SCROLL-SCRUBBING ENGINE -->
+  <!-- GSAP & INTERSECTION OBSERVER SCROLL ENGINE -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Top progress bar scrub
       if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
 
-        // 1. Top progress bar
         gsap.to('#gsap-scroll-bar', {
           width: '100%',
           ease: 'none',
@@ -273,88 +321,49 @@
           }
         });
 
-        // 2. MASTER FULL-PAGE PINNED SCROLL PRESENTATION TIMELINE WITH ELEGANT VECTOR ROTATION
-        if (window.innerWidth > 900) {
-          const masterTL = gsap.timeline({
-            scrollTrigger: {
-              trigger: '.master-scroll-viewport',
-              start: 'top top',
-              end: '+=4500',
-              scrub: 1,
-              pin: true,
-              anticipatePin: 1
-            }
-          });
-
-          // SCENE 1: Hero text & player exit, Elegant Vector Music Note comes to center stage
-          masterTL.to('.hero-text-area', { opacity: 0, y: -80, duration: 1 }, 0);
-          masterTL.to('.hero-player-area', { opacity: 0, y: 80, scale: 0.8, duration: 1 }, 0);
-
-          masterTL.fromTo('.spinning-note-stage',
-            { opacity: 0, scale: 0.5, y: 100 },
-            { opacity: 1, scale: 1.25, y: 0, duration: 1.5, ease: 'power2.out' }, 0.5
-          );
-
-          // 🌀 ELEGANT 2D VECTOR ROTATION ON SCROLL WHEEL (1440deg)
-          masterTL.to('.spinning-music-note-svg', {
-            rotate: 1440,
-            duration: 8,
-            ease: 'none'
-          }, 1);
-
-          // SCENE 2: Feature 1 Reveal (%100 Ücretsiz)
-          masterTL.fromTo('#story-feature-1', 
-            { opacity: 0, x: -140, scale: 0.8 },
-            { opacity: 1, x: 0, scale: 1, duration: 1.2 }, 1.2
-          );
-          masterTL.to('#story-feature-1', { opacity: 0, x: -140, duration: 0.8 }, 2.6);
-
-          // SCENE 3: Feature 2 Reveal (Canlı Lyrics)
-          masterTL.fromTo('#story-feature-2', 
-            { opacity: 0, x: 140, scale: 0.8 },
-            { opacity: 1, x: 0, scale: 1, duration: 1.2 }, 2.7
-          );
-          masterTL.to('#story-feature-2', { opacity: 0, x: 140, duration: 0.8 }, 4.1);
-
-          // SCENE 4: Feature 3 Reveal (Mini Player)
-          masterTL.fromTo('#story-feature-3', 
-            { opacity: 0, x: -140, scale: 0.8 },
-            { opacity: 1, x: 0, scale: 1, duration: 1.2 }, 4.2
-          );
-          masterTL.to('#story-feature-3', { opacity: 0, x: -140, duration: 0.8 }, 5.6);
-
-          // SCENE 5: Feature 4 Reveal (Discord RPC)
-          masterTL.fromTo('#story-feature-4', 
-            { opacity: 0, x: 140, scale: 0.8 },
-            { opacity: 1, x: 0, scale: 1, duration: 1.2 }, 5.7
-          );
-          masterTL.to('#story-feature-4', { opacity: 0, x: 140, duration: 0.8 }, 7.1);
-
-          // SCENE 6: Music Note shrinks out, Live Stats Stage enters
-          masterTL.to('.spinning-note-stage', { scale: 0.7, opacity: 0, duration: 1 }, 7.2);
-          masterTL.fromTo('.master-stats-stage',
-            { opacity: 0, y: 100, scale: 0.9 },
-            { opacity: 1, y: 0, scale: 1, duration: 1.5, pointerEvents: 'auto' }, 7.3
-          );
-          masterTL.to('.master-stats-stage', { opacity: 0, y: -100, duration: 1, pointerEvents: 'none' }, 9.0);
-
-          // SCENE 7: Bento Grid Stage enters
-          masterTL.fromTo('.master-bento-stage',
-            { opacity: 0, y: 100, scale: 0.9 },
-            { opacity: 1, y: 0, scale: 1, duration: 1.5, pointerEvents: 'auto' }, 9.1
-          );
-          masterTL.to('.master-bento-stage', { opacity: 0, y: -100, duration: 1, pointerEvents: 'none' }, 11.0);
-
-          // SCENE 8: Grand Finale Stage (Comparison & CTA)
-          masterTL.fromTo('.master-finale-stage',
-            { opacity: 0, y: 100, scale: 0.9 },
-            { opacity: 1, y: 0, scale: 1, duration: 1.5, pointerEvents: 'auto' }, 11.1
-          );
-        }
+        // 2. Rotate spinning music note on scroll
+        gsap.to('.spinning-music-note-svg', {
+          rotate: 720,
+          scrollTrigger: {
+            trigger: '.spinning-note-stage',
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 0.8
+          }
+        });
       }
+
+      // 3. Robust Intersection Observer for smooth scroll reveal animations on all viewports
+      const revealElements = document.querySelectorAll('.scroll-reveal');
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px 0px -50px 0px',
+        threshold: 0.12
+      };
+
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      revealElements.forEach(el => revealObserver.observe(el));
+
+      // 4. Demo Player Audio Logic
+      let progressVal = 55;
+      const progressFill = document.getElementById('demo-progress-fill');
+      setInterval(() => {
+        if (isDemoPlaying && progressFill) {
+          progressVal = (progressVal + 0.5) % 100;
+          progressFill.style.width = progressVal + '%';
+        }
+      }, 500);
     });
 
-    // Player demo logic
+    // Player demo track switching
     const demoTracks = [
       { title: 'Seni Yazdım Kalbime', artist: 'Müslüm Gürses' },
       { title: 'Aramızda Uçurumlar', artist: 'Suat Suna' },
@@ -365,13 +374,25 @@
     let isDemoPlaying = true;
 
     function updateDemoTrack() {
-      document.getElementById('demo-track-title').textContent = demoTracks[demoIndex].title;
-      document.getElementById('demo-track-artist').textContent = demoTracks[demoIndex].artist;
+      const t = demoTracks[demoIndex];
+      const titleEl = document.getElementById('demo-track-title');
+      const artistEl = document.getElementById('demo-track-artist');
+      if (titleEl) titleEl.innerText = t.title;
+      if (artistEl) artistEl.innerText = t.artist;
     }
 
     function toggleDemoPlay() {
       isDemoPlaying = !isDemoPlaying;
-      document.getElementById('demo-play-btn').textContent = isDemoPlaying ? '⏸ Duraklat' : '▶ Oynat';
+      const btn = document.getElementById('demo-play-btn');
+      const eq = document.querySelector('.eq-visualizer');
+      if (btn) {
+        btn.innerHTML = isDemoPlaying 
+          ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>'
+          : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+      }
+      if (eq) {
+        eq.style.opacity = isDemoPlaying ? '1' : '0.3';
+      }
     }
 
     function nextDemoTrack() {
